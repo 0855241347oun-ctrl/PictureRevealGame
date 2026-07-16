@@ -22,14 +22,19 @@
         <main>
             <!-- Home Mode -->
             <section id="home-mode" class="mode-section active">
-                <div class="home-panel glass-panel">
-                    <h2>Welcome to Picture Reveal</h2>
-                    <div class="home-actions" style="margin: 2rem 0; text-align: center;">
-                        <button id="btn-home-create" class="btn primary" style="font-size: 1.2rem; padding: 1rem 2rem;">Create New Map</button>
+                <div class="home-hero">
+                    <div class="home-panel glass-panel">
+                        <h2 class="hero-title">Picture Reveal</h2>
+                        <p class="hero-subtitle">Create custom maps and challenge your friends!</p>
+                        <div class="home-actions">
+                            <button id="btn-home-create" class="btn primary hero-btn">
+                                <span class="icon">✨</span> Create New Map
+                            </button>
+                        </div>
                     </div>
                     
-                    <div id="map-list-container" style="display: none; margin-top: 2rem;">
-                        <h3>Your Maps</h3>
+                    <div id="map-list-container" style="display: none;">
+                        <h3 class="section-title">Your Maps</h3>
                         <div id="map-list" class="map-grid">
                             <!-- Map cards will be generated here -->
                         </div>
