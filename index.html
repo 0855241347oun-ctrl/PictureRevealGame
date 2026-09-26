@@ -17,6 +17,7 @@
                 <button id="btn-player-mode" style="display:none;">Play</button>
                 <button id="btn-creator-mode">Creator</button>
                 <button id="btn-wheel-mode">วงล้อสุ่ม</button>
+                <button id="btn-word-mode">เกมสุ่มคำ</button>
             </div>
         </header>
 
@@ -31,20 +32,23 @@
                             <button id="btn-home-create" class="btn primary hero-btn">
                                 <span class="icon">✨</span> Create New Map
                             </button>
-                            <button id="btn-home-create-wheel" class="btn hero-btn" style="background: rgba(255, 255, 255, 0.8); border: 1px solid var(--border-color); color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <button id="btn-home-create-wheel" class="btn hero-btn" style="background: #ffffff; border: 2px solid var(--border-color); color: var(--primary);">
                                 <span class="icon">🎡</span> สร้างวงล้อใหม่
+                            </button>
+                            <button id="btn-home-word-game" class="btn hero-btn" style="background: #ffffff; border: 2px solid var(--border-color); color: #8b5cf6;">
+                                <span class="icon">🎲</span> เกมสุ่มคำ
                             </button>
                         </div>
                     </div>
                     
-                    <div id="map-list-container" style="display: none;">
+                    <div id="map-list-container" style="display: none; width: 100%; max-width: 1000px;">
                         <h3 class="section-title">Your Maps</h3>
                         <div id="map-list" class="map-grid">
                             <!-- Map cards will be generated here -->
                         </div>
                     </div>
 
-                    <div id="wheel-list-container" style="display: none; margin-top: 2.5rem;">
+                    <div id="wheel-list-container" style="display: none; margin-top: 2.5rem; width: 100%; max-width: 1000px;">
                         <h3 class="section-title">วงล้อของคุณ</h3>
                         <div id="wheel-list" class="map-grid">
                             <!-- Wheel cards will be generated here -->
@@ -71,51 +75,66 @@
 
             <!-- Creator Mode -->
             <section id="creator-mode" class="mode-section">
-                <div class="creator-panel glass-panel">
-                    <h2>Game Settings</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; align-items: stretch; max-width: 1000px; margin: 0 auto; padding: 1rem 0;">
+                    
+                    <!-- Left: Settings -->
+                    <div class="glass-panel" style="padding: 2.5rem;">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 2rem; color: var(--text-main); letter-spacing: -0.02em;">✨ สร้างด่านใหม่</h2>
 
-                    <div class="form-group">
-                        <label for="map-name">Map Name:</label>
-                        <input type="text" id="map-name" placeholder="Enter map name (e.g. Map 1)" value="My Map">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="map-name" style="font-size: 0.9rem; font-weight: 600;">ชื่อด่าน (Map Name):</label>
+                                <input type="text" id="map-name" placeholder="ระบุชื่อด่าน" value="My Map" style="border-radius: 0.75rem; padding: 0.9rem;">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="starting-score" style="font-size: 0.9rem; font-weight: 600;">คะแนนเริ่มต้น:</label>
+                                <input type="number" id="starting-score" value="1000" style="border-radius: 0.75rem; padding: 0.9rem;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="grid-size" style="font-size: 0.9rem; font-weight: 600;">ขนาดตาราง (Grid Size):</label>
+                                <select id="grid-size" style="border-radius: 0.75rem; padding: 0.9rem; cursor: pointer;">
+                                    <option value="2">2 x 2</option>
+                                    <option value="3" selected>3 x 3</option>
+                                    <option value="4">4 x 4</option>
+                                    <option value="5">5 x 5</option>
+                                    <option value="6">6 x 6</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="aspect-ratio" style="font-size: 0.9rem; font-weight: 600;">สัดส่วนภาพ:</label>
+                                <select id="aspect-ratio" style="border-radius: 0.75rem; padding: 0.9rem; cursor: pointer;">
+                                    <option value="1:1" selected>1:1 (สี่เหลี่ยมจัตุรัส)</option>
+                                    <option value="16:9">16:9 (แนวนอน)</option>
+                                    <option value="4:3">4:3 (มาตรฐาน)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="image-upload" style="font-size: 0.9rem; font-weight: 600;">อัปโหลดรูปภาพซ่อน (Background Image):</label>
+                            <input type="file" id="image-upload" accept="image/*" style="border-radius: 0.75rem; padding: 0.8rem; background: #f8fafc; border: 2px dashed var(--border-color); cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <!-- Right: Preview -->
+                    <div class="glass-panel" style="padding: 2.5rem; display: flex; flex-direction: column;">
+                        <h3 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.5rem;">🎯 ตั้งค่าคะแนนที่ลดลง</h3>
+                        <p class="hint" style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">คลิกที่ช่องเพื่อเปลี่ยนคะแนนที่จะถูกหักเมื่อเปิดแผ่นป้ายนั้น</p>
+                        
+                        <div class="game-container creator-preview" style="margin: auto 0; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: 1.5rem;">
+                            <div id="creator-grid" class="grid"></div>
+                        </div>
+
+                        <button id="btn-save-settings" class="btn primary" style="width: 100%; margin-top: 2rem; padding: 1.2rem; font-size: 1.2rem;">
+                            💾 บันทึกและสร้างด่าน
+                        </button>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="grid-size">Grid Size:</label>
-                        <select id="grid-size">
-                            <option value="2">2 x 2</option>
-                            <option value="3" selected>3 x 3</option>
-                            <option value="4">4 x 4</option>
-                            <option value="5">5 x 5</option>
-                            <option value="6">6 x 6</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="starting-score">Starting Score:</label>
-                        <input type="number" id="starting-score" value="1000">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="aspect-ratio">Image Aspect Ratio:</label>
-                        <select id="aspect-ratio">
-                            <option value="1:1" selected>1:1 (Square)</option>
-                            <option value="16:9">16:9 (Widescreen)</option>
-                            <option value="4:3">4:3 (Standard)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="image-upload">Upload Background Image:</label>
-                        <input type="file" id="image-upload" accept="image/*">
-                    </div>
-
-                    <h3>Set Points Reduction Per Tile</h3>
-                    <p class="hint">Click inside a tile to change how many points the player loses when opening it.</p>
-                    <div class="game-container creator-preview">
-                        <div id="creator-grid" class="grid"></div>
-                    </div>
-
-                    <button id="btn-save-settings" class="btn primary">Save Game Settings</button>
                 </div>
             </section>
 
@@ -190,6 +209,40 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Random Word Game Mode -->
+            <section id="word-mode" class="mode-section">
+                <div class="word-game-layout" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 1rem;">
+                    
+                    <!-- Flashcard Container -->
+                    <div id="word-flashcard" style="width: 100%; max-width: 700px; background: #ffffff; border-radius: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.08); padding: 4rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; position: relative; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        
+                        <div style="position: absolute; top: 1.5rem; left: 2rem; opacity: 0.5;">
+                            <span style="font-size: 1.5rem;">✨</span>
+                        </div>
+                        <div style="position: absolute; bottom: 1.5rem; right: 2rem; opacity: 0.5;">
+                            <span style="font-size: 1.5rem;">🌟</span>
+                        </div>
+                        
+                        <h1 id="word-display" style="font-size: clamp(3rem, 8vw, 6rem); font-weight: 800; color: #2d3748; margin: 0; line-height: 1.2; letter-spacing: -1px; transition: all 0.2s ease;">
+                            เริ่มเกม
+                        </h1>
+                        
+                    </div>
+
+                    <!-- Controls -->
+                    <div style="margin-top: 3rem; display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+                        <button id="btn-word-random" class="btn primary" style="font-size: 1.4rem; padding: 1.2rem 3.5rem;">
+                            <span>สุ่มคำใหม่</span>
+                            <span style="font-size: 1.2rem;">🎲</span>
+                        </button>
+                        
+                        <div style="color: #a0aec0; font-size: 0.95rem; font-weight: 500;">
+                            คลังคำศัพท์สำหรับเด็ก ป.1 (<span id="word-count-display">0</span> คำ)
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -241,6 +294,7 @@
 
     <!-- Cropper.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="js/words.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

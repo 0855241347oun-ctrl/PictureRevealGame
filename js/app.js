@@ -37,10 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const creatorSection = document.getElementById('creator-mode');
     const wheelSection = document.getElementById('wheel-mode');
     const wheelPlaySection = document.getElementById('wheel-play-mode');
+    const wordSection = document.getElementById('word-mode');
+    const btnWordMode = document.getElementById('btn-word-mode');
 
     // Home Elements
     const btnHomeCreate = document.getElementById('btn-home-create');
     const btnHomeCreateWheel = document.getElementById('btn-home-create-wheel');
+    const btnHomeWordGame = document.getElementById('btn-home-word-game');
     const mapListContainer = document.getElementById('map-list-container');
     const mapList = document.getElementById('map-list');
     const wheelListContainer = document.getElementById('wheel-list-container');
@@ -106,9 +109,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnWheelWinnerKeep = document.getElementById('btn-wheel-winner-keep');
     const btnWheelWinnerHome = document.getElementById('btn-wheel-winner-home');
 
+    // Word Game Elements
+    const wordFlashcard = document.getElementById('word-flashcard');
+    const wordDisplay = document.getElementById('word-display');
+    const btnWordRandom = document.getElementById('btn-word-random');
+    const wordCountDisplay = document.getElementById('word-count-display');
+
     // --- Initialization ---
     loadSettings();
     loadWheelState();
+    
+    if (typeof THAI_NOUNS !== 'undefined' && wordCountDisplay) {
+        wordCountDisplay.textContent = THAI_NOUNS.length.toLocaleString();
+    }
+    
     switchTab('home'); // Start on home screen
 
     // --- Tab Switching ---
@@ -132,6 +146,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         switchTab('wheel');
     });
+    
+    if (btnWordMode) {
+        btnWordMode.addEventListener('click', () => switchTab('word'));
+    }
+    if (btnHomeWordGame) {
+        btnHomeWordGame.addEventListener('click', () => switchTab('word'));
+    }
+    
+    if (btnWordRandom) {
+        let isSpinningWord = false;
+        btnWordRandom.addEventListener('click', () => {
+            if (isSpinningWord) return;
+            
+            if (typeof THAI_NOUNS !== 'undefined' && THAI_NOUNS.length > 0) {
+                isSpinningWord = true;
+                btnWordRandom.disabled = true;
+                btnWordRandom.style.opacity = '0.5';
+                
+                // Animate card down slightly and change color to indicate spinning
+                if (wordFlashcard) {
+                    wordFlashcard.style.transform = 'scale(0.95)';
+                    wordFlashcard.style.boxShadow = '0 10px 30px rgba(0,0,0,0.05)';
+                    wordDisplay.style.color = '#8b5cf6';
+                }
+                
+                let count = 0;
+                // Random duration: spin 15 to 25 times
+                const maxSpins = Math.floor(Math.random() * 10) + 15;
+                const finalIndex = Math.floor(Math.random() * THAI_NOUNS.length);
+                
+                const spinInterval = setInterval(() => {
+                    const tempIndex = Math.floor(Math.random() * THAI_NOUNS.length);
+                    wordDisplay.textContent = THAI_NOUNS[tempIndex];
+                    
+                    count++;
+                    if (count >= maxSpins) {
+                        clearInterval(spinInterval);
+                        
+                        // Final reveal
+                        wordDisplay.textContent = THAI_NOUNS[finalIndex];
+                        wordDisplay.style.color = '#2d3748';
+                        
+                        if (wordFlashcard) {
+                            // Big pop animation
+                            wordFlashcard.style.transition = 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease';
+                            wordFlashcard.style.transform = 'scale(1.1)';
+                            wordFlashcard.style.boxShadow = '0 30px 60px rgba(124, 58, 237, 0.25)';
+                            
+                            // Let the user celebrate, maybe small confetti?
+                            if (Math.random() > 0.5 && typeof launchConfetti === 'function') {
+                                // Light confetti occasionally
+                                setTimeout(launchConfetti, 100);
+                            }
+                            
+                            setTimeout(() => {
+                                wordFlashcard.style.transition = 'transform 0.4s ease, box-shadow 0.4s ease';
+                                wordFlashcard.style.transform = 'scale(1)';
+                                wordFlashcard.style.boxShadow = '0 20px 50px rgba(0,0,0,0.06)';
+                            }, 200);
+                        }
+                        
+                        isSpinningWord = false;
+                        btnWordRandom.disabled = false;
+                        btnWordRandom.style.opacity = '1';
+                    }
+                }, 60); // Fast cycle every 60ms
+                
+            } else {
+                wordDisplay.textContent = 'ไม่พบข้อมูลคำศัพท์';
+            }
+        });
+    }
     
     if (wheelNameInput) {
         wheelNameInput.addEventListener('input', (e) => {
@@ -157,11 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btnPlayerMode.classList.remove('active');
         btnCreatorMode.classList.remove('active');
         btnWheelMode.classList.remove('active');
+        if (btnWordMode) btnWordMode.classList.remove('active');
+        
         homeSection.classList.remove('active');
         playerSection.classList.remove('active');
         creatorSection.classList.remove('active');
         wheelSection.classList.remove('active');
         wheelPlaySection.classList.remove('active');
+        if (wordSection) wordSection.classList.remove('active');
+        
         btnPlayerMode.style.display = 'none';
 
         if (tab === 'home') {
@@ -197,6 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 wheelPlayTitle.textContent = wheelState.name || 'วงล้อสุ่ม';
             }
             drawWheel();
+        } else if (tab === 'word') {
+            if (btnWordMode) btnWordMode.classList.add('active');
+            if (wordSection) wordSection.classList.add('active');
         }
     }
 
@@ -257,9 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const actionHTML = `
-                    <div class="map-card-actions" style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+                    <div class="map-card-actions" style="display: flex; gap: 0.5rem; justify-content: flex-start; margin-top: auto; padding-top: 1rem;">
                         <button class="btn btn-edit" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Edit</button>
-                        <button class="btn btn-delete" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--danger); color: white;">Delete</button>
+                        <button class="btn btn-delete" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ef4444; color: white;">Delete</button>
                     </div>
                 `;
 
@@ -327,10 +420,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemsPreviewHTML += '</div>';
 
                 const actionHTML = `
-                    <div class="map-card-actions" style="display: flex; gap: 0.5rem; justify-content: center; margin-top: auto; padding-top: 1rem;">
+                    <div class="map-card-actions" style="display: flex; gap: 0.5rem; justify-content: flex-start; margin-top: auto; padding-top: 1rem;">
                         <button class="btn btn-spin-now primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; flex: 1;">หมุนวงล้อ</button>
                         <button class="btn btn-edit-wheel" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">แก้ไข</button>
-                        <button class="btn btn-delete-wheel" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--danger); color: white;">ลบ</button>
+                        <button class="btn btn-delete-wheel" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ef4444; color: white;">ลบ</button>
                     </div>
                 `;
 
