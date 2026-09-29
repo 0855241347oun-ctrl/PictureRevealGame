@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const wheelPlaySection = document.getElementById('wheel-play-mode');
     const wordSection = document.getElementById('word-mode');
     const btnWordMode = document.getElementById('btn-word-mode');
+    const scoreSection = document.getElementById('score-mode');
+    const btnScoreMode = document.getElementById('btn-score-mode');
 
     // Home Elements
     const btnHomeCreate = document.getElementById('btn-home-create');
@@ -153,6 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnHomeWordGame) {
         btnHomeWordGame.addEventListener('click', () => switchTab('word'));
     }
+    if (btnScoreMode) {
+        btnScoreMode.addEventListener('click', () => switchTab('score'));
+    }
     
     if (btnWordRandom) {
         let isSpinningWord = false;
@@ -244,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreatorMode.classList.remove('active');
         btnWheelMode.classList.remove('active');
         if (btnWordMode) btnWordMode.classList.remove('active');
+        if (btnScoreMode) btnScoreMode.classList.remove('active');
         
         homeSection.classList.remove('active');
         playerSection.classList.remove('active');
@@ -251,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wheelSection.classList.remove('active');
         wheelPlaySection.classList.remove('active');
         if (wordSection) wordSection.classList.remove('active');
+        if (scoreSection) scoreSection.classList.remove('active');
         
         btnPlayerMode.style.display = 'none';
 
@@ -290,6 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tab === 'word') {
             if (btnWordMode) btnWordMode.classList.add('active');
             if (wordSection) wordSection.classList.add('active');
+        } else if (tab === 'score') {
+            if (btnScoreMode) btnScoreMode.classList.add('active');
+            if (scoreSection) scoreSection.classList.add('active');
         }
     }
 
