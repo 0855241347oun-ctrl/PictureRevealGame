@@ -53,10 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const penaltiesList = [
         "กระโดดตบ 20 ครั้ง",
         "สควอท 15 ครั้ง",
-        "วิ่งอยู่กับที่ 30 วินาที",
         "วิดพื้น 15 ครั้ง",
-        "แพลงก์ 30 วินาที",
-        "ซิทอัพ 10 ครั้ง"
     ];
 
     // State
