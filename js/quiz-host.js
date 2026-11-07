@@ -1,10 +1,11 @@
 /**
  * Quiz Host Logic (ใช่ หรือ มั่ว? พร้อมเครื่องตอบสแกน QR)
  * - สุ่มโจทย์ 50 ข้อ
- * - ตั้งเวลา 10, 15, 20, 30, 60 วิ
- * - กดเริ่ม -> เวลานับถอยหลัง
- * - เครื่องตอบกด "ใช่" หรือ "มั่ว" -> เวลาหยุดทันที แสดงผลคำตอบ
- * - ผู้คุมโจทย์กดเริ่มต่อ หรือกด "ข้อต่อไป" -> วนลูปเวลาต่อได้เรื่อยๆ
+ * - ตั้งเวลา 10, 15, 20, 30, 60 วิ (หรือตามที่เลือก)
+ * - กดเริ่ม -> เวลานับถอยหลังพร้อมเสียงเตือนชัดเจน
+ * - เครื่องตอบกด "ใช่" หรือ "มั่ว" -> เวลาหยุดทันที
+ * - กด "ข้อต่อไป & ลูปเวลาต่อ" -> รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ ไม่ค้างเวลาเดิม!
+ * - QR Code แสดงชัดเจนพร้อมรองรับทั้ง Local IP, ngrok, localhost, file
  */
 (function() {
     let roomId = localStorage.getItem('prg_quiz_room_id');
@@ -28,7 +29,7 @@
     let status = 'IDLE'; // 'IDLE', 'RUNNING', 'PAUSED_ANSWERED', 'PAUSED_MANUAL', 'TIME_UP'
     let lastPlayerAnswer = null; // 'YES', 'NO', null
 
-    // Audio SFX Synthesis
+    // Audio SFX Synthesis (ดัง ชัด ฟังง่าย ไม่พึ่งไฟล์ภายนอก)
     let audioCtx = null;
     function getAudioCtx() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -36,41 +37,83 @@
         return audioCtx;
     }
 
-    function playTone(freq, dur = 0.12, type = 'sine', vol = 0.2) {
+    // เสียงติ๊กนับถอยหลังชัดๆ
+    function playTickSound(isUrgent = false) {
         try {
             const ctx = getAudioCtx();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(vol, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+            osc.type = isUrgent ? 'sawtooth' : 'sine';
+            osc.frequency.setValueAtTime(isUrgent ? 880 : 520, ctx.currentTime);
+            gain.gain.setValueAtTime(isUrgent ? 0.35 : 0.18, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isUrgent ? 0.08 : 0.05));
             osc.connect(gain);
             gain.connect(ctx.destination);
             osc.start();
-            osc.stop(ctx.currentTime + dur);
+            osc.stop(ctx.currentTime + (isUrgent ? 0.08 : 0.05));
         } catch(e) {}
     }
 
-    function playCorrectSound() {
-        playTone(523.25, 0.1, 'triangle', 0.25);
-        setTimeout(() => playTone(659.25, 0.1, 'triangle', 0.25), 100);
-        setTimeout(() => playTone(783.99, 0.25, 'triangle', 0.25), 200);
-    }
-
+    // เสียงเมื่อมีคนกดตอบ (Buzzer)
     function playBuzzerSound() {
-        playTone(320, 0.2, 'sawtooth', 0.3);
+        try {
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.4, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.25);
+        } catch(e) {}
     }
 
-    function playTickSound() {
-        playTone(800, 0.04, 'square', 0.08);
+    // เสียงเฉลยถูก (Fanfare)
+    function playCorrectSound() {
+        try {
+            const ctx = getAudioCtx();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const start = ctx.currentTime + idx * 0.08;
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0.3, start);
+                gain.gain.exponentialRampToValueAtTime(0.01, start + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(start);
+                osc.stop(start + 0.2);
+            });
+        } catch(e) {}
     }
 
+    // เสียงหมดเวลา (Alarm Bell)
     function playAlarmSound() {
-        playTone(250, 0.35, 'sawtooth', 0.35);
+        try {
+            const ctx = getAudioCtx();
+            for (let i = 0; i < 3; i++) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const start = ctx.currentTime + i * 0.14;
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(320, start);
+                gain.gain.setValueAtTime(0.35, start);
+                gain.gain.exponentialRampToValueAtTime(0.01, start + 0.12);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(start);
+                osc.stop(start + 0.12);
+            }
+        } catch(e) {}
     }
 
-    // Communication: Broadcast state to all connected devices
+    // Broadcast state to all connected buzzers
     function broadcastState() {
         const payload = {
             type: 'STATE_UPDATE',
@@ -83,7 +126,9 @@
         };
 
         clientConns.forEach(c => {
-            if (c.open) c.send(payload);
+            if (c.open) {
+                try { c.send(payload); } catch(e) {}
+            }
         });
 
         if (bc) {
@@ -101,7 +146,6 @@
             updateConnectedCount();
             broadcastState();
         } else if (data.type === 'ANSWER_SUBMITTED') {
-            // Player buzzed! Stop timer immediately!
             if (status === 'RUNNING') {
                 pauseOnAnswer(data.answer);
             }
@@ -174,6 +218,7 @@
         const qrDrawer = document.getElementById('quiz-qr-drawer');
         const qrCodeBox = document.getElementById('quiz-qrcode-box');
         const qrLinkText = document.getElementById('quiz-link-text');
+        const customUrlInput = document.getElementById('quiz-custom-url');
 
         const timerDisplay = document.getElementById('quiz-timer-display');
         const timerBar = document.getElementById('quiz-timer-bar');
@@ -191,23 +236,27 @@
         const btnPauseTimer = document.getElementById('quiz-btn-pause-timer');
         const btnNextLoop = document.getElementById('quiz-btn-next-loop');
 
-        // Setup Buzzer URL & QR Code
-        const buzzerUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'buzzer.html?room=' + roomId;
+        // Resolve Buzzer URL (Works with IP, Localhost, File, Domain)
+        let baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '');
+        if (baseUrl.startsWith('file:///')) {
+            // If running directly as local file, suggest local server IP or standard path
+            baseUrl = 'http://localhost:8000/';
+        }
+        let buzzerUrl = baseUrl + 'buzzer.html?room=' + roomId;
         if (qrLinkText) qrLinkText.textContent = buzzerUrl;
 
-        let qrGenerated = false;
-        function generateQrCode() {
-            if (qrGenerated || !qrCodeBox || typeof QRCode === 'undefined') return;
+        function renderQrCode(urlToEncode) {
+            if (!qrCodeBox || typeof QRCode === 'undefined') return;
             qrCodeBox.innerHTML = '';
             new QRCode(qrCodeBox, {
-                text: buzzerUrl,
-                width: 160,
-                height: 160,
+                text: urlToEncode,
+                width: 180,
+                height: 180,
                 colorDark: '#0f172a',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M
             });
-            qrGenerated = true;
+            if (qrLinkText) qrLinkText.textContent = urlToEncode;
         }
 
         if (btnToggleQr) {
@@ -215,7 +264,18 @@
                 if (!qrDrawer) return;
                 const isHidden = qrDrawer.style.display === 'none';
                 qrDrawer.style.display = isHidden ? 'block' : 'none';
-                if (isHidden) generateQrCode();
+                if (isHidden) {
+                    const targetUrl = (customUrlInput && customUrlInput.value.trim()) ? customUrlInput.value.trim() : buzzerUrl;
+                    renderQrCode(targetUrl);
+                }
+            });
+        }
+
+        if (customUrlInput) {
+            customUrlInput.value = buzzerUrl;
+            customUrlInput.addEventListener('input', () => {
+                const val = customUrlInput.value.trim() || buzzerUrl;
+                renderQrCode(val);
             });
         }
 
@@ -225,7 +285,7 @@
             });
         }
 
-        // Duration Select
+        // Duration Select (10, 15, 20, 30, 60 วินาที)
         if (timeSelect) {
             durationSeconds = parseInt(timeSelect.value, 10) || 15;
             remainingMs = durationSeconds * 1000;
@@ -243,7 +303,7 @@
             const sec = Math.max(0, Math.ceil(remainingMs / 1000));
             if (timerDisplay) {
                 timerDisplay.textContent = sec;
-                if (sec <= 3 && status === 'RUNNING') {
+                if (sec <= 4 && status === 'RUNNING') {
                     timerDisplay.classList.add('warning');
                 } else {
                     timerDisplay.classList.remove('warning');
@@ -256,7 +316,8 @@
             }
         }
 
-        function loadQuestion(idx) {
+        // Load Question & Reset Timer to Full Duration
+        function loadQuestion(idx, autoResetTimer = true) {
             if (typeof TRICKY_QUESTIONS === 'undefined' || TRICKY_QUESTIONS.length === 0) return;
             currentQIndex = (idx + TRICKY_QUESTIONS.length) % TRICKY_QUESTIONS.length;
             currentQuestion = TRICKY_QUESTIONS[currentQIndex];
@@ -270,9 +331,11 @@
             // Reset player answer
             lastPlayerAnswer = null;
 
-            // Reset timer
-            remainingMs = durationSeconds * 1000;
-            renderTimer();
+            // CRITICAL FIX: Reset remainingMs to full durationSeconds every time a new question is loaded!
+            if (autoResetTimer) {
+                remainingMs = durationSeconds * 1000;
+                renderTimer();
+            }
 
             setStatus('IDLE');
         }
@@ -322,6 +385,7 @@
 
         function startTimer() {
             if (status === 'RUNNING') return;
+            // If starting from 0 or answer pause, ensure time is available
             if (remainingMs <= 0) {
                 remainingMs = durationSeconds * 1000;
             }
@@ -348,11 +412,12 @@
                 const currentSec = Math.ceil(remainingMs / 1000);
                 if (currentSec !== lastSecTicked) {
                     lastSecTicked = currentSec;
-                    if (currentSec <= 5) playTickSound();
+                    // Play tick sound every second, and urgent pitch on last 4 seconds
+                    playTickSound(currentSec <= 4);
                 }
 
                 renderTimer();
-            }, 50);
+            }, 40);
         }
 
         function pauseTimerManual() {
@@ -365,8 +430,6 @@
             lastPlayerAnswer = ans; // 'YES' or 'NO'
             playBuzzerSound();
             setStatus('PAUSED_ANSWERED');
-
-            // Show Reveal Result Box
             showAnswerReveal(ans);
         }
 
@@ -418,7 +481,7 @@
             btnRandomQ.addEventListener('click', () => {
                 clearInterval(timerInterval);
                 const nextIdx = Math.floor(Math.random() * (TRICKY_QUESTIONS.length || 1));
-                loadQuestion(nextIdx);
+                loadQuestion(nextIdx, true);
             });
         }
 
@@ -434,17 +497,19 @@
             });
         }
 
+        // ข้อต่อไป & ลูปเวลาต่อ: รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ!
         if (btnNextLoop) {
             btnNextLoop.addEventListener('click', () => {
                 clearInterval(timerInterval);
-                // Next question & start immediately (loop)
-                loadQuestion(currentQIndex + 1);
+                // 1. Next question & reset time
+                loadQuestion(currentQIndex + 1, true);
+                // 2. Start loop immediately
                 startTimer();
             });
         }
 
         // Initial Load
-        loadQuestion(0);
+        loadQuestion(0, true);
         updateConnectedCount();
     };
 

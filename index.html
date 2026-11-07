@@ -285,10 +285,17 @@
                         <!-- QR Code Modal / Drawer -->
                         <div id="quiz-qr-drawer" class="quiz-qr-drawer" style="display: none;">
                             <div class="quiz-qr-card">
-                                <h4>📱 สแกน QR Code ด้วยมือถือเพื่อเป็น "เครื่องตอบ"</h4>
+                                <h4>📱 สแกน QR Code เพื่อเปิด "เครื่องตอบ"</h4>
                                 <div id="quiz-qrcode-box" class="quiz-qrcode-box"></div>
-                                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">
-                                    หรือคัดลอกลิงก์: <span id="quiz-link-text" style="font-family: monospace; color: var(--primary); word-break: break-all;"></span>
+                                
+                                <div style="margin-top: 0.75rem; width: 100%; max-width: 480px; text-align: left;">
+                                    <label for="quiz-custom-url" style="font-size: 0.82rem; font-weight: 700; color: #475569;">
+                                        🌐 ที่อยู่ลิงก์สำหรับสร้าง QR (แก้ไขเป็น IP เช่น http://192.168.1.38:8000/buzzer.html หรือโดเมนเว็บจริงได้):
+                                    </label>
+                                    <input type="text" id="quiz-custom-url" style="width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.8rem; border-radius: 0.6rem; border: 1.5px solid #cbd5e1; font-family: monospace; font-size: 0.88rem; box-sizing: border-box;">
+                                </div>
+                                <div style="font-size: 0.85rem; color: #64748b;">
+                                    หรือเปิดบนเครื่องนี้: <span id="quiz-link-text" style="font-family: monospace; color: var(--primary); word-break: break-all;"></span>
                                 </div>
                             </div>
                         </div>
