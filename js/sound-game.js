@@ -1,8 +1,8 @@
 /**
- * Mystery Sound Guessing Game Logic
+ * Mystery Sound Guessing Game Logic (Always Random Edition)
  */
 (function() {
-    let currentSoundIndex = 0;
+    let currentSoundIndex = -1;
     let filteredSounds = [...MYSTERY_SOUNDS_DATA];
     let isRevealed = false;
     let isHintShown = false;
@@ -11,8 +11,10 @@
     let timerId = null;
     let timeLeft = 15;
     let selectedCategory = 'all';
+    let playedCount = 0;
+    let recentHistory = []; // Track last 10 played to avoid immediate duplicates
 
-    // Simple Web Audio Sound Effects for buttons & applause
+    // Sound effect on reveal
     function playWinJingle() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -30,7 +32,7 @@
                     gain.connect(ctx.destination);
                     osc.start();
                     osc.stop(ctx.currentTime + 0.35);
-                }, idx * 90);
+                }, idx * 80);
             });
         } catch(e) {}
     }
@@ -38,16 +40,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Elements
         const cardInner = document.getElementById('sg-card-inner');
-        const questionNumber = document.getElementById('sg-question-number');
+        const playedCountBadge = document.getElementById('sg-played-count');
         const categoryBadge = document.getElementById('sg-category-badge');
         const btnPlaySound = document.getElementById('sg-btn-play-sound');
         const btnHint = document.getElementById('sg-btn-hint');
         const hintBox = document.getElementById('sg-hint-box');
         const hintText = document.getElementById('sg-hint-text');
         const btnReveal = document.getElementById('sg-btn-reveal');
-        const btnNext = document.getElementById('sg-btn-next');
-        const btnPrev = document.getElementById('sg-btn-prev');
         const btnRandom = document.getElementById('sg-btn-random');
+        const btnRandomNext = document.getElementById('sg-btn-random-next');
         const categoryFilter = document.getElementById('sg-category-filter');
         const timerBadge = document.getElementById('sg-timer-badge');
         const visualizer = document.getElementById('sg-visualizer');
@@ -69,8 +70,8 @@
         }
 
         function playSound() {
+            if (currentSoundIndex < 0 || !filteredSounds[currentSoundIndex]) return;
             const soundItem = filteredSounds[currentSoundIndex];
-            if (!soundItem) return;
 
             stopCurrentAudio();
 
@@ -82,8 +83,10 @@
             if (visualizer) visualizer.classList.add('playing');
 
             currentAudio.play().catch(err => {
-                console.warn('Audio play failed, using fallback tone', err);
-                playFallbackSynth();
+                console.warn('Audio play error:', err);
+                isPlaying = false;
+                updatePlayButtonUI();
+                if (visualizer) visualizer.classList.remove('playing');
             });
 
             currentAudio.onended = () => {
@@ -130,8 +133,38 @@
             }
         }
 
-        function loadQuestion(index) {
-            if (index < 0 || index >= filteredSounds.length) return;
+        // Random pick without repeating recent items
+        function pickRandomSound() {
+            if (filteredSounds.length === 0) return;
+            if (filteredSounds.length === 1) {
+                loadSound(0);
+                return;
+            }
+
+            let availableIndices = [];
+            for (let i = 0; i < filteredSounds.length; i++) {
+                if (!recentHistory.includes(filteredSounds[i].key) && i !== currentSoundIndex) {
+                    availableIndices.push(i);
+                }
+            }
+
+            if (availableIndices.length === 0) {
+                // Reset history if all played
+                recentHistory = [];
+                for (let i = 0; i < filteredSounds.length; i++) {
+                    if (i !== currentSoundIndex) availableIndices.push(i);
+                }
+            }
+
+            const chosen = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+            recentHistory.push(filteredSounds[chosen].key);
+            if (recentHistory.length > 15) recentHistory.shift();
+
+            playedCount++;
+            loadSound(chosen);
+        }
+
+        function loadSound(index) {
             currentSoundIndex = index;
             isRevealed = false;
             isHintShown = false;
@@ -149,8 +182,8 @@
             }
 
             // Text elements
-            if (questionNumber) {
-                questionNumber.textContent = `ข้อที่ ${currentSoundIndex + 1} / ${filteredSounds.length}`;
+            if (playedCountBadge) {
+                playedCountBadge.textContent = `🎲 เล่นไปแล้ว ${playedCount} ข้อ`;
             }
             if (categoryBadge) {
                 categoryBadge.textContent = item.category;
@@ -168,6 +201,11 @@
             if (revealTitle) revealTitle.textContent = item.title;
             if (revealEmoji) revealEmoji.textContent = item.emoji;
             if (revealCategory) revealCategory.textContent = `หมวดหมู่: ${item.category}`;
+
+            // Automatically play sound on new random pick for instant fun
+            setTimeout(() => {
+                playSound();
+            }, 300);
         }
 
         function revealAnswer() {
@@ -179,7 +217,7 @@
         }
 
         function showHint() {
-            if (isHintShown) return;
+            if (isHintShown || currentSoundIndex < 0) return;
             isHintShown = true;
             const item = filteredSounds[currentSoundIndex];
             if (hintText) hintText.textContent = `💡 คำใบ้: ${item.hint}`;
@@ -196,7 +234,7 @@
                 } else {
                     filteredSounds = MYSTERY_SOUNDS_DATA.filter(it => it.category === selectedCategory);
                 }
-                loadQuestion(0);
+                pickRandomSound();
             });
         }
 
@@ -211,29 +249,12 @@
         if (btnHint) btnHint.addEventListener('click', showHint);
         if (btnReveal) btnReveal.addEventListener('click', revealAnswer);
 
-        if (btnNext) {
-            btnNext.addEventListener('click', () => {
-                const nextIndex = (currentSoundIndex + 1) % filteredSounds.length;
-                loadQuestion(nextIndex);
-            });
-        }
-
-        if (btnPrev) {
-            btnPrev.addEventListener('click', () => {
-                const prevIndex = (currentSoundIndex - 1 + filteredSounds.length) % filteredSounds.length;
-                loadQuestion(prevIndex);
-            });
-        }
-
         if (btnRandom) {
-            btnRandom.addEventListener('click', () => {
-                if (filteredSounds.length <= 1) return;
-                let rnd;
-                do {
-                    rnd = Math.floor(Math.random() * filteredSounds.length);
-                } while (rnd === currentSoundIndex);
-                loadQuestion(rnd);
-            });
+            btnRandom.addEventListener('click', pickRandomSound);
+        }
+
+        if (btnRandomNext) {
+            btnRandomNext.addEventListener('click', pickRandomSound);
         }
 
         // Keyboard shortcuts
@@ -246,19 +267,16 @@
                 if (isPlaying) stopCurrentAudio();
                 else playSound();
             } else if (e.code === 'KeyR' || e.code === 'Enter') {
-                revealAnswer();
+                if (!isRevealed) revealAnswer();
+                else pickRandomSound();
             } else if (e.code === 'KeyH') {
                 showHint();
-            } else if (e.code === 'ArrowRight') {
-                const nextIndex = (currentSoundIndex + 1) % filteredSounds.length;
-                loadQuestion(nextIndex);
-            } else if (e.code === 'ArrowLeft') {
-                const prevIndex = (currentSoundIndex - 1 + filteredSounds.length) % filteredSounds.length;
-                loadQuestion(prevIndex);
+            } else if (e.code === 'KeyN' || e.code === 'ArrowRight') {
+                pickRandomSound();
             }
         });
 
-        // Initialize question 0
-        loadQuestion(0);
+        // Start with a random sound immediately!
+        pickRandomSound();
     });
 })();

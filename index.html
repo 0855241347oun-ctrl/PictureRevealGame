@@ -254,17 +254,17 @@
                     <!-- Title -->
                     <div>
                         <h2 style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #0284c7, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.2rem; text-align: center;">
-                            🔊 เกมทายเสียงปริศนา (Mystery Sound)
+                            🔊 เกมทายเสียงปริศนา (โหมดสุ่มตลอด)
                         </h2>
                         <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500; text-align: center; margin: 0;">
-                            ฟังเสียงแล้วทายว่าคืออะไร! มี 50 เสียงสุดฮิตให้เล่น
+                            ฟังเสียงแท้จากธรรมชาติและชีวิตประจำวัน แล้วทายว่าคือเสียงอะไร! (กด Space เพื่อฟังซ้ำ)
                         </p>
                     </div>
 
-                    <!-- Top Status Bar: Question Number & Category Filter -->
+                    <!-- Top Status Bar -->
                     <div class="sg-topbar">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span id="sg-question-number" class="sg-badge-question">ข้อที่ 1 / 50</span>
+                            <span id="sg-played-count" class="sg-badge-question">🎲 สุ่มเสียงปริศนา</span>
                             <span id="sg-category-badge" class="sg-badge-cat">สัตว์</span>
                         </div>
 
@@ -272,12 +272,14 @@
                             <span id="sg-timer-badge" style="font-weight: 800; font-size: 1.05rem; color: #3b82f6;">⏱️ 15s</span>
                             
                             <select id="sg-category-filter" style="padding: 0.4rem 0.8rem; border-radius: 1rem; font-weight: 700; width: auto; color: #334155;">
-                                <option value="all">📂 หมวดหมู่ทั้งหมด (50 เสียง)</option>
-                                <option value="สัตว์">🐾 เสียงสัตว์ (10)</option>
-                                <option value="ของใช้ในบ้าน">🏠 ของใช้ในบ้าน (10)</option>
-                                <option value="ครัวและอาหาร">🍳 ครัวและอาหาร (10)</option>
-                                <option value="ยานพาหนะ">🚗 ยานพาหนะ (10)</option>
-                                <option value="คนและธรรมชาติ">👤 คนและธรรมชาติ (10)</option>
+                                <option value="all">📂 สุ่มจากทุกหมวด (50 เสียง)</option>
+                                <option value="สัตว์">🐾 สัตว์</option>
+                                <option value="ของใช้ในบ้าน">🏠 ของใช้ในบ้าน</option>
+                                <option value="ยานพาหนะ">🚗 ยานพาหนะ</option>
+                                <option value="ธรรมชาติ">🌧️ ธรรมชาติ</option>
+                                <option value="กีฬา">🏀 กีฬา</option>
+                                <option value="เครื่องมือ">🪓 เครื่องมือ</option>
+                                <option value="สนุกสนาน">🌀 สนุกสนาน</option>
                             </select>
                         </div>
                     </div>
@@ -299,7 +301,7 @@
                                 </div>
 
                                 <div style="color: var(--text-muted); font-size: 1.05rem; font-weight: 600; margin-bottom: 1.25rem;">
-                                    กดปุ่มด้านล่างเพื่อฟังเสียงปริศนา
+                                    กำลังเล่นเสียงอัตโนมัติ (หรือคลิกเพื่อฟังซ้ำ)
                                 </div>
 
                                 <button id="sg-btn-play-sound" class="btn primary sg-btn-play">
@@ -313,11 +315,14 @@
                                     <img id="sg-reveal-image" src="" alt="คำเฉลย">
                                 </div>
                                 <div class="sg-reveal-info">
-                                    <div id="sg-reveal-emoji" style="font-size: 2.5rem; margin-bottom: 0.2rem;">🐱</div>
-                                    <h3 id="sg-reveal-title" style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0 0 0.25rem 0;">
+                                    <div id="sg-reveal-emoji" style="font-size: 2.3rem; margin-bottom: 0.2rem;">🐱</div>
+                                    <h3 id="sg-reveal-title" style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0 0 0.2rem 0;">
                                         คำเฉลย
                                     </h3>
-                                    <span id="sg-reveal-category" style="color: #64748b; font-size: 0.95rem; font-weight: 600;"></span>
+                                    <span id="sg-reveal-category" style="color: #64748b; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;"></span>
+                                    <button id="sg-btn-random-next" class="btn primary" style="border-radius: 1.5rem; padding: 0.6rem 1.6rem; font-weight: 800; font-size: 1rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+                                        🎲 สุ่มข้อต่อไปทันที! 🚀
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -328,28 +333,17 @@
                         <span id="sg-hint-text" style="color: #854d0e; font-weight: 700; font-size: 1.05rem;"></span>
                     </div>
 
-                    <!-- Bottom Actions Bar -->
-                    <div class="sg-actions-bar">
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <button id="sg-btn-prev" class="btn" style="border-radius: 1.5rem; padding: 0.6rem 1.1rem; background: #f1f5f9; color: #475569; font-weight: 700;">
-                                ⬅️ ก่อนหน้า
-                            </button>
-                            <button id="sg-btn-next" class="btn" style="border-radius: 1.5rem; padding: 0.6rem 1.1rem; background: #f1f5f9; color: #475569; font-weight: 700;">
-                                ถัดไป ➡️
-                            </button>
-                            <button id="sg-btn-random" class="btn" style="border-radius: 1.5rem; padding: 0.6rem 1.1rem; background: #f1f5f9; color: #475569; font-weight: 700;">
-                                🎲 สุ่มข้อ
-                            </button>
-                        </div>
-
-                        <div style="display: flex; gap: 0.6rem; align-items: center;">
-                            <button id="sg-btn-hint" class="btn" style="border-radius: 1.5rem; padding: 0.6rem 1.3rem; background: #fef9c3; color: #854d0e; font-weight: 700;">
-                                💡 ขอคำใบ้
-                            </button>
-                            <button id="sg-btn-reveal" class="btn primary" style="border-radius: 1.5rem; padding: 0.6rem 1.5rem; background: linear-gradient(135deg, #10b981, #059669); font-weight: 800;">
-                                🎉 เฉลย!
-                            </button>
-                        </div>
+                    <!-- Bottom Actions Bar (Random Mode) -->
+                    <div class="sg-actions-bar" style="justify-content: center; gap: 1rem;">
+                        <button id="sg-btn-random" class="btn" style="border-radius: 1.5rem; padding: 0.75rem 1.8rem; background: #eff6ff; color: #2563eb; font-weight: 800; font-size: 1.05rem; border: 2px solid #bfdbfe;">
+                            🎲 สุ่มเสียงใหม่
+                        </button>
+                        <button id="sg-btn-hint" class="btn" style="border-radius: 1.5rem; padding: 0.75rem 1.5rem; background: #fef9c3; color: #854d0e; font-weight: 700; font-size: 1rem;">
+                            💡 ขอคำใบ้
+                        </button>
+                        <button id="sg-btn-reveal" class="btn primary" style="border-radius: 1.5rem; padding: 0.75rem 2rem; background: linear-gradient(135deg, #10b981, #059669); font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                            🎉 เฉลย!
+                        </button>
                     </div>
                 </div>
             </section>
