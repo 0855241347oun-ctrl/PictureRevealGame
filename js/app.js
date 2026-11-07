@@ -156,6 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnHomeWordGame) {
         btnHomeWordGame.addEventListener('click', () => switchTab('word'));
     }
+    if (btnQuizMode) {
+        btnQuizMode.addEventListener('click', () => switchTab('quiz'));
+    }
+    if (btnHomeQuizGame) {
+        btnHomeQuizGame.addEventListener('click', () => switchTab('quiz'));
+    }
     
     if (btnWordRandom) {
         let isSpinningWord = false;
@@ -247,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreatorMode.classList.remove('active');
         btnWheelMode.classList.remove('active');
         if (btnWordMode) btnWordMode.classList.remove('active');
+        if (btnQuizMode) btnQuizMode.classList.remove('active');
         
         homeSection.classList.remove('active');
         playerSection.classList.remove('active');
@@ -254,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wheelSection.classList.remove('active');
         wheelPlaySection.classList.remove('active');
         if (wordSection) wordSection.classList.remove('active');
+        if (quizSection) quizSection.classList.remove('active');
         
         btnPlayerMode.style.display = 'none';
 
@@ -293,6 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tab === 'word') {
             if (btnWordMode) btnWordMode.classList.add('active');
             if (wordSection) wordSection.classList.add('active');
+        } else if (tab === 'quiz') {
+            if (btnQuizMode) btnQuizMode.classList.add('active');
+            if (quizSection) quizSection.classList.add('active');
+            if (window.initQuizHost) window.initQuizHost();
         }
     }
 
