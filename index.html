@@ -312,7 +312,7 @@
                             </div>
 
                             <!-- Question Card -->
-                            <div class="quiz-question-card">
+                            <div id="quiz-question-card" class="quiz-question-card">
                                 <div class="quiz-q-meta">
                                     <span id="quiz-q-num" class="quiz-q-pill">ข้อที่ 1 / 50</span>
                                     <span id="quiz-status-pill" class="quiz-status-pill ready">พร้อมเริ่ม</span>
@@ -321,7 +321,12 @@
                                     กดปุ่ม "🎲 สุ่มโจทย์ใหม่" หรือ "▶️ เริ่มจับเวลา" เพื่อเริ่มเล่น!
                                 </h2>
 
-                                <!-- Answer Reveal Box (Hidden while running) -->
+                                <!-- Sub Answer Hint for Question Master (ตัวหนังสือเล็กๆ ใต้คำถาม) -->
+                                <div id="quiz-master-hint" class="quiz-master-hint">
+                                    เฉลยสำหรับผู้ถาม: <span id="quiz-master-hint-ans">--</span> <span id="quiz-master-hint-exp"></span>
+                                </div>
+
+                                <!-- Answer Reveal Box (Shown after player answers or time up) -->
                                 <div id="quiz-reveal-box" class="quiz-reveal-box" style="display: none;">
                                     <div class="quiz-reveal-header">
                                         <span id="quiz-player-ans-badge" class="quiz-ans-badge"></span>

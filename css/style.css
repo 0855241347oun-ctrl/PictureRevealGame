@@ -1075,11 +1075,70 @@ select:focus {
 }
 
 .quiz-q-text {
-    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
-    font-weight: 800;
+    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+    font-weight: 700;
     color: #1e293b;
-    line-height: 1.35;
-    margin: 0;
+    line-height: 1.5;
+    margin: 0.5rem 0;
+    word-break: break-word;
+}
+
+/* Master Hint Under Question (ตัวเล็กๆ ใต้คำถาม) */
+.quiz-master-hint {
+    margin-top: 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    display: inline-block;
+    padding: 0.35rem 0.95rem;
+    border-radius: 99px;
+    border: 1px solid #e2e8f0;
+}
+
+.quiz-master-hint-badge {
+    font-weight: 800;
+}
+.quiz-master-hint-badge.yes {
+    color: #16a34a;
+}
+.quiz-master-hint-badge.no {
+    color: #dc2626;
+}
+
+/* Answer Flash Effect (สีกระพริบตามคำตอบ: เขียว หรือ แดง) */
+.quiz-question-card.flash-yes {
+    animation: flashYes 0.6s ease-in-out infinite alternate;
+}
+
+.quiz-question-card.flash-no {
+    animation: flashNo 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes flashYes {
+    0% {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25), 0 12px 30px rgba(34, 197, 94, 0.2);
+        background: #f0fdf4;
+    }
+    100% {
+        border-color: #15803d;
+        box-shadow: 0 0 0 12px rgba(34, 197, 94, 0.45), 0 16px 40px rgba(34, 197, 94, 0.35);
+        background: #dcfce7;
+    }
+}
+
+@keyframes flashNo {
+    0% {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.25), 0 12px 30px rgba(239, 68, 68, 0.2);
+        background: #fef2f2;
+    }
+    100% {
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.45), 0 16px 40px rgba(239, 68, 68, 0.35);
+        background: #fee2e2;
+    }
 }
 
 /* Reveal Box */

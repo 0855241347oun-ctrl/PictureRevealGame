@@ -2,10 +2,11 @@
  * Quiz Host Logic (ใช่ หรือ มั่ว? พร้อมเครื่องตอบสแกน QR)
  * - สุ่มโจทย์ 50 ข้อ
  * - ตั้งเวลา 10, 15, 20, 30, 60 วิ (หรือตามที่เลือก)
- * - กดเริ่ม -> เวลานับถอยหลังพร้อมเสียงเตือนชัดเจน
- * - เครื่องตอบกด "ใช่" หรือ "มั่ว" -> เวลาหยุดทันที
- * - กด "ข้อต่อไป & ลูปเวลาต่อ" -> รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ ไม่ค้างเวลาเดิม!
- * - QR Code แสดงชัดเจนพร้อมรองรับทั้ง Local IP, ngrok, localhost, file
+ * - แสดงเวลานับถอยหลังเป็น .00 วินาทีชัดเจน
+ * - เมื่อเครื่องตอบกดส่งคำตอบ: เวลาหยุดทันที + ตัวการ์ดและปุ่มกระพริบตามสีคำตอบ (เขียว = ใช่, แดง = มั่ว)
+ * - หากผู้ถามกดปุ่ม "▶️ เล่นต่อ (นับเวลาต่อ)": จับเวลาต่อจากเวลาเดิมที่ค้างไว้
+ * - หากกด "ข้อต่อไป & ลูปเวลาต่อ": รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ
+ * - มีเฉลยตัวเล็กๆ ใต้คำถามให้ผู้ถามดูได้ล่วงหน้า
  */
 (function() {
     let roomId = localStorage.getItem('prg_quiz_room_id');
@@ -29,7 +30,7 @@
     let status = 'IDLE'; // 'IDLE', 'RUNNING', 'PAUSED_ANSWERED', 'PAUSED_MANUAL', 'TIME_UP'
     let lastPlayerAnswer = null; // 'YES', 'NO', null
 
-    // Audio SFX Synthesis (ดัง ชัด ฟังง่าย ไม่พึ่งไฟล์ภายนอก)
+    // Audio SFX Synthesis
     let audioCtx = null;
     function getAudioCtx() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -37,7 +38,6 @@
         return audioCtx;
     }
 
-    // เสียงติ๊กนับถอยหลังชัดๆ
     function playTickSound(isUrgent = false) {
         try {
             const ctx = getAudioCtx();
@@ -54,7 +54,6 @@
         } catch(e) {}
     }
 
-    // เสียงเมื่อมีคนกดตอบ (Buzzer)
     function playBuzzerSound() {
         try {
             const ctx = getAudioCtx();
@@ -72,7 +71,6 @@
         } catch(e) {}
     }
 
-    // เสียงเฉลยถูก (Fanfare)
     function playCorrectSound() {
         try {
             const ctx = getAudioCtx();
@@ -93,7 +91,6 @@
         } catch(e) {}
     }
 
-    // เสียงหมดเวลา (Alarm Bell)
     function playAlarmSound() {
         try {
             const ctx = getAudioCtx();
@@ -113,7 +110,6 @@
         } catch(e) {}
     }
 
-    // Broadcast state to all connected buzzers
     function broadcastState() {
         const payload = {
             type: 'STATE_UPDATE',
@@ -167,7 +163,6 @@
         }
     }
 
-    // Initialize PeerJS Host
     function initHostPeer() {
         if (peer) return;
         try {
@@ -208,7 +203,6 @@
         });
     }
 
-    // --- DOM Elements & Logic ---
     window.initQuizHost = function() {
         initHostPeer();
 
@@ -225,6 +219,11 @@
         const qNumEl = document.getElementById('quiz-q-num');
         const statusPill = document.getElementById('quiz-status-pill');
         const qTextEl = document.getElementById('quiz-question-text');
+        const qCard = document.getElementById('quiz-question-card');
+
+        // Master Hint under question
+        const masterHintAns = document.getElementById('quiz-master-hint-ans');
+        const masterHintExp = document.getElementById('quiz-master-hint-exp');
 
         const revealBox = document.getElementById('quiz-reveal-box');
         const playerAnsBadge = document.getElementById('quiz-player-ans-badge');
@@ -236,10 +235,8 @@
         const btnPauseTimer = document.getElementById('quiz-btn-pause-timer');
         const btnNextLoop = document.getElementById('quiz-btn-next-loop');
 
-        // Resolve Buzzer URL (Works with IP, Localhost, File, Domain)
         let baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '');
         if (baseUrl.startsWith('file:///')) {
-            // If running directly as local file, suggest local server IP or standard path
             baseUrl = 'http://localhost:8000/';
         }
         let buzzerUrl = baseUrl + 'buzzer.html?room=' + roomId;
@@ -285,7 +282,6 @@
             });
         }
 
-        // Duration Select (10, 15, 20, 30, 60 วินาที)
         if (timeSelect) {
             durationSeconds = parseInt(timeSelect.value, 10) || 15;
             remainingMs = durationSeconds * 1000;
@@ -299,11 +295,12 @@
             });
         }
 
+        // Render Timer with .00 decimals
         function renderTimer() {
-            const sec = Math.max(0, Math.ceil(remainingMs / 1000));
+            const totalSec = Math.max(0, remainingMs / 1000);
             if (timerDisplay) {
-                timerDisplay.textContent = sec;
-                if (sec <= 4 && status === 'RUNNING') {
+                timerDisplay.textContent = totalSec.toFixed(2);
+                if (totalSec <= 4.0 && status === 'RUNNING') {
                     timerDisplay.classList.add('warning');
                 } else {
                     timerDisplay.classList.remove('warning');
@@ -316,7 +313,12 @@
             }
         }
 
-        // Load Question & Reset Timer to Full Duration
+        function clearAnswerFlash() {
+            if (qCard) {
+                qCard.classList.remove('flash-yes', 'flash-no');
+            }
+        }
+
         function loadQuestion(idx, autoResetTimer = true) {
             if (typeof TRICKY_QUESTIONS === 'undefined' || TRICKY_QUESTIONS.length === 0) return;
             currentQIndex = (idx + TRICKY_QUESTIONS.length) % TRICKY_QUESTIONS.length;
@@ -325,13 +327,21 @@
             if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
             if (qTextEl) qTextEl.textContent = currentQuestion.question;
 
-            // Hide answer reveal
-            if (revealBox) revealBox.style.display = 'none';
+            // Master Hint (เฉลยสำหรับผู้ถาม)
+            if (masterHintAns) {
+                const isYes = currentQuestion.answer === true;
+                masterHintAns.className = 'quiz-master-hint-badge ' + (isYes ? 'yes' : 'no');
+                masterHintAns.textContent = isYes ? 'ใช่ (⭕)' : 'มั่ว (❌)';
+            }
+            if (masterHintExp) {
+                masterHintExp.textContent = `— ${currentQuestion.explanation}`;
+            }
 
-            // Reset player answer
+            // Clear visual effects & answer
+            clearAnswerFlash();
+            if (revealBox) revealBox.style.display = 'none';
             lastPlayerAnswer = null;
 
-            // CRITICAL FIX: Reset remainingMs to full durationSeconds every time a new question is loaded!
             if (autoResetTimer) {
                 remainingMs = durationSeconds * 1000;
                 renderTimer();
@@ -358,6 +368,7 @@
                 statusPill.textContent = '⏳ กำลังจับเวลา...';
                 if (btnStartTimer) btnStartTimer.style.display = 'none';
                 if (btnPauseTimer) btnPauseTimer.style.display = 'inline-flex';
+                clearAnswerFlash();
             } else if (status === 'PAUSED_ANSWERED') {
                 statusPill.classList.add('answered');
                 statusPill.textContent = '🛑 ตอบแล้ว! เวลาหยุด';
@@ -385,7 +396,7 @@
 
         function startTimer() {
             if (status === 'RUNNING') return;
-            // If starting from 0 or answer pause, ensure time is available
+            // If starting from 0, reset to duration
             if (remainingMs <= 0) {
                 remainingMs = durationSeconds * 1000;
             }
@@ -412,12 +423,11 @@
                 const currentSec = Math.ceil(remainingMs / 1000);
                 if (currentSec !== lastSecTicked) {
                     lastSecTicked = currentSec;
-                    // Play tick sound every second, and urgent pitch on last 4 seconds
                     playTickSound(currentSec <= 4);
                 }
 
                 renderTimer();
-            }, 40);
+            }, 30);
         }
 
         function pauseTimerManual() {
@@ -426,10 +436,22 @@
         }
 
         function pauseOnAnswer(ans) {
+            // STOP TIMER IMMEDIATELY! Keep remainingMs as is
             clearInterval(timerInterval);
             lastPlayerAnswer = ans; // 'YES' or 'NO'
             playBuzzerSound();
             setStatus('PAUSED_ANSWERED');
+
+            // Flash effect according to answer (Green for YES, Red for NO)
+            if (qCard) {
+                clearAnswerFlash();
+                if (ans === 'YES') {
+                    qCard.classList.add('flash-yes');
+                } else if (ans === 'NO') {
+                    qCard.classList.add('flash-no');
+                }
+            }
+
             showAnswerReveal(ans);
         }
 
@@ -485,6 +507,7 @@
             });
         }
 
+        // เริ่มจับเวลา / นับเวลาต่อจากเดิม
         if (btnStartTimer) {
             btnStartTimer.addEventListener('click', () => {
                 startTimer();
@@ -497,13 +520,11 @@
             });
         }
 
-        // ข้อต่อไป & ลูปเวลาต่อ: รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ!
+        // ข้อต่อไป & ลูปเวลาต่อ (รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ)
         if (btnNextLoop) {
             btnNextLoop.addEventListener('click', () => {
                 clearInterval(timerInterval);
-                // 1. Next question & reset time
                 loadQuestion(currentQIndex + 1, true);
-                // 2. Start loop immediately
                 startTimer();
             });
         }
@@ -513,7 +534,6 @@
         updateConnectedCount();
     };
 
-    // Auto-init if quiz mode is active on load
     document.addEventListener('DOMContentLoaded', () => {
         const quizSec = document.getElementById('quiz-mode');
         if (quizSec && quizSec.classList.contains('active')) {
