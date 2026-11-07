@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>เครื่องตอบ - ใช่ หรือ มั่ว?</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Kanit", "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+        }
+        .buzzer-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            gap: 12px;
+        }
+        .buzzer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 8px 16px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        .status-dot.connected {
+            background: #22c55e;
+            animation: none;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .buzzer-q-preview {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 10px 14px;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .buzzer-buttons {
+            flex: 1;
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+        .btn-buzzer {
+            flex: 1;
+            border: none;
+            border-radius: 28px;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 900;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 4px 0 rgba(255, 255, 255, 0.4);
+            transition: transform 0.08s ease, filter 0.08s ease;
+            position: relative;
+        }
+        .btn-buzzer:active:not(:disabled) {
+            transform: scale(0.96) translateY(4px);
+        }
+        .btn-buzzer:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+            transform: none;
+        }
+        .btn-yes {
+            background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+            border-bottom: 8px solid #14532d;
+        }
+        .btn-no {
+            background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+            border-bottom: 8px solid #7f1d1d;
+        }
+        .buzzer-emoji {
+            font-size: clamp(3rem, 12vw, 5rem);
+            line-height: 1;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+        }
+        .buzzer-label {
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .buzzer-footer {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            padding: 4px;
+        }
+        .feedback-banner {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.92);
+            border-radius: 28px;
+            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="buzzer-container">
+        <div class="buzzer-header">
+            <div><span id="conn-dot" class="status-dot"></span><span id="conn-text">กำลังเชื่อมต่อกับจอหลัก...</span></div>
+            <div id="room-badge" style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px;">ROOM: ----</div>
+        </div>
+
+        <div id="q-preview" class="buzzer-q-preview">
+            รอผู้ตั้งโจทย์กดเริ่ม... ⏳
+        </div>
+
+        <div class="buzzer-buttons" style="position: relative;">
+            <!-- Button ใช่ (Green) -->
+            <button id="btn-answer-yes" class="btn-buzzer btn-yes" disabled>
+                <span class="buzzer-emoji">⭕</span>
+                <span class="buzzer-label">ใช่</span>
+            </button>
+
+            <!-- Button มั่ว (Red) -->
+            <button id="btn-answer-no" class="btn-buzzer btn-no" disabled>
+                <span class="buzzer-emoji">❌</span>
+                <span class="buzzer-label">มั่ว</span>
+            </button>
+
+            <!-- Answer Feedback Lock Overlay -->
+            <div id="feedback-lock" class="feedback-banner">
+                <div id="feedback-emoji" style="font-size: 4rem;">🎯</div>
+                <div id="feedback-text" style="font-size: 1.6rem; font-weight: 800;">ตอบแล้ว! เวลาหยุดแล้ว</div>
+                <div style="font-size: 0.95rem; color: #cbd5e1;">รอผู้ตั้งโจทย์ตรวจคำตอบหรือกดเริ่มข้อถัดไป...</div>
+            </div>
+        </div>
+
+        <div class="buzzer-footer">
+            💡 กดปุ่มสีเขียว (ใช่) หรือ สีแดง (มั่ว) เมื่อพร้อมตอบ!
+        </div>
+    </div>
+
+    <!-- PeerJS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room') || 'DEFAULT';
+
+            const connDot = document.getElementById('conn-dot');
+            const connText = document.getElementById('conn-text');
+            const roomBadge = document.getElementById('room-badge');
+            const qPreview = document.getElementById('q-preview');
+            const btnYes = document.getElementById('btn-answer-yes');
+            const btnNo = document.getElementById('btn-answer-no');
+            const feedbackLock = document.getElementById('feedback-lock');
+            const feedbackEmoji = document.getElementById('feedback-emoji');
+            const feedbackText = document.getElementById('feedback-text');
+
+            roomBadge.textContent = 'ROOM: ' + roomId.toUpperCase();
+
+            // Web Audio Click SFX
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            function playBeep(freq = 600, dur = 0.1) {
+                try {
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + dur);
+                } catch(e) {}
+            }
+
+            // PeerJS connection to Host
+            const hostPeerId = 'prg-quiz-' + roomId;
+            let peer = null;
+            let conn = null;
+
+            // BroadcastChannel for instant same-browser testing
+            const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
+
+            function sendToHost(payload) {
+                if (conn && conn.open) {
+                    conn.send(payload);
+                }
+                if (bc) {
+                    bc.postMessage(payload);
+                }
+            }
+
+            function handleHostMessage(data) {
+                if (!data || !data.type) return;
+
+                if (data.type === 'STATE_UPDATE') {
+                    // Host sent state
+                    if (data.questionText) {
+                        qPreview.textContent = data.questionText;
+                    }
+                    if (data.status === 'RUNNING') {
+                        // Timer is running -> Buttons unlocked!
+                        feedbackLock.style.display = 'none';
+                        btnYes.disabled = false;
+                        btnNo.disabled = false;
+                    } else if (data.status === 'PAUSED_ANSWERED') {
+                        // Answered
+                        btnYes.disabled = true;
+                        btnNo.disabled = true;
+                        feedbackLock.style.display = 'flex';
+                        if (data.lastAnswer === 'YES') {
+                            feedbackEmoji.textContent = '⭕';
+                            feedbackText.textContent = 'คุณตอบ: ใช่';
+                        } else if (data.lastAnswer === 'NO') {
+                            feedbackEmoji.textContent = '❌';
+                            feedbackText.textContent = 'คุณตอบ: มั่ว';
+                        }
+                    } else if (data.status === 'TIME_UP') {
+                        btnYes.disabled = true;
+                        btnNo.disabled = true;
+                        feedbackLock.style.display = 'flex';
+                        feedbackEmoji.textContent = '⏰';
+                        feedbackText.textContent = 'หมดเวลา!';
+                    } else if (data.status === 'IDLE') {
+                        btnYes.disabled = true;
+                        btnNo.disabled = true;
+                        feedbackLock.style.display = 'none';
+                        qPreview.textContent = 'รอผู้ตั้งโจทย์กดเริ่ม... ⏳';
+                    }
+                }
+            }
+
+            if (bc) {
+                bc.onmessage = (e) => handleHostMessage(e.data);
+                // Ping host
+                bc.postMessage({ type: 'JOIN' });
+            }
+
+            // Init PeerJS
+            try {
+                peer = new Peer();
+                peer.on('open', (id) => {
+                    connectToHost();
+                });
+                peer.on('error', (err) => {
+                    console.warn('Peer error:', err);
+                    connText.textContent = 'โหมดช่องทางสำรอง (Broadcast)';
+                });
+            } catch(e) {
+                console.warn(e);
+            }
+
+            function connectToHost() {
+                if (!peer) return;
+                conn = peer.connect(hostPeerId, { reliable: true });
+
+                conn.on('open', () => {
+                    connDot.classList.add('connected');
+                    connText.textContent = 'เชื่อมต่อแล้ว 🟢';
+                    conn.send({ type: 'JOIN' });
+                });
+
+                conn.on('data', (data) => handleHostMessage(data));
+
+                conn.on('close', () => {
+                    connDot.classList.remove('connected');
+                    connText.textContent = 'หลุดการเชื่อมต่อ กำลังต่อใหม่...';
+                    setTimeout(connectToHost, 2000);
+                });
+            }
+
+            function submitAnswer(ans) {
+                playBeep(ans === 'YES' ? 800 : 400, 0.15);
+                btnYes.disabled = true;
+                btnNo.disabled = true;
+                feedbackLock.style.display = 'flex';
+                feedbackEmoji.textContent = ans === 'YES' ? '⭕' : '❌';
+                feedbackText.textContent = 'คุณตอบ: ' + (ans === 'YES' ? 'ใช่' : 'มั่ว');
+
+                sendToHost({
+                    type: 'ANSWER_SUBMITTED',
+                    answer: ans,
+                    timestamp: Date.now()
+                });
+            }
+
+            btnYes.addEventListener('click', () => submitAnswer('YES'));
+            btnNo.addEventListener('click', () => submitAnswer('NO'));
+
+            // Request state initially
+            setTimeout(() => {
+                sendToHost({ type: 'REQUEST_STATE' });
+            }, 600);
+        })();
+    </script>
+</body>
+</html>

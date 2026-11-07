@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const wheelPlaySection = document.getElementById('wheel-play-mode');
     const wordSection = document.getElementById('word-mode');
     const btnWordMode = document.getElementById('btn-word-mode');
+    const quizSection = document.getElementById('quiz-mode');
+    const btnQuizMode = document.getElementById('btn-quiz-mode');
+    const btnHomeQuizGame = document.getElementById('btn-home-quiz-game');
 
     // Home Elements
     const btnHomeCreate = document.getElementById('btn-home-create');

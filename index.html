@@ -18,6 +18,7 @@
                 <button id="btn-creator-mode">Creator</button>
                 <button id="btn-wheel-mode">วงล้อสุ่ม</button>
                 <button id="btn-word-mode">เกมสุ่มคำ</button>
+                <button id="btn-quiz-mode">⚡ ใช่ หรือ มั่ว?</button>
             </div>
         </header>
 
@@ -37,6 +38,9 @@
                             </button>
                             <button id="btn-home-word-game" class="btn hero-btn" style="background: #ffffff; border: 2px solid var(--border-color); color: #8b5cf6;">
                                 <span class="icon">🎲</span> เกมสุ่มคำ
+                            </button>
+                            <button id="btn-home-quiz-game" class="btn hero-btn" style="background: #ffffff; border: 2px solid var(--border-color); color: #10b981;">
+                                <span class="icon">⚡</span> ใช่ หรือ มั่ว? (Buzzer)
                             </button>
                         </div>
                     </div>
@@ -244,6 +248,101 @@
                 </div>
             </section>
 
+            <!-- Quiz Mode (ใช่ หรือ มั่ว? พร้อมเครื่องตอบสแกน QR) -->
+            <section id="quiz-mode" class="mode-section">
+                <div class="quiz-container">
+                    <!-- Host Control Panel -->
+                    <div class="glass-panel quiz-panel">
+                        <!-- Top Bar / Controls -->
+                        <div class="quiz-topbar">
+                            <div class="quiz-room-info">
+                                <span class="quiz-badge">🎮 เครื่องคุมโจทย์ (Host)</span>
+                                <span id="quiz-conn-status" class="quiz-conn-badge">
+                                    <span class="quiz-dot"></span> <span id="quiz-conn-count">รอเครื่องตอบเชื่อมต่อ...</span>
+                                </span>
+                            </div>
+
+                            <div class="quiz-settings-bar">
+                                <div class="quiz-setting-item">
+                                    <label for="quiz-time-select">⏱️ ตั้งเวลาต่อข้อ:</label>
+                                    <select id="quiz-time-select" class="quiz-select">
+                                        <option value="10">10 วินาที</option>
+                                        <option value="15" selected>15 วินาที</option>
+                                        <option value="20">20 วินาที</option>
+                                        <option value="30">30 วินาที</option>
+                                        <option value="60">60 วินาที</option>
+                                    </select>
+                                </div>
+                                <button type="button" id="quiz-btn-toggle-qr" class="btn secondary quiz-btn-sm">
+                                    📱 แสดง QR เครื่องตอบ
+                                </button>
+                                <button type="button" id="quiz-btn-open-buzzer" class="btn secondary quiz-btn-sm" title="เปิดหน้าเครื่องตอบในแท็บใหม่เพื่อทดสอบ">
+                                    🔗 เปิดจอเครื่องตอบ
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Modal / Drawer -->
+                        <div id="quiz-qr-drawer" class="quiz-qr-drawer" style="display: none;">
+                            <div class="quiz-qr-card">
+                                <h4>📱 สแกน QR Code ด้วยมือถือเพื่อเป็น "เครื่องตอบ"</h4>
+                                <div id="quiz-qrcode-box" class="quiz-qrcode-box"></div>
+                                <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">
+                                    หรือคัดลอกลิงก์: <span id="quiz-link-text" style="font-family: monospace; color: var(--primary); word-break: break-all;"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question Display Stage -->
+                        <div class="quiz-stage">
+                            <!-- Timer Countdown Circle / Bar -->
+                            <div class="quiz-timer-wrap">
+                                <div id="quiz-timer-display" class="quiz-timer-num">15</div>
+                                <div class="quiz-timer-label">วินาทีที่เหลือ</div>
+                                <div class="quiz-progress-bar-bg">
+                                    <div id="quiz-timer-bar" class="quiz-progress-bar-fill" style="width: 100%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Question Card -->
+                            <div class="quiz-question-card">
+                                <div class="quiz-q-meta">
+                                    <span id="quiz-q-num" class="quiz-q-pill">ข้อที่ 1 / 50</span>
+                                    <span id="quiz-status-pill" class="quiz-status-pill ready">พร้อมเริ่ม</span>
+                                </div>
+                                <h2 id="quiz-question-text" class="quiz-q-text">
+                                    กดปุ่ม "🎲 สุ่มโจทย์ใหม่" หรือ "▶️ เริ่มจับเวลา" เพื่อเริ่มเล่น!
+                                </h2>
+
+                                <!-- Answer Reveal Box (Hidden while running) -->
+                                <div id="quiz-reveal-box" class="quiz-reveal-box" style="display: none;">
+                                    <div class="quiz-reveal-header">
+                                        <span id="quiz-player-ans-badge" class="quiz-ans-badge"></span>
+                                        <span id="quiz-correct-ans-badge" class="quiz-ans-badge correct"></span>
+                                    </div>
+                                    <div id="quiz-explanation-text" class="quiz-explanation-text"></div>
+                                </div>
+                            </div>
+
+                            <!-- Host Action Controls -->
+                            <div class="quiz-actions">
+                                <button type="button" id="quiz-btn-random-q" class="btn secondary quiz-btn-action">
+                                    🎲 สุ่มโจทย์ใหม่
+                                </button>
+                                <button type="button" id="quiz-btn-start-timer" class="btn primary quiz-btn-action quiz-btn-start">
+                                    ▶️ เริ่มจับเวลา!
+                                </button>
+                                <button type="button" id="quiz-btn-pause-timer" class="btn danger quiz-btn-action" style="display: none;">
+                                    ⏸️ หยุดเวลาชั่วคราว
+                                </button>
+                                <button type="button" id="quiz-btn-next-loop" class="btn success quiz-btn-action">
+                                    ⏭️ ข้อต่อไป & ลูปเวลาต่อ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -296,6 +395,11 @@
     <!-- Cropper.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="js/words.js"></script>
+        <!-- QRCode.js and PeerJS for Quiz Mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+    <script src="js/quiz-data.js"></script>
+    <script src="js/quiz-host.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
