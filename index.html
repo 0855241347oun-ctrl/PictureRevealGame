@@ -248,198 +248,190 @@
                 </div>
             </section>
         
-            <!-- Mimic Party Game Mode (Mario Party Jamboree Edition) -->
+                        <!-- Mimic Party Game Mode (Native Clean UI) -->
             <section id="mimic-mode" class="mode-section">
-                <div class="mimic-wrapper">
-                    <div class="mp-arena">
-                        <!-- Top Festival Ribbon Banner -->
-                        <div class="mp-header-banner">
-                            <div class="mp-title-badge">
-                                <span style="font-size: 1.8rem;">⭐</span>
-                                <h2 class="mp-title-text">MIMIC PARTY!</h2>
-                                <span style="font-size: 1.8rem;">🎤</span>
-                            </div>
-                            <div class="mp-subtitle-pill">
-                                🎲 มินิเกมส่งต่อเสียงกระซิบสุดฮา! พูดตามกันทีละคน แล้วมาฟังความเพี้ยนตอนจบ! 🎉
-                            </div>
-                        </div>
+                <div class="mimic-container">
+                    <!-- Header -->
+                    <div class="mimic-header">
+                        <h2 class="mimic-title">🎤 Mimic Party พูดตามเสียงฮา</h2>
+                        <p class="mimic-subtitle">ฟังเสียงต้นฉบับแล้วพูดตามต่อกันทีละคน (อัดได้เทคเดียว!) แล้วมาฟังสรุปความเพี้ยนตอนจบ</p>
+                    </div>
 
-                        <!-- 1. SETUP VIEW (Character Select & Mystery Question Block) -->
-                        <div id="mimic-view-setup" class="mp-board-panel">
-                            <!-- Mario Golden Question Block (?) for Prompt -->
-                            <div class="mp-question-block">
-                                <div class="mp-rivet tl"></div>
-                                <div class="mp-rivet tr"></div>
-                                <div class="mp-rivet bl"></div>
-                                <div class="mp-rivet br"></div>
+                    <!-- 1. SETUP VIEW -->
+                    <div id="mimic-view-setup" class="glass-panel mimic-panel">
+                        <!-- Audio Prompt Selector Card -->
+                        <div class="mimic-card">
+                            <div class="mimic-card-header">
+                                <div class="mimic-tabs">
+                                    <button type="button" id="mimic-tab-preset" class="mimic-tab-btn active">
+                                        😂 เสียงมีม / เสียงฮาๆ (20 เสียง)
+                                    </button>
+                                    <button type="button" id="mimic-tab-custom" class="mimic-tab-btn">
+                                        🎙️ สร้างโจทย์ด้วยเสียงตัวเอง
+                                    </button>
+                                </div>
+                            </div>
 
-                                <div class="mp-qblock-header">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                        <span class="mp-qblock-label">❓ โจทย์ลับประจำรอบนี้</span>
-                                        <span id="mimic-prompt-cat-badge" style="background: #141229; color: #ffea00; padding: 0.25rem 0.8rem; border-radius: 99px; font-size: 0.85rem; font-weight: 700;">
-                                            🔥 ลิ้นพันกัน
-                                        </span>
+                            <!-- Tab 1: Preset Meme Sounds (Audio Only, No Text Script) -->
+                            <div id="mimic-preset-pane" class="mimic-pane">
+                                <div class="mimic-active-sound-box">
+                                    <div class="mimic-sound-icon" id="mimic-active-emoji">💨</div>
+                                    <div class="mimic-sound-info">
+                                        <span class="mimic-cat-pill" id="mimic-active-cat">มีมสุดฮา</span>
+                                        <h3 id="mimic-active-title" class="mimic-sound-title">เสียงตดทะลุประตู 💨</h3>
+                                        <p class="mimic-sound-note">🔊 โจทย์มีแต่เสียงเท่านั้น! กดลองฟังเสียงโจทย์ หรือกดสุ่มเสียงใหม่ได้เลย</p>
                                     </div>
-                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                        <button id="mimic-btn-toggle-secret" class="mp-btn mp-btn-dark" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
-                                            👁️ ซ่อนโจทย์บนจอ
+                                    <div class="mimic-sound-actions">
+                                        <button type="button" id="mimic-btn-preview-sound" class="btn primary mimic-btn-sm">
+                                            🔊 ฟังเสียงโจทย์
                                         </button>
-                                        <button id="mimic-btn-random-prompt" class="mp-btn mp-btn-red" style="font-size: 0.95rem; padding: 0.45rem 1.15rem;">
-                                            🎲 ทอยเต๋าสุ่มโจทย์ (20 ข้อ)
+                                        <button type="button" id="mimic-btn-random-sound" class="btn secondary mimic-btn-sm">
+                                            🎲 สุ่มเสียงใหม่
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="mp-prompt-input-wrap">
-                                    <textarea id="mimic-prompt-input" class="mp-textarea" placeholder="พิมพ์โจทย์คำหรือประโยคลิ้นพันกันที่นี่..."></textarea>
+                                <div class="mimic-sound-grid-label">เลือกเสียงโจทย์จากคลัง (หรือโจทย์ที่คุณสร้างไว้):</div>
+                                <div id="mimic-sound-grid" class="mimic-sound-grid">
+                                    <!-- Populated by JS -->
                                 </div>
                             </div>
 
-                            <!-- Character Player Slots (1P - 8P) -->
-                            <div class="mp-players-section">
-                                <div class="mp-section-header">
-                                    <div style="font-size: 1.2rem; font-weight: 700; color: #141229; display: flex; align-items: center; gap: 0.4rem;">
-                                        <span>👑 เลือกตัวละคร & ลำดับคิวผู้เล่น (คลิกที่รูปเพื่อเปลี่ยนตัวละคร!)</span>
+                            <!-- Tab 2: Custom Voice Prompt Creator -->
+                            <div id="mimic-custom-pane" class="mimic-pane" style="display: none;">
+                                <div class="mimic-custom-creator">
+                                    <div class="mimic-form-group">
+                                        <label for="mimic-custom-title">🏷️ ตั้งชื่อโจทย์เสียงของคุณ:</label>
+                                        <input type="text" id="mimic-custom-title" class="mimic-input" placeholder="เช่น เสียงหัวเราะคุณครู, เสียงแมวหิวข้าว, เสียงเลียนแบบคนดัง...">
                                     </div>
-                                    <button id="mimic-btn-add-player" class="mp-btn mp-btn-blue" style="font-size: 0.9rem; padding: 0.45rem 1.1rem;">
-                                        ➕ เพิ่มผู้เล่น (สูงสุด 8 คน)
-                                    </button>
-                                </div>
 
-                                <div id="mimic-players-list" class="mp-players-grid">
-                                    <!-- Dynamic Mario Party Character Cards -->
-                                </div>
-                            </div>
-
-                            <!-- Giant Start Button -->
-                            <div style="margin-top: 1rem; width: 100%; display: flex; justify-content: center;">
-                                <button id="mimic-btn-start-game" class="mp-btn mp-btn-green mp-btn-xl">
-                                    🌟 START PARTY! เริ่มเกมเลย! 🚀
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 2. RECORDING TURN VIEW (Spotlight Stage & Live Waveform) -->
-                        <div id="mimic-view-record" class="mp-board-panel" style="display: none;">
-                            <!-- 3-2-1-GO! Countdown Overlay -->
-                            <div id="mimic-cd-overlay" class="mp-cd-overlay">
-                                <div style="color: #ffffff; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem;">เตรียมเสียงให้พร้อม!</div>
-                                <div id="mimic-cd-text" class="mp-cd-text">3</div>
-                            </div>
-
-                            <!-- Top Turn Status Bar -->
-                            <div class="mp-turn-header">
-                                <span id="mimic-turn-badge" class="mp-turn-pill">
-                                    1P TURN • คนที่ 1 / 3
-                                </span>
-                                <button id="mimic-btn-back-setup" class="mp-btn mp-btn-dark" style="font-size: 0.85rem; padding: 0.35rem 0.95rem;">
-                                    ⚙️ กลับไปหน้าตั้งค่า
-                                </button>
-                            </div>
-
-                            <!-- Center Spotlight Stage -->
-                            <div class="mp-spotlight-stage">
-                                <div id="mimic-player-avatar" class="mp-stage-avatar-ring">👧</div>
-                                <h3 id="mimic-player-name" style="font-size: 2rem; font-weight: 700; color: #141229; margin: 0.1rem 0;">
-                                    น้องเอิร์ธ
-                                </h3>
-                                <div id="mimic-mission-hint" style="background: #141229; color: #ffea00; padding: 0.3rem 1rem; border-radius: 99px; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.8rem;">
-                                    🎯 ภารกิจคนแรก: ฟังโจทย์ต้นฉบับ แล้วพากย์เสียงใส่ไมค์เลย!
-                                </div>
-
-                                <!-- Original Prompt Box (Only for 1P) -->
-                                <div id="mimic-prompt-original-box" style="display: none; background: #fffbeb; border: 4px dashed #f59e0b; border-radius: 1.2rem; padding: 0.85rem 1.2rem; text-align: center; margin-bottom: 0.8rem; width: 100%; box-sizing: border-box;">
-                                    <div style="font-size: 0.8rem; color: #b45309; font-weight: 700;">📜 โจทย์ลับสำหรับคนแรกเท่านั้น:</div>
-                                    <div id="mimic-prompt-original-text" style="font-size: 1.35rem; font-weight: 700; color: #141229; margin-top: 0.2rem;"></div>
-                                </div>
-
-                                <!-- Listen Reference Buttons -->
-                                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-                                    <button id="mimic-btn-listen-prompt" class="mp-btn mp-btn-blue">
-                                        🔊 ฟังเสียงโจทย์ต้นฉบับ
-                                    </button>
-                                    <button id="mimic-btn-listen-prev" class="mp-btn mp-btn-yellow" style="display: none;">
-                                        👂 ฟังเสียงจากเพื่อนคนก่อนหน้า
-                                    </button>
-                                </div>
-
-                                <!-- Live Audio Waveform Monitor Screen -->
-                                <div class="mp-waveform-monitor">
-                                    <div class="mp-monitor-top">
-                                        <div>
-                                            <span id="mimic-rec-dot" class="mp-rec-dot"></span>
-                                            <span id="mimic-monitor-status">VOICE WAVE MONITOR</span>
-                                        </div>
-                                        <div id="mimic-record-timer" style="color: #ffea00; font-family: 'Fredoka', monospace; font-size: 1.05rem;">
-                                            00:00 / 00:07
-                                        </div>
+                                    <div class="mimic-custom-rec-row">
+                                        <button type="button" id="mimic-btn-custom-rec" class="btn danger mimic-btn-rec-custom">
+                                            🎙️ กดอัดเสียงต้นฉบับ (เทคเดียว)
+                                        </button>
+                                        <span id="mimic-custom-rec-status" class="mimic-rec-status-text">ยังไม่ได้อัดเสียงต้นฉบับ</span>
                                     </div>
-                                    <canvas id="mimic-wave-canvas" width="480" height="68"></canvas>
-                                </div>
 
-                                <!-- Record Push Button -->
-                                <div style="margin-top: 0.4rem;">
-                                    <button id="mimic-btn-record-toggle" class="mp-btn mp-btn-red mp-btn-xl">
-                                        🎙️ กดเพื่อเริ่มอัดเสียง!
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Review Controls after Recording -->
-                            <div id="mimic-review-box" style="display: none; flex-direction: column; align-items: center; gap: 0.9rem; width: 100%;">
-                                <div style="font-weight: 700; color: #00b248; font-size: 1.15rem; background: #e0ffe9; padding: 0.3rem 1.2rem; border-radius: 99px; border: 3px solid #141229;">
-                                    ✅ บันทึกเสียงสำเร็จแล้ว!
-                                </div>
-                                <div style="display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;">
-                                    <button id="mimic-btn-review-play" class="mp-btn mp-btn-yellow">
-                                        ▶️ ลองฟังเสียงตัวเอง
-                                    </button>
-                                    <button id="mimic-btn-review-rerecord" class="mp-btn mp-btn-red">
-                                        🔄 อัดใหม่อีกที
-                                    </button>
-                                    <button id="mimic-btn-next-turn" class="mp-btn mp-btn-green" style="font-size: 1.2rem; padding: 0.85rem 2rem;">
-                                        ส่งไม้ต่อให้เพื่อน! ➔
-                                    </button>
+                                    <div id="mimic-custom-preview-row" class="mimic-custom-preview-row" style="display: none;">
+                                        <button type="button" id="mimic-btn-custom-play" class="btn secondary mimic-btn-sm">
+                                            ▶️ ลองฟังเสียงที่อัด
+                                        </button>
+                                        <button type="button" id="mimic-btn-custom-save" class="btn success mimic-btn-sm">
+                                            💾 บันทึกและใช้เป็นโจทย์ทันที!
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. SUMMARY & SUPERSTAR REVEAL STAGE -->
-                        <div id="mimic-view-summary" class="mp-board-panel" style="display: none;">
-                            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #ffea00; border: 4px solid #141229; padding: 0.35rem 1.4rem; border-radius: 99px; box-shadow: 0 4px 0 #141229; margin-bottom: 0.8rem;">
-                                <span style="font-size: 1.5rem;">🏆</span>
-                                <span style="font-size: 1.3rem; font-weight: 700; color: #141229;">SUPER REVEAL STAGE! สรุปเสียงทุกคน!</span>
-                            </div>
-
-                            <!-- Original Secret Prompt Reveal Box -->
-                            <div style="background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); border: 4px solid #141229; border-radius: 1.3rem; padding: 0.85rem 1.5rem; text-align: center; margin-bottom: 1.2rem; width: 100%; max-width: 640px; box-shadow: 0 5px 0 #141229;">
-                                <div style="font-size: 0.85rem; color: #1d4ed8; font-weight: 700;">👑 โจทย์เสียงต้นฉบับก็คือ...</div>
-                                <div id="mimic-prompt-summary-text" style="font-size: 1.45rem; font-weight: 700; color: #141229; margin-top: 0.2rem;"></div>
-                            </div>
-
-                            <!-- MVP Superstar Banner (Hidden until voted) -->
-                            <div id="mimic-mvp-banner" style="display: none; background: linear-gradient(90deg, #ffde00, #ffaa00); border: 4px solid #141229; border-radius: 99px; padding: 0.5rem 1.6rem; font-size: 1.15rem; font-weight: 700; color: #141229; box-shadow: 0 5px 0 #141229; margin-bottom: 1rem;">
-                                ⭐ SUPER STAR ประจำรอบนี้ได้แก่: <span id="mimic-mvp-name"></span> 🎉
-                            </div>
-
-                            <!-- Giant Play All Chain Button -->
-                            <div style="margin-bottom: 0.8rem;">
-                                <button id="mimic-btn-play-chain" class="mp-btn mp-btn-green mp-btn-xl">
-                                    ▶️ เปิดฟังเสียงทุกคนเรียงกัน! (PLAY ALL CHAIN)
+                        <!-- Players Queue Setup Card -->
+                        <div class="mimic-card" style="margin-top: 1.5rem;">
+                            <div class="mimic-section-top">
+                                <div>
+                                    <h3 class="mimic-section-title">👥 ลำดับผู้เล่น (พูดต่อกันทีละคน)</h3>
+                                    <p class="mimic-section-desc">คลิกที่ไอคอนเพื่อเปลี่ยนรูปตัวละคร หรือแก้ไขชื่อผู้เล่นได้เลย</p>
+                                </div>
+                                <button type="button" id="mimic-btn-add-player" class="btn secondary mimic-btn-sm">
+                                    ➕ เพิ่มผู้เล่น
                                 </button>
                             </div>
 
-                            <!-- Podium Stage Chain -->
-                            <div id="mimic-summary-chain" class="mp-podium-chain">
-                                <!-- Podium Cards & Arrows injected dynamically -->
+                            <div id="mimic-players-list" class="mimic-players-grid">
+                                <!-- Dynamic Player Cards -->
                             </div>
+                        </div>
 
-                            <!-- Play Again Button -->
-                            <div style="margin-top: 1.2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                                <button id="mimic-btn-restart" class="mp-btn mp-btn-purple" style="font-size: 1.15rem; padding: 0.8rem 2.2rem;">
-                                    🎲 เล่นรอบต่อไป! (สุ่มโจทย์ใหม่)
+                        <!-- Start Button -->
+                        <div class="mimic-start-wrap">
+                            <button type="button" id="mimic-btn-start-game" class="btn primary mimic-btn-xl">
+                                🚀 เริ่มเกมเลย!
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. RECORDING TURN VIEW (One-Take Only!) -->
+                    <div id="mimic-view-record" class="glass-panel mimic-panel" style="display: none;">
+                        <!-- 3-2-1 Countdown Overlay -->
+                        <div id="mimic-cd-overlay" class="mimic-cd-overlay" style="display: none;">
+                            <div class="mimic-cd-sub">เตรียมตัวพูดตามเสียงที่ได้ยิน! (เทคเดียวเท่านั้น)</div>
+                            <div id="mimic-cd-text" class="mimic-cd-num">3</div>
+                        </div>
+
+                        <div class="mimic-turn-topbar">
+                            <span id="mimic-turn-badge" class="mimic-turn-badge">คนที่ 1 / 4</span>
+                            <button type="button" id="mimic-btn-back-setup" class="btn secondary mimic-btn-sm">
+                                ⚙️ ตั้งค่าใหม่
+                            </button>
+                        </div>
+
+                        <div class="mimic-stage-box">
+                            <div id="mimic-player-avatar" class="mimic-stage-avatar">🐶</div>
+                            <h3 id="mimic-player-name" class="mimic-stage-name">น้องเอิร์ธ</h3>
+                            <p id="mimic-mission-hint" class="mimic-stage-hint">
+                                🎧 กดฟังเสียงต้นฉบับ แล้วกดอัดเสียงพูดตามในเทคเดียว!
+                            </p>
+
+                            <!-- Step 1: Listen to Reference Audio (Audio Only!) -->
+                            <div class="mimic-listen-area">
+                                <button type="button" id="mimic-btn-listen-ref" class="btn secondary mimic-btn-listen">
+                                    🔊 กดฟังเสียงต้นฉบับ
                                 </button>
                             </div>
+
+                            <!-- Live Waveform Visualizer -->
+                            <div class="mimic-wave-box">
+                                <div class="mimic-wave-header">
+                                    <span id="mimic-monitor-status" class="mimic-wave-status">พร้อมอัดเสียง (เทคเดียว ไม่มีการอัดซ้ำ!)</span>
+                                    <span id="mimic-record-timer" class="mimic-wave-timer">00:00 / 00:06</span>
+                                </div>
+                                <canvas id="mimic-wave-canvas" width="500" height="64"></canvas>
+                            </div>
+
+                            <!-- Step 2: Single-Take Record Button -->
+                            <div id="mimic-record-action-area" class="mimic-record-action-area">
+                                <button type="button" id="mimic-btn-record-toggle" class="btn danger mimic-btn-xl">
+                                    🎙️ กดเพื่ออัดเสียง (เทคเดียว!)
+                                </button>
+                            </div>
+
+                            <!-- Step 3: Locked-in One-Take Box (No Re-record Button!) -->
+                            <div id="mimic-review-box" class="mimic-locked-box" style="display: none;">
+                                <div class="mimic-locked-badge">
+                                    ✅ ล็อกเสียงเทคเดียวเรียบร้อย! (ห้ามอัดซ้ำ)
+                                </div>
+                                <div class="mimic-locked-actions">
+                                    <button type="button" id="mimic-btn-review-play" class="btn secondary mimic-btn-sm">
+                                        ▶️ ลองฟังเสียงที่อัดไป
+                                    </button>
+                                    <button type="button" id="mimic-btn-next-turn" class="btn success mimic-btn-lg">
+                                        ส่งต่อให้เพื่อนคนถัดไป ➔
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. SUMMARY VIEW -->
+                    <div id="mimic-view-summary" class="glass-panel mimic-panel" style="display: none;">
+                        <div class="mimic-summary-header">
+                            <span class="mimic-summary-pill">🎉 สรุปผลการส่งต่อเสียงหรรษา</span>
+                            <h3 id="mimic-summary-title" class="mimic-summary-main-title">โจทย์: เสียงตดทะลุประตู 💨</h3>
+                        </div>
+
+                        <div class="mimic-play-all-wrap">
+                            <button type="button" id="mimic-btn-play-chain" class="btn primary mimic-btn-xl">
+                                ▶️ เปิดฟังเสียงเรียงต่อกันตั้งแต่ต้นจนจบ!
+                            </button>
+                        </div>
+
+                        <div id="mimic-summary-chain" class="mimic-chain-list">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <div class="mimic-summary-footer">
+                            <button type="button" id="mimic-btn-restart" class="btn secondary mimic-btn-lg">
+                                🔄 เล่นรอบต่อไป (สุ่มเสียงใหม่)
+                            </button>
                         </div>
                     </div>
                 </div>

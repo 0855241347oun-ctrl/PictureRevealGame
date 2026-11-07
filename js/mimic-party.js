@@ -1,172 +1,162 @@
 /**
- * Mimic Party - Mario Party Jamboree Edition
- * ระบบอัดเสียงไมค์สด + คลื่นเสียง Live Waveform + ซาวด์เอฟเฟกต์สไตล์ Mario Party + เวทีสรุปผล Superstar
+ * Mimic Party - Audio-Only Funny/Meme Sound Prompts & Custom Voice Prompt Creator
+ * - โจทย์มีเฉพาะเสียง (ไม่มีข้อความให้อ่าน)
+ * - สร้างโจทย์เองด้วยเสียงพูดตัวเอง + ตั้งชื่อโจทย์ได้
+ * - อัดเสียงได้เทคเดียว (ไม่มีปุ่มอัดซ้ำ)
  */
-(function() {
-    // Party Avatars (Click to cycle!)
-    const PARTY_AVATARS = ["🍄", "👑", "🦖", "⭐", "🐢", "👻", "🐵", "🦊", "🐼", "🐸", "🦁", "🦄"];
-    const PLAYER_COLORS = [
-        "#ff2a4b", // 1P Mario Red
-        "#0099ff", // 2P Toad Blue
-        "#00c853", // 3P Luigi Green
-        "#ffaa00", // 4P Wario Yellow
-        "#ff4081", // 5P Peach Pink
-        "#8e24aa", // 6P Waluigi Purple
-        "#00acc1", // 7P Yoshi Cyan
-        "#fb8c00"  // 8P Daisy Orange
+(function () {
+    const AVATARS = ["🐶", "🐱", "🐼", "🦊", "🐸", "🦁", "🐰", "🐨", "🐯", "🦄", "🐵", "🐧"];
+    const CUSTOM_STORAGE_KEY = "mimic_custom_voice_prompts_v1";
+    const MAX_RECORD_SECONDS = 6;
+
+    // Load saved custom voice prompts from localStorage
+    let customPrompts = [];
+    try {
+        const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) customPrompts = parsed;
+        }
+    } catch (e) {
+        customPrompts = [];
+    }
+
+    function saveCustomPromptsToStorage() {
+        try {
+            localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(customPrompts));
+        } catch (e) {
+            console.warn("Storage full or unavailable:", e);
+        }
+    }
+
+    function getAllPrompts() {
+        return [...customPrompts, ...(typeof MIMIC_PROMPTS !== "undefined" ? MIMIC_PROMPTS : [])];
+    }
+
+    // Active State
+    let activePrompt = getAllPrompts()[0] || {
+        id: "meme_1",
+        title: "เสียงตดทะลุประตู 💨",
+        category: "มีมสุดฮา",
+        emoji: "💨",
+        audioUrl: "https://actions.google.com/sounds/v1/cartoon/fart_long_through_door.ogg"
+    };
+
+    let players = [
+        { name: "คนที่ 1", avatarIdx: 0 },
+        { name: "คนที่ 2", avatarIdx: 1 },
+        { name: "คนที่ 3", avatarIdx: 2 },
+        { name: "คนที่ 4", avatarIdx: 3 }
     ];
 
-    // Game State
-    let currentPromptObj = { text: "ยายกินลำไย น้ำลายยายไหลย้อย", category: "ลิ้นพันกัน" };
-    let isSecretMasked = false;
-    let players = [
-        { name: "น้องเอิร์ธ", avatarIdx: 0 },
-        { name: "น้องมายด์", avatarIdx: 1 },
-        { name: "น้องมาร์ค", avatarIdx: 2 },
-        { name: "น้องฟ้า", avatarIdx: 3 }
-    ];
     let currentTurnIndex = 0;
     let playerRecordings = [];
-    let mvpWinnerIndex = -1;
+    let currentTurnAudioUrl = null;
 
-    // Audio & MediaRecorder State
+    // Audio & Mic State
     let audioCtx = null;
+    let activeAudioObj = null;
     let mediaStream = null;
     let mediaRecorder = null;
     let audioChunks = [];
-    let currentTempAudioUrl = null;
     let isRecording = false;
     let recordTimer = null;
     let recordSeconds = 0;
-    const MAX_RECORD_SECONDS = 7;
 
-    // Live Waveform Visualizer State
-    let analyserNode = null;
+    // Custom Creator Recording State
+    let isCustomRecording = false;
+    let customRecorder = null;
+    let customChunks = [];
+    let customRecordedDataUrl = null;
+    let customRecordTimer = null;
+    let customRecordSeconds = 0;
+
+    // Waveform State
+    let waveCanvas = null;
+    let waveCtx = null;
     let waveAnimId = null;
     let isSimulatingWave = false;
 
     // Chain Playback State
     let isChainPlaying = false;
-    let chainAudioObj = null;
 
-    // --- MARIO PARTY WEB AUDIO SFX SYNTHESIZER ---
     function getAudioCtx() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') {
+        if (audioCtx.state === "suspended") {
             audioCtx.resume();
         }
         return audioCtx;
     }
 
-    function playTone(freq, type = 'square', duration = 0.12, vol = 0.2, delay = 0) {
+    function playBeep(freq = 660, duration = 0.12, type = "sine", vol = 0.18) {
         try {
             const ctx = getAudioCtx();
-            const startTime = ctx.currentTime + delay;
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = type;
-            osc.frequency.setValueAtTime(freq, startTime);
-            gain.gain.setValueAtTime(vol, startTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(vol, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.start(startTime);
-            osc.stop(startTime + duration);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
         } catch (e) {}
     }
 
-    function playCoinSound() {
-        // Classic Mario Coin B5 -> E6
-        playTone(987.77, 'square', 0.08, 0.18, 0);
-        playTone(1318.51, 'square', 0.28, 0.18, 0.08);
+    function stopCurrentAudio() {
+        if (activeAudioObj) {
+            activeAudioObj.pause();
+            activeAudioObj.currentTime = 0;
+            activeAudioObj = null;
+        }
+        stopSimulatedWave();
     }
 
-    function playDiceBlockSound() {
-        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
-        notes.forEach((n, idx) => {
-            playTone(n, 'triangle', 0.09, 0.22, idx * 0.045);
+    function playAudioUrl(url, onEndedCallback = null, withWave = false) {
+        stopCurrentAudio();
+        if (!url) {
+            if (onEndedCallback) onEndedCallback();
+            return;
+        }
+        const audio = new Audio(url);
+        activeAudioObj = audio;
+        if (withWave) startSimulatedWave();
+
+        audio.onended = () => {
+            if (withWave) stopSimulatedWave();
+            activeAudioObj = null;
+            if (onEndedCallback) onEndedCallback();
+        };
+        audio.onerror = () => {
+            if (withWave) stopSimulatedWave();
+            activeAudioObj = null;
+            if (onEndedCallback) onEndedCallback();
+        };
+        audio.play().catch(() => {
+            if (withWave) stopSimulatedWave();
+            if (onEndedCallback) onEndedCallback();
         });
     }
 
-    function playCountdownTone(isGo = false) {
-        if (isGo) {
-            playTone(880, 'square', 0.35, 0.25, 0);
-            playTone(1174.66, 'triangle', 0.35, 0.25, 0.05);
-        } else {
-            playTone(440, 'triangle', 0.15, 0.22, 0);
-        }
-    }
-
-    function playStarFanfare() {
-        // Celebratory Mario Party Superstar Fanfare!
-        const melody = [
-            { f: 523.25, d: 0.12, t: 0.0 },
-            { f: 659.25, d: 0.12, t: 0.12 },
-            { f: 783.99, d: 0.12, t: 0.24 },
-            { f: 1046.50, d: 0.22, t: 0.36 },
-            { f: 783.99, d: 0.14, t: 0.60 },
-            { f: 1046.50, d: 0.45, t: 0.75 }
-        ];
-        melody.forEach(n => playTone(n.f, 'triangle', n.d, 0.25, n.t));
-    }
-
-    // --- THAI SPEECH SYNTHESIS ---
-    let thaiVoice = null;
-    function loadVoices() {
-        if (!('speechSynthesis' in window)) return;
-        const voices = window.speechSynthesis.getVoices();
-        thaiVoice = voices.find(v => v.lang.includes('th') || v.lang === 'th-TH') || null;
-    }
-    if ('speechSynthesis' in window) {
-        loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
-    function speakOriginal(text, onEnded = null) {
-        if (!('speechSynthesis' in window)) {
-            if (onEnded) onEnded();
-            return;
-        }
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'th-TH';
-        if (thaiVoice) utter.voice = thaiVoice;
-        utter.rate = 1.05;
-        utter.pitch = 1.1;
-        utter.onend = () => {
-            stopSimulatedWave();
-            if (onEnded) onEnded();
-        };
-        utter.onerror = () => {
-            stopSimulatedWave();
-            if (onEnded) onEnded();
-        };
-        startSimulatedWave();
-        window.speechSynthesis.speak(utter);
-    }
-
-    // --- WAVEFORM VISUALIZER CANVAS ---
-    let waveCanvas = null;
-    let waveCtx = null;
-
+    // --- WAVEFORM CANVAS ---
     function drawIdleWave() {
         if (!waveCanvas || !waveCtx) return;
         const w = waveCanvas.width;
         const h = waveCanvas.height;
         waveCtx.clearRect(0, 0, w, h);
 
-        const barCount = 28;
+        const barCount = 30;
         const gap = 5;
         const barWidth = (w - gap * (barCount - 1)) / barCount;
-        const colors = ["#ff2a4b", "#ffaa00", "#ffea00", "#00e676", "#00b4d8", "#b5179e"];
 
         for (let i = 0; i < barCount; i++) {
-            const barH = 8 + Math.sin(i * 0.5) * 4;
+            const barH = 8 + Math.sin(i * 0.45) * 4;
             const x = i * (barWidth + gap);
             const y = (h - barH) / 2;
-            waveCtx.fillStyle = colors[i % colors.length];
+            waveCtx.fillStyle = "#cbd5e1";
             waveCtx.beginPath();
             waveCtx.roundRect(x, y, barWidth, barH, 4);
             waveCtx.fill();
@@ -177,13 +167,12 @@
         try {
             const ctx = getAudioCtx();
             const source = ctx.createMediaStreamSource(stream);
-            analyserNode = ctx.createAnalyser();
-            analyserNode.fftSize = 64;
-            source.connect(analyserNode);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
 
-            const bufferLength = analyserNode.frequencyBinCount;
+            const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
-            const colors = ["#ff2a4b", "#ffaa00", "#ffea00", "#00e676", "#00b4d8", "#b5179e"];
 
             function renderFrame() {
                 if (!isRecording) {
@@ -191,14 +180,14 @@
                     return;
                 }
                 waveAnimId = requestAnimationFrame(renderFrame);
-                analyserNode.getByteFrequencyData(dataArray);
+                analyser.getByteFrequencyData(dataArray);
 
                 if (!waveCanvas || !waveCtx) return;
                 const w = waveCanvas.width;
                 const h = waveCanvas.height;
                 waveCtx.clearRect(0, 0, w, h);
 
-                const barCount = 28;
+                const barCount = 30;
                 const gap = 5;
                 const barWidth = (w - gap * (barCount - 1)) / barCount;
 
@@ -207,9 +196,9 @@
                     const barH = Math.max(8, (val / 255) * (h - 6));
                     const x = i * (barWidth + gap);
                     const y = (h - barH) / 2;
-                    waveCtx.fillStyle = colors[i % colors.length];
+                    waveCtx.fillStyle = i % 2 === 0 ? "#3b82f6" : "#8b5cf6";
                     waveCtx.beginPath();
-                    waveCtx.roundRect(x, y, barWidth, barH, 5);
+                    waveCtx.roundRect(x, y, barWidth, barH, 4);
                     waveCtx.fill();
                 }
             }
@@ -221,7 +210,6 @@
 
     function startSimulatedWave() {
         isSimulatingWave = true;
-        const colors = ["#ff2a4b", "#ffaa00", "#ffea00", "#00e676", "#00b4d8", "#b5179e"];
         let tick = 0;
         function simFrame() {
             if (!isSimulatingWave) {
@@ -229,24 +217,24 @@
                 return;
             }
             waveAnimId = requestAnimationFrame(simFrame);
-            tick += 0.22;
+            tick += 0.2;
             if (!waveCanvas || !waveCtx) return;
             const w = waveCanvas.width;
             const h = waveCanvas.height;
             waveCtx.clearRect(0, 0, w, h);
 
-            const barCount = 28;
+            const barCount = 30;
             const gap = 5;
             const barWidth = (w - gap * (barCount - 1)) / barCount;
 
             for (let i = 0; i < barCount; i++) {
-                const wave = Math.abs(Math.sin(tick + i * 0.45)) * Math.abs(Math.cos(tick * 0.7 - i * 0.2));
+                const wave = Math.abs(Math.sin(tick + i * 0.4)) * Math.abs(Math.cos(tick * 0.6 - i * 0.2));
                 const barH = Math.max(8, wave * (h - 8));
                 const x = i * (barWidth + gap);
                 const y = (h - barH) / 2;
-                waveCtx.fillStyle = colors[i % colors.length];
+                waveCtx.fillStyle = "#3b82f6";
                 waveCtx.beginPath();
-                waveCtx.roundRect(x, y, barWidth, barH, 5);
+                waveCtx.roundRect(x, y, barWidth, barH, 4);
                 waveCtx.fill();
             }
         }
@@ -259,126 +247,307 @@
         drawIdleWave();
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function blobToDataURL(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
         // Views
-        const viewSetup = document.getElementById('mimic-view-setup');
-        const viewRecord = document.getElementById('mimic-view-record');
-        const viewSummary = document.getElementById('mimic-view-summary');
+        const viewSetup = document.getElementById("mimic-view-setup");
+        const viewRecord = document.getElementById("mimic-view-record");
+        const viewSummary = document.getElementById("mimic-view-summary");
 
-        // Setup Elements
-        const promptInput = document.getElementById('mimic-prompt-input');
-        const promptCatBadge = document.getElementById('mimic-prompt-cat-badge');
-        const btnToggleSecret = document.getElementById('mimic-btn-toggle-secret');
-        const btnRandomPrompt = document.getElementById('mimic-btn-random-prompt');
-        const playersListContainer = document.getElementById('mimic-players-list');
-        const btnAddPlayer = document.getElementById('mimic-btn-add-player');
-        const btnStartGame = document.getElementById('mimic-btn-start-game');
+        // Setup Tabs & Prompt Selector
+        const tabPreset = document.getElementById("mimic-tab-preset");
+        const tabCustom = document.getElementById("mimic-tab-custom");
+        const presetPane = document.getElementById("mimic-preset-pane");
+        const customPane = document.getElementById("mimic-custom-pane");
 
-        // Record Elements
-        const cdOverlay = document.getElementById('mimic-cd-overlay');
-        const cdText = document.getElementById('mimic-cd-text');
-        const turnBadge = document.getElementById('mimic-turn-badge');
-        const btnBackSetup = document.getElementById('mimic-btn-back-setup');
-        const currentPlayerNameDisplay = document.getElementById('mimic-player-name');
-        const currentPlayerAvatar = document.getElementById('mimic-player-avatar');
-        const missionHint = document.getElementById('mimic-mission-hint');
-        const promptOriginalBox = document.getElementById('mimic-prompt-original-box');
-        const promptOriginalText = document.getElementById('mimic-prompt-original-text');
-        const btnListenPrompt = document.getElementById('mimic-btn-listen-prompt');
-        const btnListenPrevious = document.getElementById('mimic-btn-listen-prev');
-        const btnRecordToggle = document.getElementById('mimic-btn-record-toggle');
-        const recordTimerDisplay = document.getElementById('mimic-record-timer');
-        const recDot = document.getElementById('mimic-rec-dot');
-        const monitorStatus = document.getElementById('mimic-monitor-status');
-        const playbackReviewBox = document.getElementById('mimic-review-box');
-        const btnReviewPlay = document.getElementById('mimic-btn-review-play');
-        const btnReviewRerecord = document.getElementById('mimic-btn-review-rerecord');
-        const btnNextTurn = document.getElementById('mimic-btn-next-turn');
+        const activeEmojiEl = document.getElementById("mimic-active-emoji");
+        const activeCatEl = document.getElementById("mimic-active-cat");
+        const activeTitleEl = document.getElementById("mimic-active-title");
+        const btnPreviewSound = document.getElementById("mimic-btn-preview-sound");
+        const btnRandomSound = document.getElementById("mimic-btn-random-sound");
+        const soundGridEl = document.getElementById("mimic-sound-grid");
 
-        waveCanvas = document.getElementById('mimic-wave-canvas');
+        // Custom Voice Creator Elements
+        const customTitleInput = document.getElementById("mimic-custom-title");
+        const btnCustomRec = document.getElementById("mimic-btn-custom-rec");
+        const customRecStatus = document.getElementById("mimic-custom-rec-status");
+        const customPreviewRow = document.getElementById("mimic-custom-preview-row");
+        const btnCustomPlay = document.getElementById("mimic-btn-custom-play");
+        const btnCustomSave = document.getElementById("mimic-btn-custom-save");
+
+        // Players Setup
+        const playersListEl = document.getElementById("mimic-players-list");
+        const btnAddPlayer = document.getElementById("mimic-btn-add-player");
+        const btnStartGame = document.getElementById("mimic-btn-start-game");
+
+        // Turn Recording Elements
+        const cdOverlay = document.getElementById("mimic-cd-overlay");
+        const cdText = document.getElementById("mimic-cd-text");
+        const turnBadge = document.getElementById("mimic-turn-badge");
+        const btnBackSetup = document.getElementById("mimic-btn-back-setup");
+        const playerAvatarEl = document.getElementById("mimic-player-avatar");
+        const playerNameEl = document.getElementById("mimic-player-name");
+        const missionHintEl = document.getElementById("mimic-mission-hint");
+        const btnListenRef = document.getElementById("mimic-btn-listen-ref");
+        const monitorStatusEl = document.getElementById("mimic-monitor-status");
+        const recordTimerEl = document.getElementById("mimic-record-timer");
+        const recordActionArea = document.getElementById("mimic-record-action-area");
+        const btnRecordToggle = document.getElementById("mimic-btn-record-toggle");
+        const reviewBox = document.getElementById("mimic-review-box");
+        const btnReviewPlay = document.getElementById("mimic-btn-review-play");
+        const btnNextTurn = document.getElementById("mimic-btn-next-turn");
+
+        waveCanvas = document.getElementById("mimic-wave-canvas");
         if (waveCanvas) {
-            waveCtx = waveCanvas.getContext('2d');
+            waveCtx = waveCanvas.getContext("2d");
             drawIdleWave();
         }
 
         // Summary Elements
-        const summaryChainContainer = document.getElementById('mimic-summary-chain');
-        const btnPlayChain = document.getElementById('mimic-btn-play-chain');
-        const btnRestartGame = document.getElementById('mimic-btn-restart');
-        const promptSummaryText = document.getElementById('mimic-prompt-summary-text');
-        const mvpBanner = document.getElementById('mimic-mvp-banner');
-        const mvpNameSpan = document.getElementById('mimic-mvp-name');
+        const summaryTitleEl = document.getElementById("mimic-summary-title");
+        const btnPlayChain = document.getElementById("mimic-btn-play-chain");
+        const summaryChainEl = document.getElementById("mimic-summary-chain");
+        const btnRestart = document.getElementById("mimic-btn-restart");
 
-        // --- SETUP VIEW ---
-        function setRandomPrompt(playSfx = false) {
-            if (!MIMIC_PROMPTS || MIMIC_PROMPTS.length === 0) return;
-            if (playSfx) playDiceBlockSound();
-            const rnd = MIMIC_PROMPTS[Math.floor(Math.random() * MIMIC_PROMPTS.length)];
-            currentPromptObj = rnd;
-            if (promptInput) promptInput.value = rnd.text;
-            if (promptCatBadge) {
-                promptCatBadge.textContent = `⭐ หมวด: ${rnd.category} (${rnd.difficulty})`;
+        // --- TABS IN SETUP ---
+        function switchSetupTab(mode) {
+            stopCurrentAudio();
+            if (mode === "custom") {
+                tabPreset.classList.remove("active");
+                tabCustom.classList.add("active");
+                presetPane.style.display = "none";
+                customPane.style.display = "block";
+                // Reset custom creator for a fresh single-take recording
+                customRecordedDataUrl = null;
+                if (customPreviewRow) customPreviewRow.style.display = "none";
+                if (btnCustomRec) {
+                    btnCustomRec.disabled = false;
+                    btnCustomRec.textContent = "🎙️ กดอัดเสียงต้นฉบับ (เทคเดียว)";
+                }
+                if (customRecStatus) customRecStatus.textContent = "ยังไม่ได้อัดเสียงต้นฉบับ";
+            } else {
+                tabCustom.classList.remove("active");
+                tabPreset.classList.add("active");
+                customPane.style.display = "none";
+                presetPane.style.display = "block";
             }
         }
 
-        if (btnToggleSecret) {
-            btnToggleSecret.addEventListener('click', () => {
-                playCoinSound();
-                isSecretMasked = !isSecretMasked;
-                if (promptInput) {
-                    promptInput.classList.toggle('secret-masked', isSecretMasked);
+        if (tabPreset) tabPreset.addEventListener("click", () => switchSetupTab("preset"));
+        if (tabCustom) tabCustom.addEventListener("click", () => switchSetupTab("custom"));
+
+        // --- RENDER ACTIVE SOUND & SOUND GRID ---
+        function updateActiveSoundUI() {
+            if (!activePrompt) return;
+            if (activeEmojiEl) activeEmojiEl.textContent = activePrompt.emoji || "🔊";
+            if (activeCatEl) activeCatEl.textContent = activePrompt.category || "เสียงฮาๆ";
+            if (activeTitleEl) activeTitleEl.textContent = activePrompt.title;
+            renderSoundGrid();
+        }
+
+        function renderSoundGrid() {
+            if (!soundGridEl) return;
+            soundGridEl.innerHTML = "";
+            const all = getAllPrompts();
+
+            all.forEach((item) => {
+                const btn = document.createElement("div");
+                btn.className = "mimic-sound-item" + (activePrompt && activePrompt.id === item.id ? " selected" : "");
+
+                const labelSpan = document.createElement("span");
+                labelSpan.style.overflow = "hidden";
+                labelSpan.style.textOverflow = "ellipsis";
+                labelSpan.style.whiteSpace = "nowrap";
+                labelSpan.textContent = `${item.emoji || "🎙️"} ${item.title}`;
+                btn.appendChild(labelSpan);
+
+                if (item.isCustom) {
+                    const delBtn = document.createElement("button");
+                    delBtn.type = "button";
+                    delBtn.className = "mimic-sound-item-del";
+                    delBtn.title = "ลบโจทย์เสียงนี้";
+                    delBtn.textContent = "×";
+                    delBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        customPrompts = customPrompts.filter((cp) => cp.id !== item.id);
+                        saveCustomPromptsToStorage();
+                        if (activePrompt && activePrompt.id === item.id) {
+                            const remaining = getAllPrompts();
+                            activePrompt = remaining[0];
+                        }
+                        updateActiveSoundUI();
+                    });
+                    btn.appendChild(delBtn);
                 }
-                btnToggleSecret.innerHTML = isSecretMasked
-                    ? '<span>🙈 ซ่อนอยู่ (คลิกเพื่อดู)</span>'
-                    : '<span>👁️ ซ่อนโจทย์บนจอ</span>';
+
+                btn.addEventListener("click", () => {
+                    activePrompt = item;
+                    updateActiveSoundUI();
+                    playAudioUrl(activePrompt.audioUrl);
+                });
+
+                soundGridEl.appendChild(btn);
             });
         }
 
+        function pickRandomSound(autoPlay = true) {
+            const all = getAllPrompts();
+            if (all.length === 0) return;
+            let candidates = all.filter((p) => !activePrompt || p.id !== activePrompt.id);
+            if (candidates.length === 0) candidates = all;
+            activePrompt = candidates[Math.floor(Math.random() * candidates.length)];
+            updateActiveSoundUI();
+            if (autoPlay) {
+                playAudioUrl(activePrompt.audioUrl);
+            }
+        }
+
+        if (btnPreviewSound) {
+            btnPreviewSound.addEventListener("click", () => {
+                if (!activePrompt) return;
+                btnPreviewSound.textContent = "🔊 กำลังเล่นเสียง...";
+                playAudioUrl(activePrompt.audioUrl, () => {
+                    btnPreviewSound.textContent = "🔊 ฟังเสียงโจทย์";
+                });
+            });
+        }
+
+        if (btnRandomSound) {
+            btnRandomSound.addEventListener("click", () => pickRandomSound(true));
+        }
+
+        // --- CUSTOM VOICE PROMPT CREATOR (ONE-TAKE) ---
+        if (btnCustomRec) {
+            btnCustomRec.addEventListener("click", async () => {
+                stopCurrentAudio();
+                if (!isCustomRecording) {
+                    // Single-take check: if already recorded in this session, don't allow re-record
+                    if (customRecordedDataUrl) return;
+                    try {
+                        if (!mediaStream) {
+                            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        }
+                        customChunks = [];
+                        customRecorder = new MediaRecorder(mediaStream);
+                        customRecorder.ondataavailable = (e) => {
+                            if (e.data && e.data.size > 0) customChunks.push(e.data);
+                        };
+                        customRecorder.onstop = async () => {
+                            const blob = new Blob(customChunks, { type: customRecorder.mimeType || "audio/webm" });
+                            customRecordedDataUrl = await blobToDataURL(blob);
+                            isCustomRecording = false;
+                            clearInterval(customRecordTimer);
+                            btnCustomRec.textContent = "✅ อัดเสียงต้นฉบับแล้ว (เทคเดียว)";
+                            btnCustomRec.disabled = true;
+                            if (customRecStatus) customRecStatus.textContent = "อัดเสียงสำเร็จ! กดบันทึกเพื่อใช้เป็นโจทย์ได้เลย";
+                            if (customPreviewRow) customPreviewRow.style.display = "flex";
+                        };
+
+                        customRecorder.start();
+                        isCustomRecording = true;
+                        customRecordSeconds = 0;
+                        btnCustomRec.textContent = "⏹️ พูดเสร็จแล้ว กดหยุด!";
+                        if (customRecStatus) customRecStatus.textContent = "🔴 กำลังอัดเสียงต้นฉบับ... (สูงสุด 6 วินาที)";
+
+                        clearInterval(customRecordTimer);
+                        customRecordTimer = setInterval(() => {
+                            customRecordSeconds++;
+                            if (customRecordSeconds >= MAX_RECORD_SECONDS) {
+                                if (customRecorder && customRecorder.state !== "inactive") {
+                                    customRecorder.stop();
+                                }
+                            }
+                        }, 1000);
+                    } catch (err) {
+                        alert("กรุณาอนุญาตการใช้ไมโครโฟน (Allow Microphone) เพื่ออัดเสียงครับ");
+                    }
+                } else {
+                    if (customRecorder && customRecorder.state !== "inactive") {
+                        customRecorder.stop();
+                    }
+                }
+            });
+        }
+
+        if (btnCustomPlay) {
+            btnCustomPlay.addEventListener("click", () => {
+                if (!customRecordedDataUrl) return;
+                btnCustomPlay.textContent = "🔊 กำลังฟัง...";
+                playAudioUrl(customRecordedDataUrl, () => {
+                    btnCustomPlay.textContent = "▶️ ลองฟังเสียงที่อัด";
+                });
+            });
+        }
+
+        if (btnCustomSave) {
+            btnCustomSave.addEventListener("click", () => {
+                if (!customRecordedDataUrl) {
+                    alert("กรุณากดอัดเสียงต้นฉบับก่อนครับ!");
+                    return;
+                }
+                const titleVal = (customTitleInput ? customTitleInput.value.trim() : "") || `เสียงโจทย์สร้างเอง #${customPrompts.length + 1}`;
+                const newCustomPrompt = {
+                    id: "custom_" + Date.now(),
+                    title: titleVal,
+                    category: "โจทย์เสียงของคุณ",
+                    emoji: "🎙️",
+                    audioUrl: customRecordedDataUrl,
+                    isCustom: true
+                };
+                customPrompts.unshift(newCustomPrompt);
+                saveCustomPromptsToStorage();
+                activePrompt = newCustomPrompt;
+                if (customTitleInput) customTitleInput.value = "";
+                updateActiveSoundUI();
+                switchSetupTab("preset");
+            });
+        }
+
+        // --- PLAYERS SETUP ---
         function renderPlayersSetup() {
-            if (!playersListContainer) return;
-            playersListContainer.innerHTML = '';
+            if (!playersListEl) return;
+            playersListEl.innerHTML = "";
 
             players.forEach((p, idx) => {
-                const card = document.createElement('div');
-                card.className = 'mp-char-card';
-                card.setAttribute('data-pcolor', idx % 8);
+                const card = document.createElement("div");
+                card.className = "mimic-player-card";
+                const emoji = AVATARS[p.avatarIdx % AVATARS.length];
 
-                const avatarEmoji = PARTY_AVATARS[p.avatarIdx % PARTY_AVATARS.length];
                 card.innerHTML = `
-                    <span class="mp-pbadge">${idx + 1}P</span>
-                    ${players.length > 2 ? `<button class="mp-char-del" data-del="${idx}" title="ลบผู้เล่น">×</button>` : ''}
-                    <button type="button" class="mp-char-avatar-btn" data-avatar="${idx}" title="คลิกเพื่อเปลี่ยนตัวละคร!">
-                        <span>${avatarEmoji}</span>
-                        <span class="mp-char-avatar-hint">🔄</span>
-                    </button>
-                    <input type="text" class="mp-char-name-input" data-name="${idx}" value="${p.name}" placeholder="ชื่อผู้เล่น">
+                    <span class="mimic-player-order">คิวที่ ${idx + 1}</span>
+                    ${players.length > 2 ? `<button type="button" class="mimic-player-del" data-del="${idx}" title="ลบผู้เล่น">×</button>` : ""}
+                    <button type="button" class="mimic-avatar-btn" data-avatar="${idx}" title="คลิกเพื่อเปลี่ยนไอคอน">${emoji}</button>
+                    <input type="text" class="mimic-player-name-inp" data-name="${idx}" value="${p.name}" placeholder="ชื่อผู้เล่น">
                 `;
-                playersListContainer.appendChild(card);
+                playersListEl.appendChild(card);
             });
 
-            // Avatar click cycles character
-            playersListContainer.querySelectorAll('[data-avatar]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    playCoinSound();
-                    const idx = parseInt(e.currentTarget.getAttribute('data-avatar'), 10);
-                    players[idx].avatarIdx = (players[idx].avatarIdx + 1) % PARTY_AVATARS.length;
+            playersListEl.querySelectorAll("[data-avatar]").forEach((btn) => {
+                btn.addEventListener("click", (e) => {
+                    const idx = parseInt(e.currentTarget.getAttribute("data-avatar"), 10);
+                    players[idx].avatarIdx = (players[idx].avatarIdx + 1) % AVATARS.length;
                     renderPlayersSetup();
                 });
             });
 
-            // Name input change
-            playersListContainer.querySelectorAll('[data-name]').forEach(inp => {
-                inp.addEventListener('input', (e) => {
-                    const idx = parseInt(e.target.getAttribute('data-name'), 10);
-                    players[idx].name = e.target.value.trim() || `ผู้เล่น ${idx + 1}`;
+            playersListEl.querySelectorAll("[data-name]").forEach((inp) => {
+                inp.addEventListener("input", (e) => {
+                    const idx = parseInt(e.target.getAttribute("data-name"), 10);
+                    players[idx].name = e.target.value.trim() || `คนที่ ${idx + 1}`;
                 });
             });
 
-            // Delete player
-            playersListContainer.querySelectorAll('[data-del]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    playCoinSound();
-                    const idx = parseInt(e.currentTarget.getAttribute('data-del'), 10);
+            playersListEl.querySelectorAll("[data-del]").forEach((btn) => {
+                btn.addEventListener("click", (e) => {
+                    const idx = parseInt(e.currentTarget.getAttribute("data-del"), 10);
                     if (players.length > 2) {
                         players.splice(idx, 1);
                         renderPlayersSetup();
@@ -387,157 +556,145 @@
             });
         }
 
-        if (btnRandomPrompt) {
-            btnRandomPrompt.addEventListener('click', () => setRandomPrompt(true));
-        }
-
         if (btnAddPlayer) {
-            btnAddPlayer.addEventListener('click', () => {
+            btnAddPlayer.addEventListener("click", () => {
                 if (players.length >= 8) {
-                    alert('รองรับผู้เล่นสูงสุด 8 คน (1P - 8P) ครับ!');
+                    alert("เพิ่มผู้เล่นได้สูงสุด 8 คนครับ");
                     return;
                 }
-                playCoinSound();
-                const defaultNames = ["น้องเอิร์ธ", "น้องมายด์", "น้องมาร์ค", "น้องฟ้า", "น้องโฟกัส", "น้องข้าวหอม", "น้องบอส", "น้องวิน"];
-                const nextName = defaultNames[players.length % defaultNames.length] || `ผู้เล่น ${players.length + 1}`;
+                const nextNum = players.length + 1;
                 players.push({
-                    name: nextName,
-                    avatarIdx: players.length % PARTY_AVATARS.length
+                    name: `คนที่ ${nextNum}`,
+                    avatarIdx: (nextNum - 1) % AVATARS.length
                 });
                 renderPlayersSetup();
             });
         }
 
+        // --- STAGE 2: SINGLE-TAKE TURN RECORDING ---
         if (btnStartGame) {
-            btnStartGame.addEventListener('click', () => {
-                playStarFanfare();
-                const textVal = promptInput ? promptInput.value.trim() : "";
-                currentPromptObj.text = textVal || "ยายกินลำไย น้ำลายยายไหลย้อย";
-                startRecordingSession();
+            btnStartGame.addEventListener("click", () => {
+                stopCurrentAudio();
+                currentTurnIndex = 0;
+                playerRecordings = [];
+                currentTurnAudioUrl = null;
+
+                if (viewSetup) viewSetup.style.display = "none";
+                if (viewSummary) viewSummary.style.display = "none";
+                if (viewRecord) viewRecord.style.display = "flex";
+
+                loadTurn(0);
             });
         }
 
         if (btnBackSetup) {
-            btnBackSetup.addEventListener('click', () => {
-                stopRecording();
-                stopSimulatedWave();
-                if (viewRecord) viewRecord.style.display = 'none';
-                if (viewSummary) viewSummary.style.display = 'none';
-                if (viewSetup) viewSetup.style.display = 'flex';
+            btnBackSetup.addEventListener("click", () => {
+                stopTurnRecording();
+                stopCurrentAudio();
+                if (viewRecord) viewRecord.style.display = "none";
+                if (viewSummary) viewSummary.style.display = "none";
+                if (viewSetup) viewSetup.style.display = "flex";
             });
-        }
-
-        // --- STAGE 2: RECORDING SESSION ---
-        function startRecordingSession() {
-            currentTurnIndex = 0;
-            playerRecordings = [];
-            mvpWinnerIndex = -1;
-            currentTempAudioUrl = null;
-
-            if (viewSetup) viewSetup.style.display = 'none';
-            if (viewSummary) viewSummary.style.display = 'none';
-            if (viewRecord) viewRecord.style.display = 'flex';
-
-            loadTurn(0);
         }
 
         function loadTurn(index) {
             currentTurnIndex = index;
-            currentTempAudioUrl = null;
-            stopSimulatedWave();
+            currentTurnAudioUrl = null;
+            stopCurrentAudio();
             drawIdleWave();
 
-            if (playbackReviewBox) playbackReviewBox.style.display = 'none';
-            if (btnRecordToggle) {
-                btnRecordToggle.innerHTML = '<span>🎙️ กดเพื่อเริ่มอัดเสียง!</span>';
-                btnRecordToggle.className = 'mp-btn mp-btn-red mp-btn-xl';
-                btnRecordToggle.style.display = 'inline-flex';
-            }
-            if (recordTimerDisplay) recordTimerDisplay.textContent = `00:00 / 00:0${MAX_RECORD_SECONDS}`;
-            if (recDot) recDot.classList.remove('live');
-            if (monitorStatus) monitorStatus.textContent = 'READY TO RECORD';
-
             const p = players[currentTurnIndex];
-            const pColor = PLAYER_COLORS[currentTurnIndex % PLAYER_COLORS.length];
-            const avatarEmoji = PARTY_AVATARS[p.avatarIdx % PARTY_AVATARS.length];
+            const emoji = AVATARS[p.avatarIdx % AVATARS.length];
 
-            if (turnBadge) {
-                turnBadge.textContent = `${currentTurnIndex + 1}P TURN • คนที่ ${currentTurnIndex + 1} / ${players.length}`;
-                turnBadge.style.background = pColor;
-            }
-            if (currentPlayerNameDisplay) currentPlayerNameDisplay.textContent = p.name;
-            if (currentPlayerAvatar) {
-                currentPlayerAvatar.textContent = avatarEmoji;
-                currentPlayerAvatar.style.background = `linear-gradient(180deg, #ffffff 0%, ${pColor}33 100%)`;
-            }
+            if (turnBadge) turnBadge.textContent = `คิวที่ ${currentTurnIndex + 1} / ${players.length}`;
+            if (playerAvatarEl) playerAvatarEl.textContent = emoji;
+            if (playerNameEl) playerNameEl.textContent = p.name;
 
             if (currentTurnIndex === 0) {
-                if (missionHint) missionHint.textContent = '🎯 ภารกิจคนแรก (1P): ดูหรือฟังโจทย์ต้นฉบับ แล้วพากย์เสียงใส่ไมค์เลย!';
-                if (promptOriginalBox) promptOriginalBox.style.display = 'block';
-                if (promptOriginalText) promptOriginalText.textContent = `"${currentPromptObj.text}"`;
-                if (btnListenPrompt) btnListenPrompt.style.display = 'inline-flex';
-                if (btnListenPrevious) btnListenPrevious.style.display = 'none';
+                if (missionHintEl) {
+                    missionHintEl.textContent = "🎧 คิวคนแรก: กดฟังเสียงโจทย์ต้นฉบับ แล้วอัดเสียงพูดตาม (เทคเดียว!)";
+                }
+                if (btnListenRef) {
+                    btnListenRef.textContent = "🔊 กดฟังเสียงโจทย์ต้นฉบับ";
+                }
             } else {
                 const prevPlayer = players[currentTurnIndex - 1];
-                if (missionHint) missionHint.textContent = `🤫 ภารกิจคนที่ ${currentTurnIndex + 1}: ห้ามดูโจทย์! ฟังเสียงจาก "${prevPlayer.name}" แล้วพูดตาม!`;
-                if (promptOriginalBox) promptOriginalBox.style.display = 'none';
-                if (btnListenPrompt) btnListenPrompt.style.display = 'none';
-                if (btnListenPrevious) {
-                    btnListenPrevious.style.display = 'inline-flex';
-                    btnListenPrevious.innerHTML = `<span>👂 ฟังเสียงจาก "${prevPlayer.name}" (${currentTurnIndex}P)</span>`;
+                if (missionHintEl) {
+                    missionHintEl.textContent = `🎧 ฟังเสียงจาก "${prevPlayer.name}" แล้วพูดตามในเทคเดียว!`;
+                }
+                if (btnListenRef) {
+                    btnListenRef.textContent = `👂 กดฟังเสียงของ "${prevPlayer.name}"`;
                 }
             }
+
+            if (monitorStatusEl) monitorStatusEl.textContent = "พร้อมอัดเสียง (มีโอกาสอัดแค่เทคเดียว!)";
+            if (recordTimerEl) recordTimerEl.textContent = `00:00 / 00:0${MAX_RECORD_SECONDS}`;
+
+            if (recordActionArea) recordActionArea.style.display = "block";
+            if (btnRecordToggle) {
+                btnRecordToggle.disabled = false;
+                btnRecordToggle.className = "btn danger mimic-btn-xl";
+                btnRecordToggle.textContent = "🎙️ กดเพื่ออัดเสียง (เทคเดียว!)";
+            }
+            if (reviewBox) reviewBox.style.display = "none";
         }
 
-        // 3-2-1-GO! Countdown before recording starts
+        if (btnListenRef) {
+            btnListenRef.addEventListener("click", () => {
+                if (isRecording) return;
+                if (currentTurnIndex === 0) {
+                    btnListenRef.textContent = "🔊 กำลังเล่นเสียงต้นฉบับ...";
+                    playAudioUrl(activePrompt.audioUrl, () => {
+                        btnListenRef.textContent = "🔊 กดฟังเสียงโจทย์ต้นฉบับอีกครั้ง";
+                    }, true);
+                } else {
+                    const prevRec = playerRecordings[currentTurnIndex - 1];
+                    if (!prevRec) return;
+                    btnListenRef.textContent = `🔊 กำลังเล่นเสียงของ "${prevRec.name}"...`;
+                    playAudioUrl(prevRec.audioUrl, () => {
+                        btnListenRef.textContent = `👂 กดฟังเสียงของ "${prevRec.name}" อีกครั้ง`;
+                    }, true);
+                }
+            });
+        }
+
         function triggerCountdownAndRecord() {
             if (!cdOverlay || !cdText) {
-                startActualRecording();
+                startTurnRecording();
                 return;
             }
-            cdOverlay.style.display = 'flex';
-            const steps = ['3', '2', '1', 'GO! 🎙️'];
-            let sIdx = 0;
+            cdOverlay.style.display = "flex";
+            const steps = ["3", "2", "1", "พูดเลย! 🎙️"];
+            let idx = 0;
 
-            function nextStep() {
-                if (sIdx >= steps.length) {
-                    cdOverlay.style.display = 'none';
-                    startActualRecording();
+            function stepFn() {
+                if (idx >= steps.length) {
+                    cdOverlay.style.display = "none";
+                    startTurnRecording();
                     return;
                 }
-                cdText.textContent = steps[sIdx];
-                cdText.style.animation = 'none';
-                void cdText.offsetWidth;
-                cdText.style.animation = 'mpPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                playCountdownTone(sIdx === steps.length - 1);
-                sIdx++;
-                setTimeout(nextStep, 480);
+                cdText.textContent = steps[idx];
+                playBeep(idx === steps.length - 1 ? 880 : 440, 0.14);
+                idx++;
+                setTimeout(stepFn, 450);
             }
-            nextStep();
+            stepFn();
         }
 
-        async function startActualRecording() {
+        async function startTurnRecording() {
             try {
                 if (!mediaStream) {
                     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 }
                 audioChunks = [];
-                let mimeType = '';
-                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-                    mimeType = 'audio/webm;codecs=opus';
-                } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                    mimeType = 'audio/ogg';
-                }
-
-                mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+                mediaRecorder = new MediaRecorder(mediaStream);
                 mediaRecorder.ondataavailable = (e) => {
                     if (e.data && e.data.size > 0) audioChunks.push(e.data);
                 };
-
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                    currentTempAudioUrl = URL.createObjectURL(blob);
-                    showReviewUI();
+                    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+                    currentTurnAudioUrl = URL.createObjectURL(blob);
+                    lockInSingleTake();
                 };
 
                 mediaRecorder.start();
@@ -545,331 +702,228 @@
                 recordSeconds = 0;
 
                 if (btnRecordToggle) {
-                    btnRecordToggle.innerHTML = '<span>⏹️ พูดเสร็จแล้ว กดหยุด!</span>';
-                    btnRecordToggle.className = 'mp-btn mp-btn-dark mp-btn-xl';
+                    btnRecordToggle.className = "btn primary mimic-btn-xl";
+                    btnRecordToggle.textContent = "⏹️ พูดเสร็จแล้ว กดหยุด!";
                 }
-                if (recDot) recDot.classList.add('live');
-                if (monitorStatus) monitorStatus.textContent = '🔴 RECORDING LIVE VOICE...';
+                if (monitorStatusEl) monitorStatusEl.textContent = "🔴 กำลังอัดเสียงสด... (เทคเดียว!)";
 
                 startLiveMicVisualizer(mediaStream);
 
                 clearInterval(recordTimer);
                 recordTimer = setInterval(() => {
                     recordSeconds++;
-                    const secs = recordSeconds < 10 ? `0${recordSeconds}` : recordSeconds;
-                    if (recordTimerDisplay) recordTimerDisplay.textContent = `00:${secs} / 00:0${MAX_RECORD_SECONDS}`;
+                    if (recordTimerEl) {
+                        recordTimerEl.textContent = `00:0${recordSeconds} / 00:0${MAX_RECORD_SECONDS}`;
+                    }
                     if (recordSeconds >= MAX_RECORD_SECONDS) {
-                        stopRecording();
+                        stopTurnRecording();
                     }
                 }, 1000);
-
             } catch (err) {
-                console.warn('Mic access error:', err);
-                alert('กรุณาอนุญาตการใช้ไมโครโฟน (Allow Microphone) บนเบราว์เซอร์เพื่ออัดเสียงครับ!');
+                alert("กรุณาอนุญาตการใช้ไมโครโฟนเพื่ออัดเสียงครับ");
             }
         }
 
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        function stopTurnRecording() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
                 mediaRecorder.stop();
             }
             isRecording = false;
             clearInterval(recordTimer);
-            if (recDot) recDot.classList.remove('live');
-            if (monitorStatus) monitorStatus.textContent = 'VOICE CAPTURED!';
             drawIdleWave();
         }
 
-        function showReviewUI() {
-            playCoinSound();
-            if (btnRecordToggle) btnRecordToggle.style.display = 'none';
-            if (playbackReviewBox) playbackReviewBox.style.display = 'flex';
+        function lockInSingleTake() {
+            playBeep(784, 0.18);
+            if (monitorStatusEl) monitorStatusEl.textContent = "✅ บันทึกเสียงเทคเดียวเรียบร้อย!";
+            // Hide record button completely so player cannot re-record!
+            if (recordActionArea) recordActionArea.style.display = "none";
+            if (reviewBox) reviewBox.style.display = "flex";
+
             if (btnNextTurn) {
                 if (currentTurnIndex + 1 < players.length) {
                     const nextP = players[currentTurnIndex + 1];
-                    btnNextTurn.innerHTML = `<span>ส่งไม้ต่อให้ "${nextP.name}" (${currentTurnIndex + 2}P) ➔</span>`;
+                    btnNextTurn.textContent = `ส่งต่อให้ "${nextP.name}" ➔`;
                 } else {
-                    btnNextTurn.innerHTML = `<span>🎉 ครบทุกคนแล้ว! ไปหน้าสรุปผลกันเลย! 🏆</span>`;
+                    btnNextTurn.textContent = "🎉 ครบทุกคนแล้ว! ไปดูสรุปเสียงกันเลย ➔";
                 }
             }
         }
 
         if (btnRecordToggle) {
-            btnRecordToggle.addEventListener('click', () => {
+            btnRecordToggle.addEventListener("click", () => {
+                stopCurrentAudio();
                 if (!isRecording) {
-                    // Request mic permission first before 3-2-1 countdown so countdown doesn't get interrupted
-                    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    // Single-take lock check
+                    if (currentTurnAudioUrl) return;
+                    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
                         mediaStream = stream;
                         triggerCountdownAndRecord();
                     }).catch(() => {
-                        alert('กรุณาอนุญาตการใช้ไมโครโฟนในเบราว์เซอร์ก่อนเริ่มอัดเสียงครับ!');
+                        alert("กรุณาอนุญาตการใช้ไมโครโฟนก่อนเริ่มอัดเสียงครับ");
                     });
                 } else {
-                    stopRecording();
+                    stopTurnRecording();
                 }
             });
         }
 
         if (btnReviewPlay) {
-            btnReviewPlay.addEventListener('click', () => {
-                if (!currentTempAudioUrl) return;
-                const audio = new Audio(currentTempAudioUrl);
-                btnReviewPlay.innerHTML = '<span>🔊 กำลังเล่นเสียง...</span>';
-                startSimulatedWave();
-                audio.play();
-                audio.onended = () => {
-                    stopSimulatedWave();
-                    btnReviewPlay.innerHTML = '<span>▶️ ลองฟังเสียงตัวเอง</span>';
-                };
-            });
-        }
-
-        if (btnReviewRerecord) {
-            btnReviewRerecord.addEventListener('click', () => {
-                playCoinSound();
-                currentTempAudioUrl = null;
-                if (playbackReviewBox) playbackReviewBox.style.display = 'none';
-                if (btnRecordToggle) {
-                    btnRecordToggle.innerHTML = '<span>🎙️ กดเพื่อเริ่มอัดเสียง!</span>';
-                    btnRecordToggle.className = 'mp-btn mp-btn-red mp-btn-xl';
-                    btnRecordToggle.style.display = 'inline-flex';
-                }
-                if (recordTimerDisplay) recordTimerDisplay.textContent = `00:00 / 00:0${MAX_RECORD_SECONDS}`;
-            });
-        }
-
-        if (btnListenPrompt) {
-            btnListenPrompt.addEventListener('click', () => {
-                btnListenPrompt.innerHTML = '<span>🔊 กำลังอ่านโจทย์...</span>';
-                speakOriginal(currentPromptObj.text, () => {
-                    btnListenPrompt.innerHTML = '<span>🔊 ฟังเสียงโจทย์ต้นฉบับ</span>';
-                });
-            });
-        }
-
-        if (btnListenPrevious) {
-            btnListenPrevious.addEventListener('click', () => {
-                if (currentTurnIndex <= 0) return;
-                const prevRec = playerRecordings[currentTurnIndex - 1];
-                if (prevRec && prevRec.audioUrl) {
-                    const audio = new Audio(prevRec.audioUrl);
-                    btnListenPrevious.innerHTML = '<span>🔊 กำลังฟังเสียงเพื่อน...</span>';
-                    startSimulatedWave();
-                    audio.play();
-                    audio.onended = () => {
-                        stopSimulatedWave();
-                        const prevName = players[currentTurnIndex - 1].name;
-                        btnListenPrevious.innerHTML = `<span>👂 ฟังเสียงจาก "${prevName}" อีกครั้ง</span>`;
-                    };
-                }
+            btnReviewPlay.addEventListener("click", () => {
+                if (!currentTurnAudioUrl) return;
+                btnReviewPlay.textContent = "🔊 กำลังฟัง...";
+                playAudioUrl(currentTurnAudioUrl, () => {
+                    btnReviewPlay.textContent = "▶️ ลองฟังเสียงที่อัดไป";
+                }, true);
             });
         }
 
         if (btnNextTurn) {
-            btnNextTurn.addEventListener('click', () => {
-                if (!currentTempAudioUrl) return;
-                playCoinSound();
+            btnNextTurn.addEventListener("click", () => {
+                if (!currentTurnAudioUrl) return;
+                stopCurrentAudio();
 
                 const p = players[currentTurnIndex];
                 playerRecordings.push({
                     name: p.name,
-                    avatar: PARTY_AVATARS[p.avatarIdx % PARTY_AVATARS.length],
-                    color: PLAYER_COLORS[currentTurnIndex % PLAYER_COLORS.length],
-                    audioUrl: currentTempAudioUrl,
+                    avatar: AVATARS[p.avatarIdx % AVATARS.length],
+                    audioUrl: currentTurnAudioUrl,
                     turn: currentTurnIndex + 1
                 });
 
                 if (currentTurnIndex + 1 < players.length) {
                     loadTurn(currentTurnIndex + 1);
                 } else {
-                    finishAndShowSummary();
+                    showSummaryView();
                 }
             });
         }
 
-        // --- STAGE 3: SUPER REVEAL & PODIUM STAGE ---
-        function finishAndShowSummary() {
-            playStarFanfare();
-            if (viewRecord) viewRecord.style.display = 'none';
-            if (viewSetup) viewSetup.style.display = 'none';
-            if (viewSummary) viewSummary.style.display = 'flex';
+        // --- STAGE 3: SUMMARY & PLAY ALL CHAIN ---
+        function showSummaryView() {
+            stopCurrentAudio();
+            if (viewSetup) viewSetup.style.display = "none";
+            if (viewRecord) viewRecord.style.display = "none";
+            if (viewSummary) viewSummary.style.display = "flex";
 
-            if (promptSummaryText) promptSummaryText.textContent = `"${currentPromptObj.text}"`;
-            if (mvpBanner) mvpBanner.style.display = 'none';
-            renderSummaryCards(-99);
+            if (summaryTitleEl) {
+                summaryTitleEl.textContent = `โจทย์เสียง: ${activePrompt.title}`;
+            }
+            renderSummaryChain(-99);
         }
 
-        function renderSummaryCards(highlightIndex = -99) {
-            if (!summaryChainContainer) return;
-            summaryChainContainer.innerHTML = '';
+        function renderSummaryChain(highlightIndex = -99) {
+            if (!summaryChainEl) return;
+            summaryChainEl.innerHTML = "";
 
-            // 1. Original Prompt Podium Card
-            const origCard = document.createElement('div');
-            origCard.className = 'mp-podium-card' + (highlightIndex === -1 ? ' active-playing' : '');
+            // 1. Original Sound Card
+            const origCard = document.createElement("div");
+            origCard.className = "mimic-chain-card" + (highlightIndex === -1 ? " active-playing" : "");
             origCard.innerHTML = `
-                <div class="mp-star-pointer">⭐</div>
-                <span class="mp-pbadge" style="background: #141229;">ORIGINAL</span>
-                <div style="font-size: 2.8rem; margin: 0.4rem 0;">👑</div>
-                <div style="font-size: 1.05rem; font-weight: 700; color: #141229; margin-bottom: 0.5rem;">เสียงต้นฉบับ</div>
-                <button class="mp-btn mp-btn-blue" id="btn-play-orig-single" style="font-size: 0.85rem; padding: 0.4rem 0.9rem; width: 100%;">
+                <span class="mimic-chain-step">ต้นฉบับ</span>
+                <div class="mimic-chain-avatar">${activePrompt.emoji || "🔊"}</div>
+                <div class="mimic-chain-name">${activePrompt.title}</div>
+                <button type="button" class="btn secondary mimic-btn-sm" id="mimic-summary-play-orig" style="width: 100%; margin-top: 0.35rem;">
                     🔊 ฟังต้นฉบับ
                 </button>
             `;
-            summaryChainContainer.appendChild(origCard);
+            summaryChainEl.appendChild(origCard);
 
-            const btnPlayOrigSingle = origCard.querySelector('#btn-play-orig-single');
-            if (btnPlayOrigSingle) {
-                btnPlayOrigSingle.addEventListener('click', () => {
+            const btnPlayOrig = origCard.querySelector("#mimic-summary-play-orig");
+            if (btnPlayOrig) {
+                btnPlayOrig.addEventListener("click", () => {
                     stopChainPlayback();
-                    renderSummaryCards(-1);
-                    speakOriginal(currentPromptObj.text, () => {
-                        renderSummaryCards(-99);
+                    renderSummaryChain(-1);
+                    playAudioUrl(activePrompt.audioUrl, () => {
+                        renderSummaryChain(-99);
                     });
                 });
             }
 
-            // Arrow
-            const arrow0 = document.createElement('div');
-            arrow0.className = 'mp-chain-arrow';
-            arrow0.textContent = '➔';
-            summaryChainContainer.appendChild(arrow0);
-
-            // 2. Player Podium Cards
+            // 2. Player Recording Cards
             playerRecordings.forEach((rec, idx) => {
-                const isMvp = (mvpWinnerIndex === idx);
-                const isPlayingNow = (highlightIndex === idx);
-
-                const card = document.createElement('div');
-                card.className = 'mp-podium-card'
-                    + (isPlayingNow ? ' active-playing' : '')
-                    + (isMvp ? ' mvp-winner' : '');
-
+                const card = document.createElement("div");
+                card.className = "mimic-chain-card" + (highlightIndex === idx ? " active-playing" : "");
                 card.innerHTML = `
-                    <div class="mp-star-pointer">${isMvp ? '👑' : '⭐'}</div>
-                    <span class="mp-pbadge" style="background: ${rec.color};">${rec.turn}P</span>
-                    <div style="font-size: 2.8rem; margin: 0.3rem 0;">${rec.avatar}</div>
-                    <div style="font-size: 1.05rem; font-weight: 700; color: #141229; margin-bottom: 0.4rem;">${rec.name}</div>
-                    <button class="mp-btn mp-btn-yellow" data-play-idx="${idx}" style="font-size: 0.85rem; padding: 0.4rem 0.9rem; width: 100%;">
-                        ▶️ ฟังเสียง ${rec.turn}P
-                    </button>
-                    <button class="mp-vote-btn" data-mvp-idx="${idx}">
-                        ${isMvp ? '👑 SUPER STAR!' : '⭐ โหวต MVP ฮาสุด'}
+                    <span class="mimic-chain-step">คิวที่ ${rec.turn}</span>
+                    <div class="mimic-chain-avatar">${rec.avatar}</div>
+                    <div class="mimic-chain-name">${rec.name}</div>
+                    <button type="button" class="btn primary mimic-btn-sm" data-play-rec="${idx}" style="width: 100%; margin-top: 0.35rem;">
+                        ▶️ ฟังเสียง
                     </button>
                 `;
-                summaryChainContainer.appendChild(card);
+                summaryChainEl.appendChild(card);
 
-                const btnPlaySingle = card.querySelector(`[data-play-idx="${idx}"]`);
-                if (btnPlaySingle) {
-                    btnPlaySingle.addEventListener('click', () => playSingleAudio(idx));
-                }
-
-                const btnVoteMvp = card.querySelector(`[data-mvp-idx="${idx}"]`);
-                if (btnVoteMvp) {
-                    btnVoteMvp.addEventListener('click', () => {
-                        mvpWinnerIndex = idx;
-                        playStarFanfare();
-                        if (mvpBanner && mvpNameSpan) {
-                            mvpNameSpan.textContent = `${rec.avatar} ${rec.name} (${rec.turn}P)`;
-                            mvpBanner.style.display = 'inline-block';
-                        }
-                        renderSummaryCards(-99);
+                const playBtn = card.querySelector(`[data-play-rec="${idx}"]`);
+                if (playBtn) {
+                    playBtn.addEventListener("click", () => {
+                        stopChainPlayback();
+                        renderSummaryChain(idx);
+                        playAudioUrl(rec.audioUrl, () => {
+                            renderSummaryChain(-99);
+                        });
                     });
-                }
-
-                if (idx < playerRecordings.length - 1) {
-                    const arrow = document.createElement('div');
-                    arrow.className = 'mp-chain-arrow';
-                    arrow.textContent = '➔';
-                    summaryChainContainer.appendChild(arrow);
                 }
             });
         }
 
-        function playSingleAudio(idx) {
-            stopChainPlayback();
-            const rec = playerRecordings[idx];
-            if (!rec || !rec.audioUrl) return;
-
-            renderSummaryCards(idx);
-            chainAudioObj = new Audio(rec.audioUrl);
-            chainAudioObj.play();
-            chainAudioObj.onended = () => {
-                renderSummaryCards(-99);
-            };
-        }
-
         function stopChainPlayback() {
-            if (chainAudioObj) {
-                chainAudioObj.pause();
-                chainAudioObj = null;
-            }
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
             isChainPlaying = false;
+            stopCurrentAudio();
             if (btnPlayChain) {
-                btnPlayChain.innerHTML = '<span>▶️ เปิดฟังเสียงทุกคนเรียงกัน! (PLAY ALL CHAIN)</span>';
-                btnPlayChain.className = 'mp-btn mp-btn-green mp-btn-xl';
+                btnPlayChain.textContent = "▶️ เปิดฟังเสียงเรียงต่อกันตั้งแต่ต้นจนจบ!";
             }
         }
 
         function startChainPlayback() {
             if (isChainPlaying) {
                 stopChainPlayback();
-                renderSummaryCards(-99);
+                renderSummaryChain(-99);
                 return;
             }
-
             isChainPlaying = true;
             if (btnPlayChain) {
-                btnPlayChain.innerHTML = '<span>⏹️ กำลังเล่นเสียงต่อเนื่อง... (คลิกเพื่อหยุด)</span>';
-                btnPlayChain.className = 'mp-btn mp-btn-red mp-btn-xl';
+                btnPlayChain.textContent = "⏹️ หยุดเล่นเสียงต่อเนื่อง";
             }
 
-            renderSummaryCards(-1);
-            speakOriginal(currentPromptObj.text, () => {
+            renderSummaryChain(-1);
+            playAudioUrl(activePrompt.audioUrl, () => {
                 if (!isChainPlaying) return;
                 setTimeout(() => playChainStep(0), 400);
             });
         }
 
-        function playChainStep(index) {
+        function playChainStep(idx) {
             if (!isChainPlaying) return;
-            if (index >= playerRecordings.length) {
+            if (idx >= playerRecordings.length) {
                 stopChainPlayback();
-                renderSummaryCards(-99);
-                playStarFanfare();
+                renderSummaryChain(-99);
                 return;
             }
-
-            renderSummaryCards(index);
-            const rec = playerRecordings[index];
-            chainAudioObj = new Audio(rec.audioUrl);
-            chainAudioObj.play().catch(e => console.warn(e));
-
-            chainAudioObj.onended = () => {
+            renderSummaryChain(idx);
+            const rec = playerRecordings[idx];
+            playAudioUrl(rec.audioUrl, () => {
                 if (!isChainPlaying) return;
-                setTimeout(() => {
-                    playChainStep(index + 1);
-                }, 450);
-            };
-        }
-
-        if (btnPlayChain) {
-            btnPlayChain.addEventListener('click', startChainPlayback);
-        }
-
-        if (btnRestartGame) {
-            btnRestartGame.addEventListener('click', () => {
-                stopChainPlayback();
-                playDiceBlockSound();
-                if (viewSummary) viewSummary.style.display = 'none';
-                if (viewRecord) viewRecord.style.display = 'none';
-                if (viewSetup) viewSetup.style.display = 'flex';
-                setRandomPrompt(false);
+                setTimeout(() => playChainStep(idx + 1), 400);
             });
         }
 
-        // Init
-        setRandomPrompt(false);
+        if (btnPlayChain) {
+            btnPlayChain.addEventListener("click", startChainPlayback);
+        }
+
+        if (btnRestart) {
+            btnRestart.addEventListener("click", () => {
+                stopChainPlayback();
+                if (viewSummary) viewSummary.style.display = "none";
+                if (viewRecord) viewRecord.style.display = "none";
+                if (viewSetup) viewSetup.style.display = "flex";
+                pickRandomSound(false);
+            });
+        }
+
+        // Initialize Setup
+        updateActiveSoundUI();
         renderPlayersSetup();
     });
 })();

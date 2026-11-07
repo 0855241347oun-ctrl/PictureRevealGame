@@ -824,649 +824,672 @@ select:focus {
     background: rgba(59, 130, 246, 0.5);
 }
 
-/* --- Mimic Party Game Styles (Mario Party Jamboree Edition) --- */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Mitr:wght@500;600;700&display=swap');
-
-.mimic-wrapper {
-    max-width: 920px;
+/* --- Mimic Party Game Styles (Clean Modern Native Theme) --- */
+.mimic-container {
+    max-width: 900px;
     margin: 0 auto;
     width: 100%;
-    font-family: 'Mitr', 'Fredoka', sans-serif;
-}
-
-/* Main Mario Party Festival Arena */
-.mp-arena {
-    position: relative;
-    background: 
-        repeating-linear-gradient(
-            -45deg,
-            rgba(255, 255, 255, 0.06) 0px,
-            rgba(255, 255, 255, 0.06) 24px,
-            transparent 24px,
-            transparent 48px
-        ),
-        linear-gradient(145deg, #1d4ed8 0%, #6d28d9 55%, #be185d 100%);
-    border: 6px solid #141229;
-    border-radius: 2.5rem;
-    padding: 2rem 1.8rem 2.4rem;
-    box-shadow: 
-        inset 0 0 0 4px rgba(255, 255, 255, 0.25),
-        0 12px 0 #141229,
-        0 25px 50px rgba(20, 18, 41, 0.35);
-    color: #ffffff;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-/* Top Ribbon Header Banner */
-.mp-header-banner {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 1.25rem;
+}
+
+.mimic-header {
     text-align: center;
-    margin-bottom: 1.8rem;
-    position: relative;
-    z-index: 2;
+    margin-bottom: 0.25rem;
 }
 
-.mp-title-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: linear-gradient(180deg, #ff2a4b 0%, #d90429 100%);
-    border: 5px solid #141229;
-    border-radius: 999px;
-    padding: 0.55rem 2rem;
-    box-shadow: 
-        inset 0 4px 0 rgba(255, 255, 255, 0.45),
-        0 7px 0 #141229,
-        0 12px 25px rgba(0,0,0,0.3);
-    transform: rotate(-1deg);
-    margin-bottom: 0.6rem;
+.mimic-title {
+    font-size: clamp(1.75rem, 3.5vw, 2.35rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 0.35rem 0;
 }
 
-.mp-title-text {
-    font-size: clamp(1.6rem, 4vw, 2.3rem);
-    font-weight: 700;
-    color: #ffea00;
-    letter-spacing: 0.5px;
-    text-shadow: 
-        0 4px 0 #141229,
-        -2px -2px 0 #141229,
-        2px -2px 0 #141229,
-        -2px 2px 0 #141229,
-        2px 2px 0 #141229;
+.mimic-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
     margin: 0;
-}
-
-.mp-subtitle-pill {
-    background: rgba(20, 18, 41, 0.65);
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    color: #ffffff;
-    padding: 0.35rem 1.25rem;
-    border-radius: 999px;
-    font-size: 0.95rem;
     font-weight: 500;
-    backdrop-filter: blur(6px);
 }
 
-/* Mario Party Inner Cream/White Board Card */
-.mp-board-panel {
-    background: #fffdf5;
-    border: 5px solid #141229;
-    border-radius: 2rem;
-    padding: 1.8rem;
-    color: #141229;
-    box-shadow: 
-        inset 0 -6px 0 #e5dec9,
-        0 8px 0 #141229,
-        0 15px 30px rgba(0,0,0,0.25);
-    width: 100%;
-    box-sizing: border-box;
+.mimic-panel {
+    padding: 2rem !important;
+    border-radius: 2rem !important;
+    background: #ffffff !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06) !important;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
     position: relative;
+    overflow: hidden;
 }
 
-/* Golden Question Block (?) for Prompt */
-.mp-question-block {
-    position: relative;
+.mimic-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
     width: 100%;
-    background: linear-gradient(180deg, #ffde00 0%, #ffaa00 100%);
-    border: 5px solid #141229;
-    border-radius: 1.6rem;
-    padding: 1.4rem 1.5rem;
-    box-shadow: 
-        inset 0 5px 0 rgba(255, 255, 255, 0.6),
-        inset 0 -5px 0 #cc7a00,
-        0 7px 0 #141229;
-    margin-bottom: 1.6rem;
     box-sizing: border-box;
 }
 
-.mp-rivet {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #b26b00;
-    border: 2px solid #141229;
-    border-radius: 50%;
+.mimic-card-header {
+    margin-bottom: 1.25rem;
 }
-.mp-rivet.tl { top: 10px; left: 10px; }
-.mp-rivet.tr { top: 10px; right: 10px; }
-.mp-rivet.bl { bottom: 10px; left: 10px; }
-.mp-rivet.br { bottom: 10px; right: 10px; }
 
-.mp-qblock-header {
+.mimic-tabs {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-bottom: 0.75rem;
-}
-
-.mp-qblock-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #141229;
-    background: rgba(255, 255, 255, 0.75);
-    padding: 0.3rem 0.9rem;
+    gap: 0.5rem;
+    background: #e2e8f0;
+    padding: 0.35rem;
     border-radius: 99px;
-    border: 3px solid #141229;
+    width: fit-content;
+    max-width: 100%;
+    flex-wrap: wrap;
 }
 
-.mp-prompt-input-wrap {
-    position: relative;
-    width: 100%;
+.mimic-tab-btn {
+    border: none;
+    background: transparent;
+    color: #475569;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.6rem 1.25rem;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.mp-textarea {
-    width: 100%;
-    padding: 0.9rem 1.2rem;
-    font-family: 'Mitr', sans-serif;
+.mimic-tab-btn.active {
+    background: #ffffff;
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Active Sound Box */
+.mimic-active-sound-box {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+    border: 2px solid #bfdbfe;
+    border-radius: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.mimic-sound-icon {
+    font-size: 3rem;
+    width: 72px;
+    height: 72px;
+    background: #ffffff;
+    border-radius: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+    flex-shrink: 0;
+}
+
+.mimic-sound-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.mimic-cat-pill {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.2rem 0.75rem;
+    border-radius: 99px;
+    margin-bottom: 0.3rem;
+}
+
+.mimic-sound-title {
+    margin: 0;
     font-size: 1.35rem;
-    font-weight: 700;
-    color: #141229;
-    background: #ffffff;
-    border: 4px solid #141229;
-    border-radius: 1.1rem;
-    box-sizing: border-box;
-    outline: none;
-    resize: none;
-    min-height: 78px;
-    text-align: center;
-    box-shadow: inset 0 4px 8px rgba(0,0,0,0.08);
-    transition: transform 0.15s ease;
+    font-weight: 800;
+    color: #1e293b;
 }
 
-.mp-textarea:focus {
-    border-color: #ff2a4b;
-    transform: scale(1.01);
+.mimic-sound-note {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
 }
 
-.mp-textarea.secret-masked {
-    color: transparent;
-    text-shadow: 0 0 14px #141229;
-    user-select: none;
-}
-
-/* Tactile 3D Mario Party Push Buttons */
-.mp-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-family: 'Mitr', 'Fredoka', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding: 0.75rem 1.6rem;
-    border-radius: 999px;
-    border: 4px solid #141229;
-    cursor: pointer;
-    color: #ffffff;
-    text-shadow: 0 2px 0 #141229;
-    box-shadow: 
-        inset 0 4px 0 rgba(255, 255, 255, 0.45),
-        0 6px 0 #141229,
-        0 10px 20px rgba(0,0,0,0.2);
-    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
-    user-select: none;
-}
-
-.mp-btn:hover {
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 
-        inset 0 4px 0 rgba(255, 255, 255, 0.55),
-        0 8px 0 #141229,
-        0 14px 24px rgba(0,0,0,0.25);
-}
-
-.mp-btn:active {
-    transform: translateY(5px) scale(0.98) !important;
-    box-shadow: 
-        inset 0 2px 0 rgba(255, 255, 255, 0.3),
-        0 1px 0 #141229 !important;
-}
-
-.mp-btn-green {
-    background: linear-gradient(180deg, #00e676 0%, #00b248 100%);
-}
-.mp-btn-red {
-    background: linear-gradient(180deg, #ff3b5c 0%, #d90429 100%);
-}
-.mp-btn-blue {
-    background: linear-gradient(180deg, #00b4d8 0%, #0077b6 100%);
-}
-.mp-btn-yellow {
-    background: linear-gradient(180deg, #ffea00 0%, #ffaa00 100%);
-    color: #141229;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-}
-.mp-btn-purple {
-    background: linear-gradient(180deg, #b5179e 0%, #7209b7 100%);
-}
-.mp-btn-dark {
-    background: linear-gradient(180deg, #475569 0%, #1e293b 100%);
-}
-
-.mp-btn-xl {
-    font-size: 1.4rem;
-    padding: 1rem 2.8rem;
-    border-width: 5px;
-}
-
-/* Mario Party Character Selection Slots (1P, 2P, 3P, 4P...) */
-.mp-players-section {
-    width: 100%;
-    margin-bottom: 1.2rem;
-}
-
-.mp-section-header {
+.mimic-sound-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
-    gap: 0.5rem;
 }
 
-.mp-players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-    gap: 1rem;
-    width: 100%;
-}
-
-.mp-char-card {
-    position: relative;
-    border: 4px solid #141229;
-    border-radius: 1.4rem;
-    padding: 1.8rem 0.75rem 0.85rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 
-        inset 0 4px 0 rgba(255,255,255,0.5),
-        0 6px 0 #141229;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.mp-char-card:hover {
-    transform: translateY(-4px);
-}
-
-/* Player Slot Color Themes (1P Red, 2P Blue, 3P Green, 4P Yellow, etc.) */
-.mp-char-card[data-pcolor="0"] { background: linear-gradient(180deg, #ffe5e9 0%, #ffb3c1 100%); }
-.mp-char-card[data-pcolor="1"] { background: linear-gradient(180deg, #e0f4ff 0%, #99dcff 100%); }
-.mp-char-card[data-pcolor="2"] { background: linear-gradient(180deg, #e0ffe9 0%, #99f7b5 100%); }
-.mp-char-card[data-pcolor="3"] { background: linear-gradient(180deg, #fff9db 0%, #ffe680 100%); }
-.mp-char-card[data-pcolor="4"] { background: linear-gradient(180deg, #fce7f3 0%, #f9a8d4 100%); }
-.mp-char-card[data-pcolor="5"] { background: linear-gradient(180deg, #f3e8ff 0%, #d8b4fe 100%); }
-.mp-char-card[data-pcolor="6"] { background: linear-gradient(180deg, #ccfbf1 0%, #5eead4 100%); }
-.mp-char-card[data-pcolor="7"] { background: linear-gradient(180deg, #ffedd5 0%, #fdba74 100%); }
-
-.mp-pbadge {
-    position: absolute;
-    top: -10px;
-    left: -8px;
-    font-family: 'Fredoka', sans-serif;
+.mimic-sound-grid-label {
+    font-size: 0.9rem;
     font-weight: 700;
-    font-size: 1rem;
-    padding: 0.15rem 0.7rem;
-    border-radius: 99px;
-    border: 3px solid #141229;
-    color: #ffffff;
-    text-shadow: 0 2px 0 #141229;
-    box-shadow: 0 3px 0 #141229;
-    transform: rotate(-6deg);
+    color: #475569;
+    margin-bottom: 0.65rem;
 }
 
-.mp-char-card[data-pcolor="0"] .mp-pbadge { background: #ff2a4b; }
-.mp-char-card[data-pcolor="1"] .mp-pbadge { background: #0099ff; }
-.mp-char-card[data-pcolor="2"] .mp-pbadge { background: #00c853; }
-.mp-char-card[data-pcolor="3"] .mp-pbadge { background: #ffaa00; }
-.mp-char-card[data-pcolor="4"] .mp-pbadge { background: #ff4081; }
-.mp-char-card[data-pcolor="5"] .mp-pbadge { background: #8e24aa; }
-.mp-char-card[data-pcolor="6"] .mp-pbadge { background: #00acc1; }
-.mp-char-card[data-pcolor="7"] .mp-pbadge { background: #fb8c00; }
+.mimic-sound-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 0.6rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
 
-.mp-char-del {
-    position: absolute;
-    top: -10px;
-    right: -8px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #ff2a4b;
-    color: #ffffff;
-    border: 3px solid #141229;
-    font-weight: 900;
-    font-size: 1rem;
-    cursor: pointer;
+.mimic-sound-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 3px 0 #141229;
-    transition: transform 0.15s;
-}
-
-.mp-char-del:hover {
-    transform: scale(1.15);
-}
-
-.mp-char-avatar-btn {
-    width: 74px;
-    height: 74px;
-    border-radius: 50%;
+    justify-content: space-between;
+    gap: 0.5rem;
     background: #ffffff;
-    border: 4px solid #141229;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.6rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.9rem;
+    padding: 0.6rem 0.85rem;
     cursor: pointer;
-    margin-bottom: 0.6rem;
-    box-shadow: inset 0 -4px 0 #e2e8f0, 0 4px 0 #141229;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    text-align: left;
+    transition: all 0.18s ease;
 }
 
-.mp-char-avatar-btn:hover {
-    transform: scale(1.12) rotate(5deg);
+.mimic-sound-item:hover {
+    border-color: #93c5fd;
+    background: #f0f9ff;
+    transform: translateY(-1px);
 }
 
-.mp-char-avatar-hint {
-    position: absolute;
-    bottom: -4px;
-    right: -4px;
-    background: #ffea00;
-    border: 2px solid #141229;
+.mimic-sound-item.selected {
+    border-color: var(--primary);
+    background: #eff6ff;
+    color: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+}
+
+.mimic-sound-item-del {
+    border: none;
+    background: #fee2e2;
+    color: #ef4444;
     border-radius: 50%;
     width: 22px;
     height: 22px;
-    font-size: 0.7rem;
-    display: flex;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.mp-char-name-input {
-    width: 100%;
+.mimic-sound-item-del:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* Custom Voice Prompt Creator */
+.mimic-custom-creator {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
     background: #ffffff;
-    border: 3px solid #141229;
-    border-radius: 99px;
-    padding: 0.35rem 0.6rem;
-    font-family: 'Mitr', sans-serif;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+}
+
+.mimic-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.mimic-form-group label {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #141229;
-    text-align: center;
-    outline: none;
+    color: #1e293b;
+}
+
+.mimic-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 0.85rem;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #1e293b;
+    background: #f8fafc;
     box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.mp-char-name-input:focus {
-    border-color: #ff2a4b;
-    background: #fffdf0;
+.mimic-input:focus {
+    border-color: var(--primary);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* --- STAGE 2: RECORDING TURN VIEW --- */
-.mp-turn-header {
+.mimic-custom-rec-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 1rem;
+    gap: 1rem;
     flex-wrap: wrap;
-    gap: 0.5rem;
 }
 
-.mp-turn-pill {
-    background: #ff2a4b;
-    color: #ffffff;
-    border: 4px solid #141229;
-    border-radius: 99px;
-    padding: 0.35rem 1.3rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    box-shadow: 0 4px 0 #141229;
+.mimic-rec-status-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
-.mp-spotlight-stage {
-    background: radial-gradient(circle at 50% 35%, #ffffff 0%, #f1f5f9 100%);
-    border: 4px solid #141229;
-    border-radius: 1.6rem;
-    padding: 1.4rem;
-    width: 100%;
-    max-width: 580px;
+.mimic-custom-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e2e8f0;
+}
+
+/* Players Setup Grid */
+.mimic-section-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.mimic-section-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.mimic-section-desc {
+    margin: 0.15rem 0 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.mimic-players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 0.85rem;
+}
+
+.mimic-player-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1.1rem;
+    padding: 0.85rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: inset 0 -6px 0 #cbd5e1, 0 6px 0 #141229;
-    margin-bottom: 1.2rem;
-    box-sizing: border-box;
+    gap: 0.5rem;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.mp-stage-avatar-ring {
-    width: 96px;
-    height: 96px;
+.mimic-player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.mimic-player-order {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #3b82f6;
+    background: #eff6ff;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+}
+
+.mimic-player-del {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: linear-gradient(180deg, #ffea00 0%, #ffaa00 100%);
-    border: 5px solid #141229;
+    border: none;
+    background: #fee2e2;
+    color: #ef4444;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3.6rem;
-    box-shadow: 0 6px 0 #141229;
-    margin-bottom: 0.5rem;
-    animation: mpFloat 2s infinite ease-in-out;
 }
 
-@keyframes mpFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+.mimic-player-del:hover {
+    background: #ef4444;
+    color: #ffffff;
 }
 
-/* Live Audio Waveform Monitor Screen */
-.mp-waveform-monitor {
-    width: 100%;
-    background: #141229;
-    border: 4px solid #334155;
-    border-radius: 1.2rem;
-    padding: 0.75rem 1rem;
-    margin: 0.85rem 0;
+.mimic-avatar-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid #dbeafe;
+    background: #f8fafc;
+    font-size: 1.85rem;
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
+    justify-content: center;
+    margin-top: 0.35rem;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.mimic-avatar-btn:hover {
+    transform: scale(1.08);
+    background: #eff6ff;
+}
+
+.mimic-player-name-inp {
+    width: 100%;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.65rem;
+    padding: 0.45rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f8fafc;
     box-sizing: border-box;
 }
 
-.mp-monitor-top {
-    width: 100%;
+.mimic-player-name-inp:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #ffffff;
+}
+
+.mimic-start-wrap {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+/* Buttons helpers */
+.mimic-btn-sm {
+    padding: 0.55rem 1.15rem !important;
+    font-size: 0.9rem !important;
+}
+
+.mimic-btn-lg {
+    padding: 0.85rem 1.85rem !important;
+    font-size: 1.05rem !important;
+}
+
+.mimic-btn-xl {
+    padding: 1rem 2.5rem !important;
+    font-size: 1.2rem !important;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+}
+
+/* Stage 2: Recording Turn View */
+.mimic-turn-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    margin-bottom: 0.35rem;
+    margin-bottom: 1.25rem;
+}
+
+.mimic-turn-badge {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 0.4rem 1.1rem;
+    border-radius: 99px;
+}
+
+.mimic-stage-box {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.9rem;
+}
+
+.mimic-stage-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #bfdbfe;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.12);
+    font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mimic-stage-name {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.mimic-stage-hint {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #475569;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 0.4rem 1.1rem;
+    border-radius: 99px;
     font-weight: 600;
 }
 
-.mp-rec-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #64748b;
-    margin-right: 5px;
+.mimic-listen-area {
+    margin: 0.35rem 0;
 }
 
-.mp-rec-dot.live {
-    background: #ff2a4b;
-    box-shadow: 0 0 10px #ff2a4b;
-    animation: blinkDot 0.6s infinite alternate;
+.mimic-btn-listen {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border: 2px solid #93c5fd !important;
+    font-size: 1.05rem !important;
+    padding: 0.75rem 1.75rem !important;
 }
 
-@keyframes blinkDot {
-    from { opacity: 1; }
-    to { opacity: 0.2; }
+.mimic-btn-listen:hover {
+    background: #dbeafe !important;
+}
+
+/* Waveform Box */
+.mimic-wave-box {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1.15rem;
+    padding: 0.85rem 1.1rem;
+    box-sizing: border-box;
+}
+
+.mimic-wave-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0.45rem;
+}
+
+.mimic-wave-timer {
+    color: var(--primary);
+    font-family: monospace;
+    font-size: 0.95rem;
 }
 
 #mimic-wave-canvas {
     width: 100%;
-    height: 68px;
+    height: 60px;
     display: block;
 }
 
-/* --- STAGE 3: SUMMARY PODIUM STAGE --- */
-.mp-podium-chain {
-    display: flex;
-    align-items: stretch;
-    gap: 0.75rem;
-    overflow-x: auto;
-    padding: 2.2rem 0.8rem 1.2rem;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.mp-podium-card {
-    position: relative;
-    flex: 0 0 175px;
-    background: #ffffff;
-    border: 4px solid #141229;
-    border-radius: 1.5rem;
-    padding: 1.4rem 0.85rem 1rem;
+.mimic-locked-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    box-shadow: 
-        inset 0 -5px 0 #e2e8f0,
-        0 7px 0 #141229;
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    gap: 0.85rem;
+    margin-top: 0.5rem;
+    width: 100%;
 }
 
-.mp-podium-card.active-playing {
-    background: linear-gradient(180deg, #fffbeb 0%, #fef08a 100%) !important;
-    border-color: #ff2a4b !important;
-    transform: translateY(-12px) scale(1.06);
-    box-shadow: 
-        0 0 0 4px #ffea00,
-        0 14px 0 #141229,
-        0 20px 35px rgba(255, 42, 75, 0.35) !important;
-    z-index: 5;
-}
-
-.mp-podium-card.mvp-winner {
-    background: linear-gradient(180deg, #fffbeb 0%, #fde047 100%);
-    border-color: #d97706;
-}
-
-.mp-star-pointer {
-    position: absolute;
-    top: -32px;
-    font-size: 2.2rem;
-    filter: drop-shadow(0 4px 0 #141229);
-    display: none;
-    animation: starHop 0.45s infinite alternate ease-in-out;
-}
-
-.mp-podium-card.active-playing .mp-star-pointer,
-.mp-podium-card.mvp-winner .mp-star-pointer {
-    display: block;
-}
-
-@keyframes starHop {
-    from { transform: translateY(0) scale(1); }
-    to { transform: translateY(-8px) scale(1.15); }
-}
-
-.mp-chain-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #ffaa00;
-    text-shadow: 0 3px 0 #141229;
-    flex-shrink: 0;
-}
-
-.mp-vote-btn {
-    margin-top: 0.45rem;
-    font-size: 0.8rem;
-    padding: 0.25rem 0.7rem;
-    border-radius: 99px;
-    background: #fef9c3;
-    border: 2px solid #141229;
-    color: #141229;
+.mimic-locked-badge {
+    background: #dcfce7;
+    color: #15803d;
     font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.15s;
+    font-size: 0.95rem;
+    padding: 0.4rem 1.2rem;
+    border-radius: 99px;
 }
 
-.mp-vote-btn:hover {
-    background: #ffea00;
-    transform: scale(1.08);
+.mimic-locked-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-/* 3-2-1 Mario Party Countdown Overlay */
-.mp-cd-overlay {
+/* Countdown Overlay */
+.mimic-cd-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(20, 18, 41, 0.82);
-    backdrop-filter: blur(6px);
-    display: none;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    z-index: 30;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 50;
-    border-radius: 1.8rem;
 }
 
-.mp-cd-text {
-    font-family: 'Fredoka', 'Mitr', sans-serif;
-    font-size: clamp(5rem, 16vw, 8.5rem);
+.mimic-cd-sub {
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #ffea00;
-    text-shadow: 
-        0 8px 0 #141229,
-        -4px -4px 0 #141229,
-        4px -4px 0 #141229,
-        -4px 4px 0 #141229,
-        4px 4px 0 #141229;
-    animation: mpPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: #475569;
+    margin-bottom: 0.5rem;
 }
 
-@keyframes mpPopIn {
-    0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+.mimic-cd-num {
+    font-size: 5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Summary View */
+.mimic-summary-header {
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
+.mimic-summary-pill {
+    display: inline-block;
+    background: #eff6ff;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.35rem 1rem;
+    border-radius: 99px;
+    margin-bottom: 0.5rem;
+}
+
+.mimic-summary-main-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.mimic-play-all-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.mimic-chain-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.mimic-chain-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 1.25rem;
+    padding: 1.15rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+}
+
+.mimic-chain-card.active-playing {
+    border-color: var(--primary);
+    background: #eff6ff;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(59, 130, 246, 0.18);
+}
+
+.mimic-chain-step {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #475569;
+    background: #e2e8f0;
+    padding: 0.15rem 0.65rem;
+    border-radius: 99px;
+}
+
+.mimic-chain-avatar {
+    font-size: 2.35rem;
+    margin: 0.2rem 0;
+}
+
+.mimic-chain-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.mimic-summary-footer {
+    margin-top: 1.75rem;
+    display: flex;
+    justify-content: center;
 }
