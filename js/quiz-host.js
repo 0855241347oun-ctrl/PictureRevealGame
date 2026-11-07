@@ -1,36 +1,36 @@
 /**
  * Quiz Host Logic (ใช่ หรือ มั่ว? พร้อมเครื่องตอบสแกน QR)
- * - 50 ข้อคำถามกวนๆ พร้อมเฉลย
- * - ตั้งเวลา 10, 15, 20, 30, 60 วินาที
- * - นับถอยหลังละเอียดระดับเศษวินาที (.00)
- * - ระบบรับสัญญาณคำตอบหลายช่องทางพร้อมกัน (Multi-Channel Redundancy):
- *   1) ntfy WebSocket (wss://ntfy.sh) - ไม่ติดบัฟเฟอร์ ส่งได้ทันที
- *   2) ntfy EventSource (SSE)
- *   3) Fast Polling Fail-Safe (ดึง REST API ทุก 150ms ระหว่างเวลากำลังเดิน ป้องกันการบล็อคสตรีมทุกรูปแบบ)
- *   4) MQTT over WebSocket (broker.emqx.io)
- *   5) BroadcastChannel & LocalStorage Event (สำหรับเปิดเทสบนเครื่องเดียวกัน)
- * - หยุดเวลาทันทีเมื่อได้รับคำตอบ (.00 ค้างไว้)
- * - แสดงชัดเจนในหน้าคนถามว่าเครื่องตอบกด "ใช่ ⭕" หรือ "มั่ว ❌"
- * - พร้อมเฉลยและคำอธิบายใต้โจทย์
- * - ป้องกันรหัสห้องหลุด: รหัสเริ่มต้นเป็น "1234" และเชื่อมต่อทั้งรหัสห้องปัจจุบันและ DEFAULT สำรอง
+ * - สุ่มโจทย์ 50 ข้อ พร้อมเฉลยสำหรับผู้ถาม
+ * - ตั้งเวลา 10, 15, 20, 30, 60 วินาที นับถอยหลังละเอียดระดับ .00 วินาที
+ * - ซิงก์สถานะแบบ Real-Time 2 ทิศทาง (Host <-> Buzzer):
+ *   1) EMQX MQTT over WSS (broker.emqx.io:8084/mqtt, mqttVersion: 4 + Retained State)
+ *   2) HiveMQ MQTT over WSS (broker.hivemq.com:8884/mqtt, mqttVersion: 4 + Retained State)
+ *   3) PeerJS WebRTC DataChannel (Direct P2P < 10ms)
+ *   4) BroadcastChannel & LocalStorage 60ms Memory Watcher (สำหรับเปิดบนเครื่องเดียวกัน)
+ * - เมื่อเวลาหยุดอยู่ (IDLE / PAUSED / TIME_UP) เครื่องตอบจะถูกบล็อกอัตโนมัติ
+ * - เมื่อคนถามกด "เริ่มจับเวลา" เครื่องตอบจะปลดล็อกให้กดตอบได้ทันที (ตอบได้ครั้งเดียวต่อรอบ)
+ * - เมื่อเครื่องตอบกดตอบ เวลาบนหน้าคนถามจะหยุดทันที แสดงคำตอบขนาดใหญ่ชัดเจน + กระพริบสีเขียว/แดง
  */
 (function() {
-    let roomId = localStorage.getItem('prg_quiz_room_id') || '1234';
+    // Clean v3 room key (ignores any old random 5-char code from earlier versions)
+    let roomId = localStorage.getItem('prg_quiz_room_v3') || '1234';
     roomId = roomId.toUpperCase().replace(/[^A-Z0-9]/g, '') || '1234';
-    localStorage.setItem('prg_quiz_room_id', roomId);
+    localStorage.setItem('prg_quiz_room_v3', roomId);
 
-    // Game State
+    // Game State (All in top-level scope so every handler can access directly)
     let currentQIndex = 0;
     let currentQuestion = null;
     let durationSeconds = 15;
     let remainingMs = 15000;
     let timerInterval = null;
-    let pollTimer = null;
+    let heartbeatInterval = null;
     let lastTickTime = 0;
     let status = 'IDLE'; // 'IDLE', 'RUNNING', 'PAUSED_ANSWERED', 'PAUSED_MANUAL', 'TIME_UP'
     let lastPlayerAnswer = null; // 'YES', 'NO', null
-    let currentRoundStartTime = 0;
+    let currentRoundId = Date.now();
     let isInitialized = false;
+    let buzzerConnected = false;
+    const processedMsgIds = new Set();
 
     // Audio SFX Synthesis
     let audioCtx = null;
@@ -112,282 +112,539 @@
         } catch(e) {}
     }
 
-    // Communication Setup
-    let ntfyWs = null;
-    let sseSource = null;
-    let mqttClient = null;
-    let bc = null;
-
-    function initConnections() {
-        const ntfyClientTopic = 'prg_quiz_' + roomId + '_client';
-        const LS_KEY = 'prg_quiz_action_' + roomId;
-
-        // 1. WebSocket to ntfy.sh (Fastest, zero-buffer)
-        try {
-            if (ntfyWs) ntfyWs.close();
-            ntfyWs = new WebSocket('wss://ntfy.sh/' + ntfyClientTopic + '/ws');
-            ntfyWs.onopen = () => {
-                updateConnectedCount(true);
-            };
-            ntfyWs.onmessage = (event) => {
-                try {
-                    const ntfyMsg = JSON.parse(event.data);
-                    if (ntfyMsg.id && !handledMessageIds.has(ntfyMsg.id)) {
-                        handledMessageIds.add(ntfyMsg.id);
-                        if (ntfyMsg.event === 'message' && ntfyMsg.message) {
-                            const payload = JSON.parse(ntfyMsg.message);
-                            handleClientMessage(payload);
-                        }
-                    }
-                } catch(e) {}
-            };
-            ntfyWs.onclose = () => {
-                setTimeout(() => { if (roomId) initConnections(); }, 3000);
-            };
-        } catch(e) {}
-
-        // 2. EventSource (SSE)
-        try {
-            if (sseSource) sseSource.close();
-            sseSource = new EventSource('https://ntfy.sh/' + ntfyClientTopic + '/sse');
-            sseSource.onopen = () => {
-                updateConnectedCount(true);
-            };
-            sseSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.id && !handledMessageIds.has(data.id)) {
-                        handledMessageIds.add(data.id);
-                        if (data.event === 'message' && data.message) {
-                            const payload = JSON.parse(data.message);
-                            handleClientMessage(payload);
-                        }
-                    }
-                } catch(e) {}
-            };
-        } catch(e) {}
-
-        // 3. MQTT
-        try {
-            if (typeof Paho !== 'undefined') {
-                const cid = 'hst_' + Math.random().toString(36).substring(2, 8);
-                mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, cid);
-                mqttClient.onMessageArrived = (m) => {
-                    try { handleClientMessage(JSON.parse(m.payloadString)); } catch(e) {}
-                };
-                mqttClient.connect({
-                    useSSL: true,
-                    timeout: 4,
-                    onSuccess: () => {
-                        mqttClient.subscribe('prg/quiz/' + roomId + '/client');
-                        if (roomId !== 'DEFAULT') {
-                            mqttClient.subscribe('prg/quiz/DEFAULT/client');
-                        }
-                        updateConnectedCount(true);
-                    }
-                });
-            }
-        } catch(e) {}
-
-        // 4. BroadcastChannel
-        try {
-            if ('BroadcastChannel' in window) {
-                if (bc) bc.close();
-                bc = new BroadcastChannel('prg_quiz_' + roomId);
-                bc.onmessage = (e) => handleClientMessage(e.data);
-            }
-        } catch(e) {}
-
-        // 5. LocalStorage Storage Listener
-        window.addEventListener('storage', (e) => {
-            if ((e.key === LS_KEY || e.key === 'prg_quiz_action_DEFAULT') && e.newValue) {
-                try {
-                    handleClientMessage(JSON.parse(e.newValue));
-                } catch(err) {}
-            }
-        });
+    // --- DOM Element Lookup Helpers ---
+    function el(id) {
+        return document.getElementById(id);
     }
 
-    const handledMessageIds = new Set();
+    // --- UI Rendering & Game Control Functions (Top-Level Scope!) ---
+    function updateConnectedCount(isClientSeen = false) {
+        if (isClientSeen) buzzerConnected = true;
+        const countEl = el('quiz-conn-count');
+        const dotEl = document.querySelector('.quiz-dot');
+        const roomDisplay = el('quiz-room-display');
 
-    // Pre-seed old message IDs so past session messages are ignored
-    async function seedOldMessageIds() {
-        try {
-            const clientTopic = 'prg_quiz_' + roomId + '_client';
-            const res = await fetch(`https://ntfy.sh/${clientTopic}/json?poll=1&since=all`, { cache: 'no-store' });
-            if (res.ok) {
-                const text = await res.text();
-                const lines = text.trim().split('\n');
-                lines.forEach(l => {
-                    try {
-                        const item = JSON.parse(l);
-                        if (item.id) handledMessageIds.add(item.id);
-                    } catch(e) {}
-                });
+        if (roomDisplay) roomDisplay.textContent = roomId;
+
+        const mqttReady = (emqxClient && emqxClient.isConnected()) || (hiveClient && hiveClient.isConnected());
+        if (countEl) {
+            if (buzzerConnected) {
+                countEl.textContent = `เชื่อมต่อเครื่องตอบแล้ว 🟢 (ห้อง: ${roomId})`;
+                if (dotEl) dotEl.classList.add('active');
+            } else if (mqttReady) {
+                countEl.textContent = `ออนไลน์ พร้อมเชื่อมเครื่องตอบ 📱 (ห้อง: ${roomId})`;
+                if (dotEl) dotEl.classList.add('active');
+            } else {
+                countEl.textContent = `กำลังเตรียมสัญญาณ... (ห้อง: ${roomId})`;
+                if (dotEl) dotEl.classList.remove('active');
             }
-        } catch(e) {}
+        }
     }
-    seedOldMessageIds();
 
-    initConnections();
+    function renderTimer() {
+        const timerDisplay = el('quiz-timer-display');
+        const timerBar = el('quiz-timer-bar');
+        const totalSec = Math.max(0, remainingMs / 1000);
+        if (timerDisplay) {
+            timerDisplay.textContent = totalSec.toFixed(2);
+            if (totalSec <= 4.0 && status === 'RUNNING') {
+                timerDisplay.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+            }
+        }
+        if (timerBar) {
+            const totalMs = durationSeconds * 1000;
+            const pct = Math.min(100, Math.max(0, (remainingMs / totalMs) * 100));
+            timerBar.style.width = pct + '%';
+        }
+    }
 
-    // 6. Fast Polling Fail-Safe (Fires every 150ms during RUNNING countdown)
-    function startFastPolling() {
-        if (pollTimer) clearInterval(pollTimer);
-        const clientTopic = 'prg_quiz_' + roomId + '_client';
+    function clearAnswerFlash() {
+        const qCard = el('quiz-question-card');
+        if (qCard) {
+            qCard.classList.remove('flash-yes', 'flash-no');
+        }
+    }
 
-        pollTimer = setInterval(async () => {
-            if (status !== 'RUNNING') {
-                clearInterval(pollTimer);
+    function loadQuestion(idx, forceResetTimer = false) {
+        if (typeof TRICKY_QUESTIONS === 'undefined' || TRICKY_QUESTIONS.length === 0) return;
+        currentQIndex = (idx + TRICKY_QUESTIONS.length) % TRICKY_QUESTIONS.length;
+        currentQuestion = TRICKY_QUESTIONS[currentQIndex];
+
+        const qNumEl = el('quiz-q-num');
+        const qTextEl = el('quiz-question-text');
+        const masterHintAns = el('quiz-master-hint-ans');
+        const masterHintExp = el('quiz-master-hint-exp');
+        const revealBox = el('quiz-reveal-box');
+
+        if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
+        if (qTextEl) qTextEl.textContent = currentQuestion.question;
+
+        if (masterHintAns) {
+            const isYes = currentQuestion.answer === true;
+            masterHintAns.className = 'quiz-master-hint-badge ' + (isYes ? 'yes' : 'no');
+            masterHintAns.textContent = isYes ? 'ใช่ (⭕)' : 'มั่ว (❌)';
+        }
+        if (masterHintExp) {
+            masterHintExp.textContent = `— ${currentQuestion.explanation}`;
+        }
+
+        clearAnswerFlash();
+        if (revealBox) revealBox.style.display = 'none';
+        lastPlayerAnswer = null;
+        currentRoundId = Date.now();
+
+        if (forceResetTimer || remainingMs <= 0 || status === 'TIME_UP') {
+            remainingMs = durationSeconds * 1000;
+        }
+        renderTimer();
+        setStatus('IDLE');
+    }
+
+    function setStatus(newStatus) {
+        status = newStatus;
+        const statusPill = el('quiz-status-pill');
+        const btnStartTimer = el('quiz-btn-start-timer');
+        const btnPauseTimer = el('quiz-btn-pause-timer');
+
+        if (statusPill) {
+            statusPill.className = 'quiz-status-pill';
+            if (status === 'IDLE') {
+                statusPill.classList.add('ready');
+                const isPartial = remainingMs > 0 && remainingMs < durationSeconds * 1000;
+                statusPill.textContent = isPartial
+                    ? `⏸️ รอกดเริ่มต่อ (${(remainingMs / 1000).toFixed(2)} วิ)`
+                    : 'พร้อมเริ่ม (เครื่องตอบล็อกอยู่)';
+                if (btnStartTimer) {
+                    btnStartTimer.textContent = isPartial ? '▶️ เริ่มจับเวลาต่อ!' : '▶️ เริ่มจับเวลา!';
+                    btnStartTimer.style.display = 'inline-flex';
+                }
+                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
+            } else if (status === 'RUNNING') {
+                statusPill.classList.add('running');
+                statusPill.textContent = '⏳ กำลังจับเวลา... (เครื่องตอบกดได้!)';
+                if (btnStartTimer) btnStartTimer.style.display = 'none';
+                if (btnPauseTimer) btnPauseTimer.style.display = 'inline-flex';
+                clearAnswerFlash();
+            } else if (status === 'PAUSED_ANSWERED') {
+                statusPill.classList.add('answered');
+                const sec = (Math.max(0, remainingMs) / 1000).toFixed(2);
+                statusPill.textContent = `🛑 เครื่องตอบแล้ว! หยุดที่ ${sec} วิ`;
+                if (btnStartTimer) {
+                    btnStartTimer.textContent = '▶️ เล่นต่อ (นับเวลาต่อ)';
+                    btnStartTimer.style.display = 'inline-flex';
+                }
+                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
+            } else if (status === 'PAUSED_MANUAL') {
+                statusPill.classList.add('answered');
+                statusPill.textContent = '⏸️ หยุดเวลาชั่วคราว (เครื่องตอบล็อกอยู่)';
+                if (btnStartTimer) {
+                    btnStartTimer.textContent = '▶️ จับเวลาต่อ';
+                    btnStartTimer.style.display = 'inline-flex';
+                }
+                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
+            } else if (status === 'TIME_UP') {
+                statusPill.classList.add('timeout');
+                statusPill.textContent = '⏰ หมดเวลา!';
+                if (btnStartTimer) {
+                    btnStartTimer.textContent = '🔄 เริ่มจับเวลารอบใหม่';
+                    btnStartTimer.style.display = 'inline-flex';
+                }
+                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
+            }
+        }
+        broadcastState();
+    }
+
+    function startTimer() {
+        if (status === 'RUNNING') return;
+
+        // If resuming after an answer or time up, hide previous answer reveal & flash
+        const revealBox = el('quiz-reveal-box');
+        if (status === 'PAUSED_ANSWERED' || status === 'TIME_UP') {
+            if (revealBox) revealBox.style.display = 'none';
+            clearAnswerFlash();
+            lastPlayerAnswer = null;
+        }
+
+        if (remainingMs <= 0) {
+            remainingMs = durationSeconds * 1000;
+        }
+
+        // New round ID so buzzer unlocks cleanly for this countdown
+        currentRoundId = Date.now();
+        setStatus('RUNNING');
+        lastTickTime = performance.now();
+        let lastSecTicked = Math.ceil(remainingMs / 1000);
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            const now = performance.now();
+            const delta = now - lastTickTime;
+            lastTickTime = now;
+
+            remainingMs -= delta;
+            if (remainingMs <= 0) {
+                remainingMs = 0;
+                renderTimer();
+                clearInterval(timerInterval);
+                onTimeUp();
                 return;
             }
 
-            // Poll Primary Topic
-            try {
-                const res = await fetch(`https://ntfy.sh/${clientTopic}/json?poll=1&since=all`, { cache: 'no-store' });
-                if (res.ok) {
-                    const text = await res.text();
-                    processPollText(text);
-                }
-            } catch(e) {}
-
-            // Poll Backup DEFAULT Topic
-            if (roomId !== 'DEFAULT' && status === 'RUNNING') {
-                try {
-                    const resDef = await fetch(`https://ntfy.sh/prg_quiz_DEFAULT_client/json?poll=1&since=all`, { cache: 'no-store' });
-                    if (resDef.ok) {
-                        const textDef = await resDef.text();
-                        processPollText(textDef);
-                    }
-                } catch(e) {}
+            const currentSec = Math.ceil(remainingMs / 1000);
+            if (currentSec !== lastSecTicked) {
+                lastSecTicked = currentSec;
+                playTickSound(currentSec <= 4);
             }
-        }, 150);
+
+            renderTimer();
+        }, 30);
     }
 
-    function processPollText(text) {
-        if (!text || status !== 'RUNNING') return;
-        const lines = text.trim().split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            try {
-                const item = JSON.parse(lines[i]);
-                if (item.id && !handledMessageIds.has(item.id)) {
-                    handledMessageIds.add(item.id);
-                    if (item.event === 'message' && item.message) {
-                        const payload = JSON.parse(item.message);
-                        handleClientMessage(payload);
-                    }
-                }
-            } catch(e) {}
+    function pauseTimerManual() {
+        clearInterval(timerInterval);
+        setStatus('PAUSED_MANUAL');
+    }
+
+    function pauseOnAnswer(ans) {
+        // Only accept answer when timer is RUNNING (or prevent duplicate trigger)
+        if (status !== 'RUNNING') return;
+
+        // STOP TIMER IMMEDIATELY!
+        clearInterval(timerInterval);
+        lastPlayerAnswer = ans;
+        playBuzzerSound();
+        setStatus('PAUSED_ANSWERED');
+
+        const qCard = el('quiz-question-card');
+        if (qCard) {
+            clearAnswerFlash();
+            if (ans === 'YES') {
+                qCard.classList.add('flash-yes');
+            } else if (ans === 'NO') {
+                qCard.classList.add('flash-no');
+            }
         }
+
+        showAnswerReveal(ans);
+        broadcastState();
+    }
+
+    function onTimeUp() {
+        clearInterval(timerInterval);
+        playAlarmSound();
+        setStatus('TIME_UP');
+        showAnswerReveal(null);
+    }
+
+    function showAnswerReveal(playerAns) {
+        const revealBox = el('quiz-reveal-box');
+        const playerAnsBadge = el('quiz-player-ans-badge');
+        const correctAnsBadge = el('quiz-correct-ans-badge');
+        const explanationText = el('quiz-explanation-text');
+
+        if (!revealBox || !currentQuestion) return;
+        revealBox.style.display = 'flex';
+
+        const isYes = currentQuestion.answer === true;
+        const correctText = isYes ? 'ใช่ (⭕)' : 'มั่ว (❌)';
+
+        if (playerAnsBadge) {
+            if (playerAns === 'YES') {
+                playerAnsBadge.className = 'quiz-player-ans-banner yes';
+                playerAnsBadge.innerHTML = '📱 เครื่องตอบกด: <strong style="font-size: 1.65rem; margin-left: 6px;">ใช่ (⭕)</strong>';
+            } else if (playerAns === 'NO') {
+                playerAnsBadge.className = 'quiz-player-ans-banner no';
+                playerAnsBadge.innerHTML = '📱 เครื่องตอบกด: <strong style="font-size: 1.65rem; margin-left: 6px;">มั่ว (❌)</strong>';
+            } else {
+                playerAnsBadge.className = 'quiz-player-ans-banner no';
+                playerAnsBadge.innerHTML = '📱 เครื่องตอบ: <strong style="margin-left: 6px;">ไม่ทัน (หมดเวลา) ⏰</strong>';
+            }
+        }
+
+        if (correctAnsBadge) {
+            const isPlayerCorrect = (playerAns === 'YES' && isYes) || (playerAns === 'NO' && !isYes);
+            if (playerAns && isPlayerCorrect) {
+                correctAnsBadge.className = 'quiz-ans-badge yes';
+                correctAnsBadge.textContent = `เฉลย: ${correctText} (ตอบถูก! 🎉)`;
+                playCorrectSound();
+            } else if (playerAns && !isPlayerCorrect) {
+                correctAnsBadge.className = 'quiz-ans-badge no';
+                correctAnsBadge.textContent = `เฉลย: ${correctText} (ตอบผิด! ❌)`;
+            } else {
+                correctAnsBadge.className = 'quiz-ans-badge correct';
+                correctAnsBadge.textContent = `เฉลย: ${correctText}`;
+            }
+        }
+
+        if (explanationText) {
+            explanationText.textContent = `💡 ${currentQuestion.explanation}`;
+        }
+    }
+
+    // --- Multi-Channel Real-Time Sync Engine ---
+    let emqxClient = null;
+    let hiveClient = null;
+    let hostPeer = null;
+    let peerConnections = [];
+    let bcRoom = null;
+    let bcGlobal = null;
+
+    function getStatePayload() {
+        return {
+            type: 'STATE_UPDATE',
+            status: status,
+            roundId: currentRoundId,
+            questionText: currentQuestion ? `ข้อที่ ${currentQIndex + 1}: ${currentQuestion.question}` : '',
+            qIndex: currentQIndex,
+            remainingMs: Math.round(remainingMs),
+            durationSeconds: durationSeconds,
+            lastAnswer: lastPlayerAnswer,
+            roomId: roomId,
+            _t: Date.now()
+        };
     }
 
     function broadcastState() {
-        const ntfyHostTopic = 'prg_quiz_' + roomId + '_host';
-        const payload = {
-            type: 'STATE_UPDATE',
-            status: status,
-            questionText: currentQuestion ? currentQuestion.question : '',
-            qIndex: currentQIndex,
-            remainingMs: remainingMs,
-            durationSeconds: durationSeconds,
-            lastAnswer: lastPlayerAnswer
-        };
+        const payload = getStatePayload();
         const str = JSON.stringify(payload);
 
-        // A. Send via ntfy POST
-        try {
-            fetch('https://ntfy.sh/' + ntfyHostTopic, {
-                method: 'POST',
-                body: str,
-                headers: { 'Content-Type': 'application/json' }
-            }).catch(() => {});
-        } catch(e) {}
-
-        // B. Send via MQTT
-        if (mqttClient && mqttClient.isConnected()) {
+        // 1. EMQX MQTT (with retained = true so new buzzers get state immediately!)
+        if (emqxClient && emqxClient.isConnected()) {
             try {
-                const m = new Paho.MQTT.Message(str);
-                m.destinationName = 'prg/quiz/' + roomId + '/host';
-                mqttClient.send(m);
+                const m1 = new Paho.MQTT.Message(str);
+                m1.destinationName = 'prg/quiz/' + roomId + '/host';
+                m1.retained = true;
+                emqxClient.send(m1);
+
+                const m2 = new Paho.MQTT.Message(str);
+                m2.destinationName = 'prg/quiz/GLOBAL/host';
+                m2.retained = true;
+                emqxClient.send(m2);
             } catch(e) {}
         }
 
-        // C. Send via BroadcastChannel
-        if (bc) {
-            try { bc.postMessage(payload); } catch(e) {}
+        // 2. HiveMQ MQTT (hot-standby broker)
+        if (hiveClient && hiveClient.isConnected()) {
+            try {
+                const m1 = new Paho.MQTT.Message(str);
+                m1.destinationName = 'prg/quiz/' + roomId + '/host';
+                m1.retained = true;
+                hiveClient.send(m1);
+
+                const m2 = new Paho.MQTT.Message(str);
+                m2.destinationName = 'prg/quiz/GLOBAL/host';
+                m2.retained = true;
+                hiveClient.send(m2);
+            } catch(e) {}
         }
 
-        // D. LocalStorage
+        // 3. PeerJS WebRTC DataChannels
+        peerConnections.forEach(conn => {
+            try {
+                if (conn && conn.open) conn.send(payload);
+            } catch(e) {}
+        });
+
+        // 4. BroadcastChannel (Same browser tabs)
         try {
-            localStorage.setItem('prg_quiz_host_state_' + roomId, str);
+            if (bcRoom) bcRoom.postMessage(payload);
+            if (bcGlobal) bcGlobal.postMessage(payload);
+        } catch(e) {}
+
+        // 5. LocalStorage (Same browser fallback)
+        try {
+            localStorage.setItem('prg_quiz_ls_host_v3_' + roomId, str);
+            localStorage.setItem('prg_quiz_ls_host_v3_GLOBAL', str);
         } catch(e) {}
     }
 
     function handleClientMessage(data) {
         if (!data || !data.type) return;
 
-        if (data.type === 'JOIN' || data.type === 'REQUEST_STATE') {
+        // Deduplicate by msgId if present
+        if (data.msgId) {
+            if (processedMsgIds.has(data.msgId)) return;
+            processedMsgIds.add(data.msgId);
+        }
+
+        if (data.type === 'JOIN' || data.type === 'REQUEST_STATE' || data.type === 'PING') {
             updateConnectedCount(true);
             broadcastState();
         } else if (data.type === 'ANSWER_SUBMITTED') {
-            // STOP TIMER IMMEDIATELY! Regardless of current state
+            updateConnectedCount(true);
             pauseOnAnswer(data.answer);
         }
     }
 
-    function updateConnectedCount(hasConnection = false) {
-        const countEl = document.getElementById('quiz-conn-count');
-        const dotEl = document.querySelector('.quiz-dot');
-        const roomDisplay = document.getElementById('quiz-room-display');
-
-        if (roomDisplay) roomDisplay.textContent = roomId;
-
-        if (countEl) {
-            if (hasConnection || (mqttClient && mqttClient.isConnected()) || (ntfyWs && ntfyWs.readyState === WebSocket.OPEN)) {
-                countEl.textContent = `พร้อมตอบ 📱 (ห้อง: ${roomId})`;
-                if (dotEl) dotEl.classList.add('active');
-            } else {
-                countEl.textContent = `รอเครื่องตอบ... (ห้อง: ${roomId})`;
-                if (dotEl) dotEl.classList.remove('active');
+    // Channel 1: EMQX MQTT Broker (mqttVersion: 4)
+    function initEmqx() {
+        if (typeof Paho === 'undefined') return;
+        try {
+            if (emqxClient && emqxClient.isConnected()) {
+                try { emqxClient.disconnect(); } catch(e) {}
             }
-        }
+            const cid = 'prg_hst_emqx_' + Math.random().toString(36).substring(2, 9);
+            emqxClient = new Paho.MQTT.Client('broker.emqx.io', 8084, '/mqtt', cid);
+            emqxClient.onMessageArrived = (m) => {
+                try { handleClientMessage(JSON.parse(m.payloadString)); } catch(e) {}
+            };
+            emqxClient.onConnectionLost = () => {
+                updateConnectedCount();
+                setTimeout(initEmqx, 2500);
+            };
+            emqxClient.connect({
+                useSSL: true,
+                mqttVersion: 4,
+                timeout: 5,
+                keepAliveInterval: 30,
+                onSuccess: () => {
+                    try {
+                        emqxClient.subscribe('prg/quiz/' + roomId + '/client');
+                        emqxClient.subscribe('prg/quiz/GLOBAL/client');
+                        emqxClient.subscribe('prg/quiz/1234/client');
+                    } catch(e) {}
+                    updateConnectedCount();
+                    broadcastState();
+                },
+                onFailure: () => {
+                    setTimeout(initEmqx, 3000);
+                }
+            });
+        } catch(e) {}
     }
 
-    // --- DOM Elements & Host Controller ---
+    // Channel 2: HiveMQ MQTT Broker (mqttVersion: 4)
+    function initHiveMq() {
+        if (typeof Paho === 'undefined') return;
+        try {
+            if (hiveClient && hiveClient.isConnected()) {
+                try { hiveClient.disconnect(); } catch(e) {}
+            }
+            const cid = 'prg_hst_hive_' + Math.random().toString(36).substring(2, 9);
+            hiveClient = new Paho.MQTT.Client('broker.hivemq.com', 8884, '/mqtt', cid);
+            hiveClient.onMessageArrived = (m) => {
+                try { handleClientMessage(JSON.parse(m.payloadString)); } catch(e) {}
+            };
+            hiveClient.onConnectionLost = () => {
+                updateConnectedCount();
+                setTimeout(initHiveMq, 3000);
+            };
+            hiveClient.connect({
+                useSSL: true,
+                mqttVersion: 4,
+                timeout: 5,
+                keepAliveInterval: 30,
+                onSuccess: () => {
+                    try {
+                        hiveClient.subscribe('prg/quiz/' + roomId + '/client');
+                        hiveClient.subscribe('prg/quiz/GLOBAL/client');
+                        hiveClient.subscribe('prg/quiz/1234/client');
+                    } catch(e) {}
+                    updateConnectedCount();
+                    broadcastState();
+                },
+                onFailure: () => {
+                    setTimeout(initHiveMq, 4000);
+                }
+            });
+        } catch(e) {}
+    }
+
+    // Channel 3: PeerJS WebRTC DataChannel
+    function initPeerJs() {
+        if (typeof Peer === 'undefined') return;
+        try {
+            if (hostPeer) {
+                try { hostPeer.destroy(); } catch(e) {}
+            }
+            peerConnections = [];
+            const peerId = 'prg-quiz-host-v3-' + roomId.toLowerCase();
+            hostPeer = new Peer(peerId);
+            hostPeer.on('open', () => {
+                updateConnectedCount();
+            });
+            hostPeer.on('connection', (conn) => {
+                peerConnections.push(conn);
+                updateConnectedCount(true);
+                conn.on('open', () => {
+                    updateConnectedCount(true);
+                    conn.send(getStatePayload());
+                });
+                conn.on('data', (data) => {
+                    handleClientMessage(data);
+                });
+            });
+            hostPeer.on('error', () => {
+                // Ignore ID-taken or network errors gracefully; MQTT is active
+            });
+        } catch(e) {}
+    }
+
+    // Channel 4 & 5: BroadcastChannel + LocalStorage 60ms Watcher
+    let lastSeenClientLs = '';
+    function initLocalChannels() {
+        try {
+            if ('BroadcastChannel' in window) {
+                if (bcRoom) bcRoom.close();
+                if (bcGlobal) bcGlobal.close();
+                bcRoom = new BroadcastChannel('prg_quiz_bc_v3_' + roomId);
+                bcGlobal = new BroadcastChannel('prg_quiz_bc_v3_GLOBAL');
+                bcRoom.onmessage = (e) => handleClientMessage(e.data);
+                bcGlobal.onmessage = (e) => handleClientMessage(e.data);
+            }
+        } catch(e) {}
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (e.key && e.key.startsWith('prg_quiz_ls_client_v3_') && e.newValue) {
+            try { handleClientMessage(JSON.parse(e.newValue)); } catch(err) {}
+        }
+    });
+
+    // 60ms LocalStorage memory watcher (0 network cost, instant same-machine sync even on file:///)
+    setInterval(() => {
+        try {
+            const raw = localStorage.getItem('prg_quiz_ls_client_v3_GLOBAL') || localStorage.getItem('prg_quiz_ls_client_v3_' + roomId);
+            if (raw && raw !== lastSeenClientLs) {
+                lastSeenClientLs = raw;
+                handleClientMessage(JSON.parse(raw));
+            }
+        } catch(e) {}
+    }, 60);
+
+    // Periodic 1s heartbeat so any buzzer stays in sync with timer & status
+    heartbeatInterval = setInterval(() => {
+        broadcastState();
+    }, 1000);
+
+    function startAllTransports() {
+        initLocalChannels();
+        initEmqx();
+        initHiveMq();
+        initPeerJs();
+    }
+
+    startAllTransports();
+
+    // --- DOM Elements & Host Controller Binding ---
     window.initQuizHost = function() {
-        const timeSelect = document.getElementById('quiz-time-select');
-        const btnToggleQr = document.getElementById('quiz-btn-toggle-qr');
-        const btnOpenBuzzer = document.getElementById('quiz-btn-open-buzzer');
-        const qrDrawer = document.getElementById('quiz-qr-drawer');
-        const qrCodeBox = document.getElementById('quiz-qrcode-box');
-        const qrLinkText = document.getElementById('quiz-link-text');
-        const customUrlInput = document.getElementById('quiz-custom-url');
-        const hostRoomBadge = document.getElementById('quiz-host-room-badge');
-
-        const timerDisplay = document.getElementById('quiz-timer-display');
-        const timerBar = document.getElementById('quiz-timer-bar');
-        const qNumEl = document.getElementById('quiz-q-num');
-        const statusPill = document.getElementById('quiz-status-pill');
-        const qTextEl = document.getElementById('quiz-question-text');
-        const qCard = document.getElementById('quiz-question-card');
-
-        const masterHintAns = document.getElementById('quiz-master-hint-ans');
-        const masterHintExp = document.getElementById('quiz-master-hint-exp');
-
-        const revealBox = document.getElementById('quiz-reveal-box');
-        const playerAnsBadge = document.getElementById('quiz-player-ans-badge');
-        const correctAnsBadge = document.getElementById('quiz-correct-ans-badge');
-        const explanationText = document.getElementById('quiz-explanation-text');
-
-        const btnRandomQ = document.getElementById('quiz-btn-random-q');
-        const btnStartTimer = document.getElementById('quiz-btn-start-timer');
-        const btnPauseTimer = document.getElementById('quiz-btn-pause-timer');
+        const timeSelect = el('quiz-time-select');
+        const btnToggleQr = el('quiz-btn-toggle-qr');
+        const btnOpenBuzzer = el('quiz-btn-open-buzzer');
+        const qrDrawer = el('quiz-qr-drawer');
+        const qrCodeBox = el('quiz-qrcode-box');
+        const qrLinkText = el('quiz-link-text');
+        const customUrlInput = el('quiz-custom-url');
+        const hostRoomBadge = el('quiz-host-room-badge');
+        const btnRandomQ = el('quiz-btn-random-q');
+        const btnStartTimer = el('quiz-btn-start-timer');
+        const btnPauseTimer = el('quiz-btn-pause-timer');
 
         function buildBuzzerUrl(targetBase) {
             let base = targetBase || window.location.href.split('?')[0].replace(/[^/]*$/, '');
-            if (base.startsWith('file:///')) {
-                base = 'http://localhost:8000/';
-            }
             if (!base.endsWith('/')) {
                 const parts = base.split('/');
                 if (parts[parts.length - 1].includes('.')) {
@@ -406,7 +663,6 @@
 
         function getEffectiveBuzzerUrl(rawVal) {
             let val = (rawVal && rawVal.trim()) ? rawVal.trim() : currentBuzzerUrl;
-            // Ensure room parameter exists
             if (!val.includes('room=')) {
                 const sep = val.includes('?') ? '&' : '?';
                 val = val + sep + 'room=' + roomId;
@@ -428,19 +684,19 @@
             if (qrLinkText) qrLinkText.textContent = urlToEncode;
         }
 
-        // Quick Room Code edit on Host
         if (hostRoomBadge && !hostRoomBadge.dataset.bound) {
             hostRoomBadge.dataset.bound = 'true';
             hostRoomBadge.addEventListener('click', () => {
-                const newCode = prompt('ใส่รหัสห้องที่ต้องการ (เช่น 1234 หรือ 999):', roomId);
+                const newCode = prompt('ใส่รหัสห้องที่ต้องการ (เช่น 1234):', roomId);
                 if (newCode && newCode.trim()) {
                     const sanitized = newCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
                     if (sanitized) {
                         roomId = sanitized;
-                        localStorage.setItem('prg_quiz_room_id', roomId);
+                        localStorage.setItem('prg_quiz_room_v3', roomId);
+                        buzzerConnected = false;
                         currentBuzzerUrl = buildBuzzerUrl();
                         if (customUrlInput) customUrlInput.value = currentBuzzerUrl;
-                        initConnections();
+                        startAllTransports();
                         updateConnectedCount();
                         renderQrCode(currentBuzzerUrl);
                     }
@@ -486,230 +742,21 @@
                 if (status !== 'RUNNING') {
                     remainingMs = durationSeconds * 1000;
                     renderTimer();
-                    broadcastState();
+                    setStatus('IDLE');
                 }
             });
-        }
-
-        function renderTimer() {
-            const totalSec = Math.max(0, remainingMs / 1000);
-            if (timerDisplay) {
-                timerDisplay.textContent = totalSec.toFixed(2);
-                if (totalSec <= 4.0 && status === 'RUNNING') {
-                    timerDisplay.classList.add('warning');
-                } else {
-                    timerDisplay.classList.remove('warning');
-                }
-            }
-            if (timerBar) {
-                const totalMs = durationSeconds * 1000;
-                const pct = Math.min(100, Math.max(0, (remainingMs / totalMs) * 100));
-                timerBar.style.width = pct + '%';
-            }
-        }
-
-        function clearAnswerFlash() {
-            if (qCard) {
-                qCard.classList.remove('flash-yes', 'flash-no');
-            }
-        }
-
-        function loadQuestion(idx, autoResetTimer = true) {
-            if (typeof TRICKY_QUESTIONS === 'undefined' || TRICKY_QUESTIONS.length === 0) return;
-            currentQIndex = (idx + TRICKY_QUESTIONS.length) % TRICKY_QUESTIONS.length;
-            currentQuestion = TRICKY_QUESTIONS[currentQIndex];
-
-            if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
-            if (qTextEl) qTextEl.textContent = currentQuestion.question;
-
-            if (masterHintAns) {
-                const isYes = currentQuestion.answer === true;
-                masterHintAns.className = 'quiz-master-hint-badge ' + (isYes ? 'yes' : 'no');
-                masterHintAns.textContent = isYes ? 'ใช่ (⭕)' : 'มั่ว (❌)';
-            }
-            if (masterHintExp) {
-                masterHintExp.textContent = `— ${currentQuestion.explanation}`;
-            }
-
-            clearAnswerFlash();
-            if (revealBox) revealBox.style.display = 'none';
-            lastPlayerAnswer = null;
-
-            if (autoResetTimer) {
-                remainingMs = durationSeconds * 1000;
-                renderTimer();
-            }
-
-            setStatus('IDLE');
-        }
-
-        function setStatus(newStatus) {
-            status = newStatus;
-            if (!statusPill) return;
-
-            statusPill.className = 'quiz-status-pill';
-            if (status === 'IDLE') {
-                statusPill.classList.add('ready');
-                statusPill.textContent = 'พร้อมเริ่ม';
-                if (btnStartTimer) {
-                    btnStartTimer.textContent = '▶️ เริ่มจับเวลา!';
-                    btnStartTimer.style.display = 'inline-flex';
-                }
-                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
-            } else if (status === 'RUNNING') {
-                statusPill.classList.add('running');
-                statusPill.textContent = '⏳ กำลังจับเวลา...';
-                if (btnStartTimer) btnStartTimer.style.display = 'none';
-                if (btnPauseTimer) btnPauseTimer.style.display = 'inline-flex';
-                clearAnswerFlash();
-            } else if (status === 'PAUSED_ANSWERED') {
-                statusPill.classList.add('answered');
-                const sec = (Math.max(0, remainingMs) / 1000).toFixed(2);
-                statusPill.textContent = `🛑 เครื่องตอบแล้ว! หยุดที่ ${sec} วิ`;
-                if (btnStartTimer) {
-                    btnStartTimer.textContent = '▶️ เล่นต่อ (นับเวลาต่อ)';
-                    btnStartTimer.style.display = 'inline-flex';
-                }
-                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
-            } else if (status === 'PAUSED_MANUAL') {
-                statusPill.classList.add('answered');
-                statusPill.textContent = '⏸️ หยุดเวลาชั่วคราว';
-                if (btnStartTimer) {
-                    btnStartTimer.textContent = '▶️ จับเวลาต่อ';
-                    btnStartTimer.style.display = 'inline-flex';
-                }
-                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
-            } else if (status === 'TIME_UP') {
-                statusPill.classList.add('timeout');
-                statusPill.textContent = '⏰ หมดเวลา!';
-                if (btnStartTimer) btnStartTimer.style.display = 'none';
-                if (btnPauseTimer) btnPauseTimer.style.display = 'none';
-            }
-            broadcastState();
-        }
-
-        function startTimer() {
-            if (status === 'RUNNING') return;
-            if (remainingMs <= 0) {
-                remainingMs = durationSeconds * 1000;
-            }
-
-            currentRoundStartTime = Date.now() - 300;
-            setStatus('RUNNING');
-            lastTickTime = performance.now();
-            let lastSecTicked = Math.ceil(remainingMs / 1000);
-
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                const now = performance.now();
-                const delta = now - lastTickTime;
-                lastTickTime = now;
-
-                remainingMs -= delta;
-                if (remainingMs <= 0) {
-                    remainingMs = 0;
-                    renderTimer();
-                    clearInterval(timerInterval);
-                    if (pollTimer) clearInterval(pollTimer);
-                    onTimeUp();
-                    return;
-                }
-
-                const currentSec = Math.ceil(remainingMs / 1000);
-                if (currentSec !== lastSecTicked) {
-                    lastSecTicked = currentSec;
-                    playTickSound(currentSec <= 4);
-                }
-
-                renderTimer();
-            }, 30);
-
-            startFastPolling();
-        }
-
-        function pauseTimerManual() {
-            clearInterval(timerInterval);
-            if (pollTimer) clearInterval(pollTimer);
-            setStatus('PAUSED_MANUAL');
-        }
-
-        function pauseOnAnswer(ans) {
-            if (status === 'PAUSED_ANSWERED') return;
-
-            // STOP TIMER IMMEDIATELY!
-            clearInterval(timerInterval);
-            if (pollTimer) clearInterval(pollTimer);
-
-            lastPlayerAnswer = ans;
-            playBuzzerSound();
-            setStatus('PAUSED_ANSWERED');
-
-            if (qCard) {
-                clearAnswerFlash();
-                if (ans === 'YES') {
-                    qCard.classList.add('flash-yes');
-                } else if (ans === 'NO') {
-                    qCard.classList.add('flash-no');
-                }
-            }
-
-            showAnswerReveal(ans);
-            broadcastState();
-        }
-
-        function onTimeUp() {
-            playAlarmSound();
-            setStatus('TIME_UP');
-            showAnswerReveal(null);
-        }
-
-        function showAnswerReveal(playerAns) {
-            if (!revealBox || !currentQuestion) return;
-            revealBox.style.display = 'flex';
-
-            const isYes = currentQuestion.answer === true;
-            const correctText = isYes ? 'ใช่ (⭕)' : 'มั่ว (❌)';
-
-            if (playerAnsBadge) {
-                if (playerAns === 'YES') {
-                    playerAnsBadge.className = 'quiz-player-ans-banner yes';
-                    playerAnsBadge.innerHTML = '📱 เครื่องตอบกด: <strong style="font-size: 1.6rem; margin-left: 6px;">ใช่ (⭕)</strong>';
-                } else if (playerAns === 'NO') {
-                    playerAnsBadge.className = 'quiz-player-ans-banner no';
-                    playerAnsBadge.innerHTML = '📱 เครื่องตอบกด: <strong style="font-size: 1.6rem; margin-left: 6px;">มั่ว (❌)</strong>';
-                } else {
-                    playerAnsBadge.className = 'quiz-player-ans-banner no';
-                    playerAnsBadge.innerHTML = '📱 เครื่องตอบ: <strong style="margin-left: 6px;">ไม่ทัน (หมดเวลา) ⏰</strong>';
-                }
-            }
-
-            if (correctAnsBadge) {
-                const isPlayerCorrect = (playerAns === 'YES' && isYes) || (playerAns === 'NO' && !isYes);
-                if (playerAns && isPlayerCorrect) {
-                    correctAnsBadge.className = 'quiz-ans-badge yes';
-                    correctAnsBadge.textContent = `เฉลย: ${correctText} (ตอบถูก! 🎉)`;
-                    playCorrectSound();
-                } else if (playerAns && !isPlayerCorrect) {
-                    correctAnsBadge.className = 'quiz-ans-badge no';
-                    correctAnsBadge.textContent = `เฉลย: ${correctText} (ตอบผิด! ❌)`;
-                } else {
-                    correctAnsBadge.className = 'quiz-ans-badge correct';
-                    correctAnsBadge.textContent = `เฉลย: ${correctText}`;
-                }
-            }
-
-            if (explanationText) {
-                explanationText.textContent = `💡 ${currentQuestion.explanation}`;
-            }
         }
 
         if (btnRandomQ && !btnRandomQ.dataset.bound) {
             btnRandomQ.dataset.bound = 'true';
             btnRandomQ.addEventListener('click', () => {
                 clearInterval(timerInterval);
-                if (pollTimer) clearInterval(pollTimer);
-                const nextIdx = Math.floor(Math.random() * (TRICKY_QUESTIONS.length || 1));
-                loadQuestion(nextIdx, true);
+                let nextIdx = Math.floor(Math.random() * (TRICKY_QUESTIONS.length || 1));
+                if (TRICKY_QUESTIONS.length > 1 && nextIdx === currentQIndex) {
+                    nextIdx = (nextIdx + 1) % TRICKY_QUESTIONS.length;
+                }
+                // Keep remaining time if paused mid-countdown; only reset if time was up or full
+                loadQuestion(nextIdx, false);
             });
         }
 
@@ -731,11 +778,13 @@
             isInitialized = true;
             loadQuestion(0, true);
             updateConnectedCount();
+        } else {
+            broadcastState();
         }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        const quizSec = document.getElementById('quiz-mode');
+        const quizSec = el('quiz-mode');
         if (quizSec && quizSec.classList.contains('active')) {
             window.initQuizHost();
         }
