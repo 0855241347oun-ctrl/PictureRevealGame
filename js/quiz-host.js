@@ -3,11 +3,10 @@
  * - สุ่มโจทย์ 50 ข้อ
  * - ตั้งเวลา 10, 15, 20, 30, 60 วิ (หรือตามที่เลือก)
  * - แสดงเวลานับถอยหลังเป็น .00 วินาทีชัดเจน
- * - เชื่อมต่อแบบ 4 ช่องทาง Real-time:
- *   1) MQTT SSL WebSockets (ทำงานข้ามเน็ต ข้ามมือถือ 100% ไม่ติด NAT)
- *   2) PeerJS WebRTC
- *   3) BroadcastChannel (สำหรับเล่นหรือทดสอบในเบราว์เซอร์เดียวกัน)
- *   4) LocalStorage StorageEvent
+ * - รับสัญญาณตอบแบบหลายช่องทางความเร็วสูง:
+ *   1) ntfy.sh HTTPS EventStream/WebSocket (ทำงานข้ามอุปกรณ์และข้ามเครือข่ายเน็ตได้ 100%)
+ *   2) MQTT WebSockets (broker.emqx.io)
+ *   3) BroadcastChannel & LocalStorage StorageEvent
  * - เมื่อเครื่องตอบกดส่งคำตอบ: เวลาหยุดทันที!
  * - เมื่อคนถามกดเริ่ม: นับเวลาต่อจากเศษวินาทีเดิม
  * - กระพริบแสงการ์ดตามคำตอบ (เขียว = ใช่, แดง = มั่ว)
@@ -18,7 +17,7 @@
         roomId = Math.random().toString(36).substring(2, 7).toUpperCase();
         localStorage.setItem('prg_quiz_room_id', roomId);
     }
-    roomId = roomId.toUpperCase();
+    roomId = roomId.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
     // Game State
     let currentQIndex = 0;
@@ -111,65 +110,68 @@
     }
 
     // --- Communication Setup ---
-    let clientConns = [];
-    let mqttClient = null;
-    const mqttTopicHost = 'prg/quiz/' + roomId + '/host';
-    const mqttTopicClient = 'prg/quiz/' + roomId + '/client';
+    const ntfyClientTopic = 'prg_quiz_' + roomId + '_client';
+    const ntfyHostTopic = 'prg_quiz_' + roomId + '_host';
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
     const LS_KEY = 'prg_quiz_action_' + roomId;
-    let peer = null;
 
+    // 1. Listen to Client via ntfy WebSocket
+    let ntfyWs = null;
+    function connectNtfyHostWs() {
+        try {
+            ntfyWs = new WebSocket('wss://ntfy.sh/' + ntfyClientTopic + '/ws');
+            ntfyWs.onopen = () => {
+                updateConnectedCount(true);
+            };
+            ntfyWs.onmessage = (event) => {
+                try {
+                    const ntfyMsg = JSON.parse(event.data);
+                    if (ntfyMsg.event === 'message') {
+                        const payload = JSON.parse(ntfyMsg.message);
+                        handleClientMessage(payload);
+                    }
+                } catch(e) {}
+            };
+            ntfyWs.onclose = () => {
+                setTimeout(connectNtfyHostWs, 2000);
+            };
+        } catch(e) {}
+    }
+    connectNtfyHostWs();
+
+    // 2. MQTT Backup
+    let mqttClient = null;
     function initMqttHost() {
         if (typeof Paho === 'undefined') return;
         try {
-            const clientId = 'host_' + Math.random().toString(36).substring(2, 9);
-            mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, clientId);
-            mqttClient.onConnectionLost = () => {
-                setTimeout(initMqttHost, 2000);
-            };
-            mqttClient.onMessageArrived = (message) => {
-                try {
-                    const data = JSON.parse(message.payloadString);
-                    handleClientMessage(data);
-                } catch(e) {}
+            const cid = 'hst_' + Math.random().toString(36).substring(2, 8);
+            mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, cid);
+            mqttClient.onMessageArrived = (m) => {
+                try { handleClientMessage(JSON.parse(m.payloadString)); } catch(e) {}
             };
             mqttClient.connect({
                 useSSL: true,
-                timeout: 5,
+                timeout: 4,
                 onSuccess: () => {
-                    console.log('Host connected to MQTT broker');
-                    mqttClient.subscribe(mqttTopicClient);
+                    mqttClient.subscribe('prg/quiz/' + roomId + '/client');
                     updateConnectedCount(true);
-                    broadcastState();
-                },
-                onFailure: () => {
-                    tryAltMqttHost();
                 }
             });
         } catch(e) {}
     }
+    initMqttHost();
 
-    function tryAltMqttHost() {
-        try {
-            const clientId = 'host_' + Math.random().toString(36).substring(2, 9);
-            mqttClient = new Paho.MQTT.Client('test.mosquitto.org', 8081, clientId);
-            mqttClient.onMessageArrived = (message) => {
-                try {
-                    const data = JSON.parse(message.payloadString);
-                    handleClientMessage(data);
-                } catch(e) {}
-            };
-            mqttClient.connect({
-                useSSL: true,
-                timeout: 5,
-                onSuccess: () => {
-                    mqttClient.subscribe(mqttTopicClient);
-                    updateConnectedCount(true);
-                    broadcastState();
-                }
-            });
-        } catch(e) {}
+    // 3. BroadcastChannel & Storage Event
+    if (bc) {
+        bc.onmessage = (e) => handleClientMessage(e.data);
     }
+    window.addEventListener('storage', (e) => {
+        if (e.key === LS_KEY && e.newValue) {
+            try {
+                handleClientMessage(JSON.parse(e.newValue));
+            } catch(err) {}
+        }
+    });
 
     function broadcastState() {
         const payload = {
@@ -183,25 +185,31 @@
         };
         const str = JSON.stringify(payload);
 
-        // 1. MQTT
+        // A. Send via ntfy POST (Instant HTTP)
+        try {
+            fetch('https://ntfy.sh/' + ntfyHostTopic, {
+                method: 'POST',
+                body: str,
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' }
+            }).catch(() => {});
+        } catch(e) {}
+
+        // B. Send via MQTT
         if (mqttClient && mqttClient.isConnected()) {
             try {
-                const msg = new Paho.MQTT.Message(str);
-                msg.destinationName = mqttTopicHost;
-                mqttClient.send(msg);
+                const m = new Paho.MQTT.Message(str);
+                m.destinationName = 'prg/quiz/' + roomId + '/host';
+                mqttClient.send(m);
             } catch(e) {}
         }
-        // 2. PeerJS
-        clientConns.forEach(c => {
-            if (c.open) {
-                try { c.send(payload); } catch(e) {}
-            }
-        });
-        // 3. BroadcastChannel
+
+        // C. Send via BroadcastChannel
         if (bc) {
             try { bc.postMessage(payload); } catch(e) {}
         }
-        // 4. LocalStorage
+
+        // D. LocalStorage
         try {
             localStorage.setItem('prg_quiz_host_state_' + roomId, str);
         } catch(e) {}
@@ -224,9 +232,8 @@
     function updateConnectedCount(hasConnection = false) {
         const countEl = document.getElementById('quiz-conn-count');
         const dotEl = document.querySelector('.quiz-dot');
-        const activeCount = clientConns.filter(c => c.open).length;
         if (countEl) {
-            if (hasConnection || activeCount > 0 || (mqttClient && mqttClient.isConnected())) {
+            if (hasConnection || (mqttClient && mqttClient.isConnected())) {
                 countEl.textContent = `ระบบเครื่องตอบพร้อมใช้งาน 📱 (ROOM: ${roomId})`;
                 if (dotEl) dotEl.classList.add('active');
             } else {
@@ -236,41 +243,8 @@
         }
     }
 
-    function initHostPeer() {
-        if (peer) return;
-        try {
-            const hostPeerId = 'prg-quiz-' + roomId;
-            peer = new Peer(hostPeerId);
-            peer.on('connection', (conn) => {
-                clientConns.push(conn);
-                conn.on('open', () => {
-                    updateConnectedCount(true);
-                    broadcastState();
-                });
-                conn.on('data', (data) => handleClientMessage(data));
-                conn.on('close', () => {
-                    clientConns = clientConns.filter(c => c !== conn);
-                    updateConnectedCount();
-                });
-            });
-        } catch(e) {}
-
-        if (bc) {
-            bc.onmessage = (e) => handleClientMessage(e.data);
-        }
-        window.addEventListener('storage', (e) => {
-            if (e.key === LS_KEY && e.newValue) {
-                try {
-                    handleClientMessage(JSON.parse(e.newValue));
-                } catch(err) {}
-            }
-        });
-    }
-
+    // --- DOM Elements & Host Controller ---
     window.initQuizHost = function() {
-        initHostPeer();
-        initMqttHost();
-
         const timeSelect = document.getElementById('quiz-time-select');
         const btnToggleQr = document.getElementById('quiz-btn-toggle-qr');
         const btnOpenBuzzer = document.getElementById('quiz-btn-open-buzzer');
@@ -359,7 +333,6 @@
             });
         }
 
-        // Render timer with .00 format
         function renderTimer() {
             const totalSec = Math.max(0, remainingMs / 1000);
             if (timerDisplay) {
@@ -391,7 +364,6 @@
             if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
             if (qTextEl) qTextEl.textContent = currentQuestion.question;
 
-            // Master Hint (เฉลยสำหรับคนถาม)
             if (masterHintAns) {
                 const isYes = currentQuestion.answer === true;
                 masterHintAns.className = 'quiz-master-hint-badge ' + (isYes ? 'yes' : 'no');
@@ -500,11 +472,10 @@
         function pauseOnAnswer(ans) {
             // STOP TIMER IMMEDIATELY! Keep remainingMs at exact fraction
             clearInterval(timerInterval);
-            lastPlayerAnswer = ans; // 'YES' or 'NO'
+            lastPlayerAnswer = ans;
             playBuzzerSound();
             setStatus('PAUSED_ANSWERED');
 
-            // Flash effect according to answer
             if (qCard) {
                 clearAnswerFlash();
                 if (ans === 'YES') {
@@ -568,7 +539,6 @@
             });
         }
 
-        // เริ่มจับเวลา หรือ เล่นต่อนับเวลาจากจุดเดิม
         if (btnStartTimer) {
             btnStartTimer.addEventListener('click', () => {
                 startTimer();
@@ -581,7 +551,6 @@
             });
         }
 
-        // ข้อต่อไป & ลูปเวลาต่อ
         if (btnNextLoop) {
             btnNextLoop.addEventListener('click', () => {
                 clearInterval(timerInterval);
