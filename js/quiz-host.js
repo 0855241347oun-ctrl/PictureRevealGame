@@ -87,8 +87,11 @@
         });
 
         if (bc) {
-            bc.postMessage(payload);
+            try { bc.postMessage(payload); } catch(e) {}
         }
+        try {
+            localStorage.setItem('prg_quiz_host_state_' + roomId, JSON.stringify(payload));
+        } catch(e) {}
     }
 
     function handleClientMessage(data) {
@@ -152,6 +155,13 @@
         if (bc) {
             bc.onmessage = (e) => handleClientMessage(e.data);
         }
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'prg_quiz_action_' + roomId && e.newValue) {
+                try {
+                    handleClientMessage(JSON.parse(e.newValue));
+                } catch(err) {}
+            }
+        });
     }
 
     // --- DOM Elements & Logic ---
