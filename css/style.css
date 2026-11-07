@@ -1081,6 +1081,12 @@ select:focus {
     line-height: 1.5;
     margin: 0.5rem 0;
     word-break: break-word;
+    animation: questionPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes questionPopIn {
+    0% { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Master Hint Under Question (ตัวเล็กๆ ใต้คำถาม) */
@@ -1118,26 +1124,36 @@ select:focus {
 @keyframes flashYes {
     0% {
         border-color: #22c55e;
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25), 0 12px 30px rgba(34, 197, 94, 0.2);
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3), 0 12px 30px rgba(34, 197, 94, 0.25);
         background: #f0fdf4;
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
     }
     100% {
         border-color: #15803d;
-        box-shadow: 0 0 0 12px rgba(34, 197, 94, 0.45), 0 16px 40px rgba(34, 197, 94, 0.35);
+        box-shadow: 0 0 0 16px rgba(34, 197, 94, 0.5), 0 20px 45px rgba(34, 197, 94, 0.4);
         background: #dcfce7;
+        transform: scale(1);
     }
 }
 
 @keyframes flashNo {
     0% {
         border-color: #ef4444;
-        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.25), 0 12px 30px rgba(239, 68, 68, 0.2);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.3), 0 12px 30px rgba(239, 68, 68, 0.25);
         background: #fef2f2;
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
     }
     100% {
         border-color: #b91c1c;
-        box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.45), 0 16px 40px rgba(239, 68, 68, 0.35);
+        box-shadow: 0 0 0 16px rgba(239, 68, 68, 0.5), 0 20px 45px rgba(239, 68, 68, 0.4);
         background: #fee2e2;
+        transform: scale(1);
     }
 }
 
@@ -1206,8 +1222,9 @@ select:focus {
 }
 
 @keyframes quizPopIn {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% { transform: scale(0.65) rotate(-3deg); opacity: 0; }
+    60% { transform: scale(1.08) rotate(1deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 .quiz-explanation-text {

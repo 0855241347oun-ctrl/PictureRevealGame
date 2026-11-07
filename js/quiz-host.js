@@ -179,7 +179,12 @@
         const revealBox = el('quiz-reveal-box');
 
         if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
-        if (qTextEl) qTextEl.textContent = currentQuestion.question;
+        if (qTextEl) {
+            qTextEl.textContent = currentQuestion.question;
+            qTextEl.style.animation = 'none';
+            void qTextEl.offsetHeight; // trigger reflow
+            qTextEl.style.animation = 'questionPopIn 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        }
 
         if (masterHintAns) {
             const isYes = currentQuestion.answer === true;
