@@ -257,6 +257,9 @@
                         <div class="quiz-topbar">
                             <div class="quiz-room-info">
                                 <span class="quiz-badge">🎮 เครื่องคุมโจทย์ (Host)</span>
+                                <button type="button" id="quiz-host-room-badge" class="quiz-room-badge" style="font-family: monospace; font-size: 0.95rem; font-weight: 800; background: #e0e7ff; color: #3730a3; padding: 0.35rem 0.85rem; border-radius: 99px; border: 1.5px solid #c7d2fe; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;" title="คลิกเพื่อเปลี่ยนรหัสห้อง">
+                                    🏷️ ห้อง: <strong id="quiz-room-display" style="font-size: 1.12rem; color: #1e1b4b;">1234</strong> ✏️
+                                </button>
                                 <span id="quiz-conn-status" class="quiz-conn-badge">
                                     <span class="quiz-dot"></span> <span id="quiz-conn-count">รอเครื่องตอบเชื่อมต่อ...</span>
                                 </span>
@@ -328,8 +331,12 @@
 
                                 <!-- Answer Reveal Box (Shown after player answers or time up) -->
                                 <div id="quiz-reveal-box" class="quiz-reveal-box" style="display: none;">
+                                    <div id="quiz-player-ans-container" style="width: 100%; display: flex; justify-content: center; margin-bottom: 0.4rem;">
+                                        <div id="quiz-player-ans-badge" class="quiz-player-ans-banner yes">
+                                            📱 เครื่องตอบกด: <strong>ใช่ (⭕)</strong>
+                                        </div>
+                                    </div>
                                     <div class="quiz-reveal-header">
-                                        <span id="quiz-player-ans-badge" class="quiz-ans-badge"></span>
                                         <span id="quiz-correct-ans-badge" class="quiz-ans-badge correct"></span>
                                     </div>
                                     <div id="quiz-explanation-text" class="quiz-explanation-text"></div>

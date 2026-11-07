@@ -35,9 +35,9 @@
             align-items: center;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 8px 16px;
+            padding: 8px 14px;
             color: #ffffff;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 600;
         }
         .status-dot {
@@ -48,18 +48,35 @@
             background: #22c55e;
             margin-right: 6px;
         }
+        .buzzer-room-btn {
+            font-family: monospace;
+            background: rgba(255, 255, 255, 0.16);
+            padding: 5px 12px;
+            border-radius: 99px;
+            color: #ffffff;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .buzzer-room-btn:active {
+            transform: scale(0.96);
+        }
         .buzzer-q-preview {
             background: rgba(255, 255, 255, 0.06);
             border-radius: 16px;
             padding: 12px 16px;
             color: #e2e8f0;
-            font-size: 1.15rem;
+            font-size: 1.12rem;
             text-align: center;
-            min-height: 58px;
+            min-height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            line-height: 1.4;
         }
         .buzzer-buttons {
             flex: 1;
@@ -85,8 +102,13 @@
             transition: transform 0.08s ease, filter 0.08s ease;
             position: relative;
         }
-        .btn-buzzer:active {
+        .btn-buzzer:active:not(:disabled) {
             transform: scale(0.95) translateY(4px);
+        }
+        .btn-buzzer:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(0.6);
         }
         .btn-yes {
             background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
@@ -116,17 +138,38 @@
             display: none;
             position: absolute;
             inset: 0;
-            background: rgba(15, 23, 42, 0.94);
+            background: rgba(15, 23, 42, 0.96);
             border-radius: 28px;
-            z-index: 10;
+            z-index: 20;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 12px;
             color: #ffffff;
             padding: 20px;
             text-align: center;
             animation: fadeIn 0.15s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        .feedback-banner.yes {
+            border: 4px solid #22c55e;
+        }
+        .feedback-banner.no {
+            border: 4px solid #ef4444;
+        }
+        .feedback-banner.timeout {
+            border: 4px solid #f59e0b;
+        }
+        .locked-tag {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #fbbf24;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
@@ -137,8 +180,10 @@
 <body>
     <div class="buzzer-container">
         <div class="buzzer-header">
-            <div><span id="conn-dot" class="status-dot"></span><span id="conn-text">เชื่อมต่อพร้อมตอบ 🟢</span></div>
-            <div id="room-badge" style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 8px;">ROOM: ----</div>
+            <div><span id="conn-dot" class="status-dot"></span><span id="conn-text">พร้อมตอบ 🟢</span></div>
+            <button type="button" id="room-badge" class="buzzer-room-btn" title="แตะเพื่อเปลี่ยนรหัสห้อง">
+                ROOM: <strong id="room-code-text">1234</strong> ✏️
+            </button>
         </div>
 
         <div id="q-preview" class="buzzer-q-preview">
@@ -158,19 +203,19 @@
                 <span class="buzzer-label">มั่ว</span>
             </button>
 
-            <!-- Answer Feedback Lock Overlay -->
+            <!-- Answer Feedback Lock Overlay (Single-take, NO change answer button) -->
             <div id="feedback-lock" class="feedback-banner">
-                <div id="feedback-emoji" style="font-size: 4.5rem;">🎯</div>
-                <div id="feedback-text" style="font-size: 1.8rem; font-weight: 900;">ตอบแล้ว! ส่งสัญญาณแล้ว</div>
-                <div style="font-size: 1rem; color: #cbd5e1; margin-top: 4px;">จอหลักกำลังหยุดเวลาและตรวจคำตอบ...</div>
-                <button id="btn-unlock-answer" style="margin-top: 10px; padding: 8px 20px; border-radius: 99px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer;">
-                    กดเปลี่ยนคำตอบ
-                </button>
+                <div id="feedback-emoji" style="font-size: 4.8rem;">🎯</div>
+                <div id="feedback-text" style="font-size: 2rem; font-weight: 900;">ตอบแล้ว!</div>
+                <div class="locked-tag">🔒 ล็อกคำตอบแล้ว (ตอบได้ครั้งเดียว)</div>
+                <div id="feedback-sub" style="font-size: 1.05rem; color: #cbd5e1; margin-top: 6px; font-weight: 600;">
+                    เวลาบนจอหลักหยุดแล้ว! รอผู้ถามกดเริ่มข้อต่อไป
+                </div>
             </div>
         </div>
 
         <div class="buzzer-footer">
-            👆 กดปุ่มสีเขียว (ใช่) หรือ สีแดง (มั่ว) ได้เลย!
+            👆 กด "ใช่ (⭕)" หรือ "มั่ว (❌)" (กดได้ครั้งเดียว)
         </div>
     </div>
 
@@ -179,31 +224,49 @@
     <script>
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const rawRoom = urlParams.get('room') || 'DEFAULT';
-            const roomId = rawRoom.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            let rawRoom = urlParams.get('room') || localStorage.getItem('prg_quiz_buzzer_room') || '1234';
+            let roomId = rawRoom.toUpperCase().replace(/[^A-Z0-9]/g, '') || '1234';
+            localStorage.setItem('prg_quiz_buzzer_room', roomId);
 
             const connDot = document.getElementById('conn-dot');
             const connText = document.getElementById('conn-text');
             const roomBadge = document.getElementById('room-badge');
+            const roomCodeText = document.getElementById('room-code-text');
             const qPreview = document.getElementById('q-preview');
             const btnYes = document.getElementById('btn-answer-yes');
             const btnNo = document.getElementById('btn-answer-no');
             const feedbackLock = document.getElementById('feedback-lock');
             const feedbackEmoji = document.getElementById('feedback-emoji');
             const feedbackText = document.getElementById('feedback-text');
-            const btnUnlock = document.getElementById('btn-unlock-answer');
+            const feedbackSub = document.getElementById('feedback-sub');
 
-            roomBadge.textContent = 'ROOM: ' + roomId;
+            roomCodeText.textContent = roomId;
+
+            // Change Room on click
+            roomBadge.addEventListener('click', () => {
+                const newRoom = prompt('ใส่รหัสห้อง (Room Code):', roomId);
+                if (newRoom && newRoom.trim()) {
+                    const sanitized = newRoom.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (sanitized) {
+                        localStorage.setItem('prg_quiz_buzzer_room', sanitized);
+                        window.location.search = '?room=' + sanitized;
+                    }
+                }
+            });
+
+            // State
+            let hasAnsweredCurrentRound = false;
 
             // Audio SFX
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            function playBeep(freq = 600, dur = 0.1) {
+            let audioCtx = null;
+            function playBeep(freq = 600, dur = 0.12) {
                 try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     if (audioCtx.state === 'suspended') audioCtx.resume();
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -212,7 +275,7 @@
                 } catch(e) {}
             }
 
-            // Universal ntfy.sh PubSub Topics
+            // Universal ntfy.sh Topics
             const ntfyClientTopic = 'prg_quiz_' + roomId + '_client';
             const ntfyHostTopic = 'prg_quiz_' + roomId + '_host';
 
@@ -273,35 +336,50 @@
                 }
             });
 
-            // Master Send function: Send through HTTP POST + WS + MQTT + BC + Storage
+            // Master Multi-Send function (Bulletproof across NAT, Mobile, Firewalls)
             function sendToHost(payload) {
                 const str = JSON.stringify({ ...payload, _t: Date.now() });
 
-                // A. Instant HTTP POST to ntfy.sh (Guaranteed to cross any network/NAT instantly!)
+                // A. Instant Standard CORS HTTP POST to ntfy.sh (Primary topic)
                 try {
                     fetch('https://ntfy.sh/' + ntfyClientTopic, {
                         method: 'POST',
                         body: str,
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain' }
+                        headers: { 'Content-Type': 'application/json' }
                     }).catch(() => {});
                 } catch(e) {}
 
-                // B. MQTT
+                // B. Also POST to DEFAULT topic if roomId is not DEFAULT (safety net)
+                if (roomId !== 'DEFAULT') {
+                    try {
+                        fetch('https://ntfy.sh/prg_quiz_DEFAULT_client', {
+                            method: 'POST',
+                            body: str,
+                            headers: { 'Content-Type': 'application/json' }
+                        }).catch(() => {});
+                    } catch(e) {}
+                }
+
+                // C. MQTT
                 if (mqttClient && mqttClient.isConnected()) {
                     try {
                         const m = new Paho.MQTT.Message(str);
                         m.destinationName = 'prg/quiz/' + roomId + '/client';
                         mqttClient.send(m);
+                        if (roomId !== 'DEFAULT') {
+                            const mDef = new Paho.MQTT.Message(str);
+                            mDef.destinationName = 'prg/quiz/DEFAULT/client';
+                            mqttClient.send(mDef);
+                        }
                     } catch(e) {}
                 }
 
-                // C. BroadcastChannel
+                // D. BroadcastChannel
                 if (bc) {
                     try { bc.postMessage(payload); } catch(e) {}
                 }
 
-                // D. LocalStorage
+                // E. LocalStorage
                 try {
                     localStorage.setItem('prg_quiz_action_' + roomId, str);
                 } catch(e) {}
@@ -315,32 +393,62 @@
                         qPreview.textContent = data.questionText;
                     }
                     if (data.status === 'RUNNING') {
+                        // UNLOCK for answering
+                        hasAnsweredCurrentRound = false;
+                        btnYes.disabled = false;
+                        btnNo.disabled = false;
                         feedbackLock.style.display = 'none';
+                        feedbackLock.className = 'feedback-banner';
                     } else if (data.status === 'PAUSED_ANSWERED') {
                         feedbackLock.style.display = 'flex';
                         if (data.lastAnswer === 'YES') {
+                            feedbackLock.className = 'feedback-banner yes';
                             feedbackEmoji.textContent = '⭕';
-                            feedbackText.textContent = 'คุณตอบ: ใช่';
+                            feedbackText.textContent = 'ตอบ: ใช่ ⭕';
+                            feedbackSub.textContent = 'เวลาบนจอหลักหยุดแล้ว!';
                         } else if (data.lastAnswer === 'NO') {
+                            feedbackLock.className = 'feedback-banner no';
                             feedbackEmoji.textContent = '❌';
-                            feedbackText.textContent = 'คุณตอบ: มั่ว';
+                            feedbackText.textContent = 'ตอบ: มั่ว ❌';
+                            feedbackSub.textContent = 'เวลาบนจอหลักหยุดแล้ว!';
                         }
                     } else if (data.status === 'TIME_UP') {
                         feedbackLock.style.display = 'flex';
+                        feedbackLock.className = 'feedback-banner timeout';
                         feedbackEmoji.textContent = '⏰';
                         feedbackText.textContent = 'หมดเวลา!';
+                        feedbackSub.textContent = 'เวลาหมดแล้วสำหรับข้อนี้';
                     } else if (data.status === 'IDLE') {
+                        hasAnsweredCurrentRound = false;
+                        btnYes.disabled = false;
+                        btnNo.disabled = false;
                         feedbackLock.style.display = 'none';
                     }
                 }
             }
 
             function submitAnswer(ans) {
-                playBeep(ans === 'YES' ? 880 : 380, 0.15);
-                feedbackLock.style.display = 'flex';
-                feedbackEmoji.textContent = ans === 'YES' ? '⭕' : '❌';
-                feedbackText.textContent = 'คุณตอบ: ' + (ans === 'YES' ? 'ใช่' : 'มั่ว');
+                if (hasAnsweredCurrentRound) return; // Answer only once!
+                hasAnsweredCurrentRound = true;
 
+                // Disable buttons immediately
+                btnYes.disabled = true;
+                btnNo.disabled = true;
+
+                // SFX & Haptics
+                playBeep(ans === 'YES' ? 880 : 380, 0.18);
+                if (navigator.vibrate) {
+                    navigator.vibrate([80, 40, 80]);
+                }
+
+                // Show Locked Banner (Single-take, NO change option!)
+                feedbackLock.style.display = 'flex';
+                feedbackLock.className = 'feedback-banner ' + (ans === 'YES' ? 'yes' : 'no');
+                feedbackEmoji.textContent = ans === 'YES' ? '⭕' : '❌';
+                feedbackText.textContent = 'คุณตอบ: ' + (ans === 'YES' ? 'ใช่ ⭕' : 'มั่ว ❌');
+                feedbackSub.textContent = 'เวลาบนจอหลักหยุดแล้ว! รอผู้ถามกดเริ่มข้อต่อไป';
+
+                // Send Answer with timestamp
                 sendToHost({
                     type: 'ANSWER_SUBMITTED',
                     answer: ans,
@@ -350,12 +458,6 @@
 
             btnYes.addEventListener('click', () => submitAnswer('YES'));
             btnNo.addEventListener('click', () => submitAnswer('NO'));
-
-            if (btnUnlock) {
-                btnUnlock.addEventListener('click', () => {
-                    feedbackLock.style.display = 'none';
-                });
-            }
 
             // Tell host we joined
             setTimeout(() => {
