@@ -3,10 +3,14 @@
  * - สุ่มโจทย์ 50 ข้อ
  * - ตั้งเวลา 10, 15, 20, 30, 60 วิ (หรือตามที่เลือก)
  * - แสดงเวลานับถอยหลังเป็น .00 วินาทีชัดเจน
- * - เมื่อเครื่องตอบกดส่งคำตอบ: เวลาหยุดทันที + ตัวการ์ดและปุ่มกระพริบตามสีคำตอบ (เขียว = ใช่, แดง = มั่ว)
- * - หากผู้ถามกดปุ่ม "▶️ เล่นต่อ (นับเวลาต่อ)": จับเวลาต่อจากเวลาเดิมที่ค้างไว้
- * - หากกด "ข้อต่อไป & ลูปเวลาต่อ": รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ
- * - มีเฉลยตัวเล็กๆ ใต้คำถามให้ผู้ถามดูได้ล่วงหน้า
+ * - เชื่อมต่อแบบ 4 ช่องทาง Real-time:
+ *   1) MQTT SSL WebSockets (ทำงานข้ามเน็ต ข้ามมือถือ 100% ไม่ติด NAT)
+ *   2) PeerJS WebRTC
+ *   3) BroadcastChannel (สำหรับเล่นหรือทดสอบในเบราว์เซอร์เดียวกัน)
+ *   4) LocalStorage StorageEvent
+ * - เมื่อเครื่องตอบกดส่งคำตอบ: เวลาหยุดทันที!
+ * - เมื่อคนถามกดเริ่ม: นับเวลาต่อจากเศษวินาทีเดิม
+ * - กระพริบแสงการ์ดตามคำตอบ (เขียว = ใช่, แดง = มั่ว)
  */
 (function() {
     let roomId = localStorage.getItem('prg_quiz_room_id');
@@ -14,11 +18,7 @@
         roomId = Math.random().toString(36).substring(2, 7).toUpperCase();
         localStorage.setItem('prg_quiz_room_id', roomId);
     }
-
-    const hostPeerId = 'prg-quiz-' + roomId;
-    let peer = null;
-    let clientConns = [];
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
+    roomId = roomId.toUpperCase();
 
     // Game State
     let currentQIndex = 0;
@@ -110,6 +110,67 @@
         } catch(e) {}
     }
 
+    // --- Communication Setup ---
+    let clientConns = [];
+    let mqttClient = null;
+    const mqttTopicHost = 'prg/quiz/' + roomId + '/host';
+    const mqttTopicClient = 'prg/quiz/' + roomId + '/client';
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
+    const LS_KEY = 'prg_quiz_action_' + roomId;
+    let peer = null;
+
+    function initMqttHost() {
+        if (typeof Paho === 'undefined') return;
+        try {
+            const clientId = 'host_' + Math.random().toString(36).substring(2, 9);
+            mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, clientId);
+            mqttClient.onConnectionLost = () => {
+                setTimeout(initMqttHost, 2000);
+            };
+            mqttClient.onMessageArrived = (message) => {
+                try {
+                    const data = JSON.parse(message.payloadString);
+                    handleClientMessage(data);
+                } catch(e) {}
+            };
+            mqttClient.connect({
+                useSSL: true,
+                timeout: 5,
+                onSuccess: () => {
+                    console.log('Host connected to MQTT broker');
+                    mqttClient.subscribe(mqttTopicClient);
+                    updateConnectedCount(true);
+                    broadcastState();
+                },
+                onFailure: () => {
+                    tryAltMqttHost();
+                }
+            });
+        } catch(e) {}
+    }
+
+    function tryAltMqttHost() {
+        try {
+            const clientId = 'host_' + Math.random().toString(36).substring(2, 9);
+            mqttClient = new Paho.MQTT.Client('test.mosquitto.org', 8081, clientId);
+            mqttClient.onMessageArrived = (message) => {
+                try {
+                    const data = JSON.parse(message.payloadString);
+                    handleClientMessage(data);
+                } catch(e) {}
+            };
+            mqttClient.connect({
+                useSSL: true,
+                timeout: 5,
+                onSuccess: () => {
+                    mqttClient.subscribe(mqttTopicClient);
+                    updateConnectedCount(true);
+                    broadcastState();
+                }
+            });
+        } catch(e) {}
+    }
+
     function broadcastState() {
         const payload = {
             type: 'STATE_UPDATE',
@@ -120,18 +181,29 @@
             durationSeconds: durationSeconds,
             lastAnswer: lastPlayerAnswer
         };
+        const str = JSON.stringify(payload);
 
+        // 1. MQTT
+        if (mqttClient && mqttClient.isConnected()) {
+            try {
+                const msg = new Paho.MQTT.Message(str);
+                msg.destinationName = mqttTopicHost;
+                mqttClient.send(msg);
+            } catch(e) {}
+        }
+        // 2. PeerJS
         clientConns.forEach(c => {
             if (c.open) {
                 try { c.send(payload); } catch(e) {}
             }
         });
-
+        // 3. BroadcastChannel
         if (bc) {
             try { bc.postMessage(payload); } catch(e) {}
         }
+        // 4. LocalStorage
         try {
-            localStorage.setItem('prg_quiz_host_state_' + roomId, JSON.stringify(payload));
+            localStorage.setItem('prg_quiz_host_state_' + roomId, str);
         } catch(e) {}
     }
 
@@ -139,25 +211,26 @@
         if (!data || !data.type) return;
 
         if (data.type === 'JOIN' || data.type === 'REQUEST_STATE') {
-            updateConnectedCount();
+            updateConnectedCount(true);
             broadcastState();
         } else if (data.type === 'ANSWER_SUBMITTED') {
+            // STOP TIMER IMMEDIATELY!
             if (status === 'RUNNING') {
                 pauseOnAnswer(data.answer);
             }
         }
     }
 
-    function updateConnectedCount() {
+    function updateConnectedCount(hasConnection = false) {
         const countEl = document.getElementById('quiz-conn-count');
         const dotEl = document.querySelector('.quiz-dot');
         const activeCount = clientConns.filter(c => c.open).length;
         if (countEl) {
-            if (activeCount > 0) {
-                countEl.textContent = `เชื่อมต่อแล้ว ${activeCount} เครื่อง 📱`;
+            if (hasConnection || activeCount > 0 || (mqttClient && mqttClient.isConnected())) {
+                countEl.textContent = `ระบบเครื่องตอบพร้อมใช้งาน 📱 (ROOM: ${roomId})`;
                 if (dotEl) dotEl.classList.add('active');
             } else {
-                countEl.textContent = 'รอเครื่องตอบเชื่อมต่อ... (สแกน QR)';
+                countEl.textContent = `รอเครื่องตอบเชื่อมต่อ... (ROOM: ${roomId})`;
                 if (dotEl) dotEl.classList.remove('active');
             }
         }
@@ -166,15 +239,12 @@
     function initHostPeer() {
         if (peer) return;
         try {
+            const hostPeerId = 'prg-quiz-' + roomId;
             peer = new Peer(hostPeerId);
-            peer.on('open', () => {
-                console.log('Quiz Host ready on PeerID:', hostPeerId);
-            });
-
             peer.on('connection', (conn) => {
                 clientConns.push(conn);
                 conn.on('open', () => {
-                    updateConnectedCount();
+                    updateConnectedCount(true);
                     broadcastState();
                 });
                 conn.on('data', (data) => handleClientMessage(data));
@@ -183,19 +253,13 @@
                     updateConnectedCount();
                 });
             });
-
-            peer.on('error', (err) => {
-                console.warn('Host Peer error:', err);
-            });
-        } catch(e) {
-            console.warn(e);
-        }
+        } catch(e) {}
 
         if (bc) {
             bc.onmessage = (e) => handleClientMessage(e.data);
         }
         window.addEventListener('storage', (e) => {
-            if (e.key === 'prg_quiz_action_' + roomId && e.newValue) {
+            if (e.key === LS_KEY && e.newValue) {
                 try {
                     handleClientMessage(JSON.parse(e.newValue));
                 } catch(err) {}
@@ -205,6 +269,7 @@
 
     window.initQuizHost = function() {
         initHostPeer();
+        initMqttHost();
 
         const timeSelect = document.getElementById('quiz-time-select');
         const btnToggleQr = document.getElementById('quiz-btn-toggle-qr');
@@ -221,7 +286,6 @@
         const qTextEl = document.getElementById('quiz-question-text');
         const qCard = document.getElementById('quiz-question-card');
 
-        // Master Hint under question
         const masterHintAns = document.getElementById('quiz-master-hint-ans');
         const masterHintExp = document.getElementById('quiz-master-hint-exp');
 
@@ -295,7 +359,7 @@
             });
         }
 
-        // Render Timer with .00 decimals
+        // Render timer with .00 format
         function renderTimer() {
             const totalSec = Math.max(0, remainingMs / 1000);
             if (timerDisplay) {
@@ -327,7 +391,7 @@
             if (qNumEl) qNumEl.textContent = `ข้อที่ ${currentQIndex + 1} / ${TRICKY_QUESTIONS.length}`;
             if (qTextEl) qTextEl.textContent = currentQuestion.question;
 
-            // Master Hint (เฉลยสำหรับผู้ถาม)
+            // Master Hint (เฉลยสำหรับคนถาม)
             if (masterHintAns) {
                 const isYes = currentQuestion.answer === true;
                 masterHintAns.className = 'quiz-master-hint-badge ' + (isYes ? 'yes' : 'no');
@@ -337,7 +401,6 @@
                 masterHintExp.textContent = `— ${currentQuestion.explanation}`;
             }
 
-            // Clear visual effects & answer
             clearAnswerFlash();
             if (revealBox) revealBox.style.display = 'none';
             lastPlayerAnswer = null;
@@ -396,7 +459,6 @@
 
         function startTimer() {
             if (status === 'RUNNING') return;
-            // If starting from 0, reset to duration
             if (remainingMs <= 0) {
                 remainingMs = durationSeconds * 1000;
             }
@@ -436,13 +498,13 @@
         }
 
         function pauseOnAnswer(ans) {
-            // STOP TIMER IMMEDIATELY! Keep remainingMs as is
+            // STOP TIMER IMMEDIATELY! Keep remainingMs at exact fraction
             clearInterval(timerInterval);
             lastPlayerAnswer = ans; // 'YES' or 'NO'
             playBuzzerSound();
             setStatus('PAUSED_ANSWERED');
 
-            // Flash effect according to answer (Green for YES, Red for NO)
+            // Flash effect according to answer
             if (qCard) {
                 clearAnswerFlash();
                 if (ans === 'YES') {
@@ -498,7 +560,6 @@
             }
         }
 
-        // Button Event Handlers
         if (btnRandomQ) {
             btnRandomQ.addEventListener('click', () => {
                 clearInterval(timerInterval);
@@ -507,7 +568,7 @@
             });
         }
 
-        // เริ่มจับเวลา / นับเวลาต่อจากเดิม
+        // เริ่มจับเวลา หรือ เล่นต่อนับเวลาจากจุดเดิม
         if (btnStartTimer) {
             btnStartTimer.addEventListener('click', () => {
                 startTimer();
@@ -520,7 +581,7 @@
             });
         }
 
-        // ข้อต่อไป & ลูปเวลาต่อ (รีเซ็ตเวลาเต็มจำนวนของข้อใหม่เสมอ)
+        // ข้อต่อไป & ลูปเวลาต่อ
         if (btnNextLoop) {
             btnNextLoop.addEventListener('click', () => {
                 clearInterval(timerInterval);
@@ -529,7 +590,6 @@
             });
         }
 
-        // Initial Load
         loadQuestion(0, true);
         updateConnectedCount();
     };

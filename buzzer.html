@@ -174,12 +174,13 @@
         </div>
     </div>
 
-    <!-- PeerJS CDN -->
+    <!-- Paho MQTT CDN (Instant Internet WebSocket Broker) & PeerJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
     <script>
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const roomId = urlParams.get('room') || 'DEFAULT';
+            const roomId = (urlParams.get('room') || 'DEFAULT').toUpperCase();
 
             const connDot = document.getElementById('conn-dot');
             const connText = document.getElementById('conn-text');
@@ -192,12 +193,9 @@
             const feedbackText = document.getElementById('feedback-text');
             const btnUnlock = document.getElementById('btn-unlock-answer');
 
-            roomBadge.textContent = 'ROOM: ' + roomId.toUpperCase();
+            roomBadge.textContent = 'ROOM: ' + roomId;
 
-            // LocalStorage sync key for fallback
-            const LS_KEY = 'prg_quiz_action_' + roomId;
-
-            // Web Audio Click SFX
+            // Audio Click SFX
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             function playBeep(freq = 600, dur = 0.1) {
                 try {
@@ -214,26 +212,110 @@
                 } catch(e) {}
             }
 
-            // PeerJS connection to Host
+            // --- 1. MQTT Public Realtime WebSocket Client ---
+            let mqttClient = null;
+            const mqttTopicHost = 'prg/quiz/' + roomId + '/host';
+            const mqttTopicClient = 'prg/quiz/' + roomId + '/client';
+
+            function initMqtt() {
+                if (typeof Paho === 'undefined') return;
+                try {
+                    const clientId = 'buzzer_' + Math.random().toString(36).substring(2, 9);
+                    // Public SSL WebSocket broker on port 8084
+                    mqttClient = new Paho.MQTT.Client('broker.emqx.io', 8084, clientId);
+                    mqttClient.onConnectionLost = () => {
+                        setTimeout(initMqtt, 2000);
+                    };
+                    mqttClient.onMessageArrived = (message) => {
+                        try {
+                            const data = JSON.parse(message.payloadString);
+                            handleHostMessage(data);
+                        } catch(e) {}
+                    };
+                    mqttClient.connect({
+                        useSSL: true,
+                        timeout: 5,
+                        onSuccess: () => {
+                            connDot.style.background = '#22c55e';
+                            connText.textContent = 'ออนไลน์พร้อมตอบ 🟢';
+                            mqttClient.subscribe(mqttTopicHost);
+                            sendToHost({ type: 'JOIN' });
+                        },
+                        onFailure: () => {
+                            // Try test.mosquitto.org if emqx fails
+                            tryAltMqtt();
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            function tryAltMqtt() {
+                try {
+                    const clientId = 'buzzer_' + Math.random().toString(36).substring(2, 9);
+                    mqttClient = new Paho.MQTT.Client('test.mosquitto.org', 8081, clientId);
+                    mqttClient.onMessageArrived = (message) => {
+                        try {
+                            const data = JSON.parse(message.payloadString);
+                            handleHostMessage(data);
+                        } catch(e) {}
+                    };
+                    mqttClient.connect({
+                        useSSL: true,
+                        timeout: 5,
+                        onSuccess: () => {
+                            connDot.style.background = '#22c55e';
+                            connText.textContent = 'ออนไลน์พร้อมตอบ 🟢';
+                            mqttClient.subscribe(mqttTopicHost);
+                            sendToHost({ type: 'JOIN' });
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            // --- 2. BroadcastChannel & LocalStorage fallback ---
+            const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
+            const LS_KEY = 'prg_quiz_action_' + roomId;
+
+            // --- 3. PeerJS WebRTC ---
             const hostPeerId = 'prg-quiz-' + roomId;
             let peer = null;
             let conn = null;
 
-            // BroadcastChannel for instant same-browser & cross-tab testing
-            const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
+            try {
+                peer = new Peer();
+                peer.on('open', () => {
+                    conn = peer.connect(hostPeerId, { reliable: true });
+                    conn.on('open', () => {
+                        connDot.style.background = '#22c55e';
+                        connText.textContent = 'เชื่อมต่อตรงแล้ว 🟢';
+                        conn.send({ type: 'JOIN' });
+                    });
+                    conn.on('data', (data) => handleHostMessage(data));
+                });
+            } catch(e) {}
 
             function sendToHost(payload) {
-                // 1. PeerJS WebRTC
+                const str = JSON.stringify({ ...payload, _t: Date.now() });
+
+                // 1. MQTT
+                if (mqttClient && mqttClient.isConnected()) {
+                    try {
+                        const msg = new Paho.MQTT.Message(str);
+                        msg.destinationName = mqttTopicClient;
+                        mqttClient.send(msg);
+                    } catch(e) {}
+                }
+                // 2. PeerJS
                 if (conn && conn.open) {
                     try { conn.send(payload); } catch(e) {}
                 }
-                // 2. BroadcastChannel
+                // 3. BroadcastChannel
                 if (bc) {
                     try { bc.postMessage(payload); } catch(e) {}
                 }
-                // 3. LocalStorage Event (cross-tab fallback)
+                // 4. LocalStorage
                 try {
-                    localStorage.setItem(LS_KEY, JSON.stringify({ ...payload, _t: Date.now() }));
+                    localStorage.setItem(LS_KEY, str);
                 } catch(e) {}
             }
 
@@ -245,7 +327,6 @@
                         qPreview.textContent = data.questionText;
                     }
                     if (data.status === 'RUNNING') {
-                        // Timer is running on host -> unlock feedback lock
                         feedbackLock.style.display = 'none';
                     } else if (data.status === 'PAUSED_ANSWERED') {
                         feedbackLock.style.display = 'flex';
@@ -268,47 +349,12 @@
 
             if (bc) {
                 bc.onmessage = (e) => handleHostMessage(e.data);
-                bc.postMessage({ type: 'JOIN' });
             }
-
             window.addEventListener('storage', (e) => {
                 if (e.key === 'prg_quiz_host_state_' + roomId && e.newValue) {
-                    try {
-                        handleHostMessage(JSON.parse(e.newValue));
-                    } catch(err) {}
+                    try { handleHostMessage(JSON.parse(e.newValue)); } catch(err) {}
                 }
             });
-
-            // Init PeerJS
-            try {
-                peer = new Peer();
-                peer.on('open', () => {
-                    connectToHost();
-                });
-                peer.on('error', (err) => {
-                    console.warn('Peer error:', err);
-                });
-            } catch(e) {
-                console.warn(e);
-            }
-
-            function connectToHost() {
-                if (!peer) return;
-                conn = peer.connect(hostPeerId, { reliable: true });
-
-                conn.on('open', () => {
-                    connDot.style.background = '#22c55e';
-                    connText.textContent = 'เชื่อมต่อแล้ว 🟢';
-                    conn.send({ type: 'JOIN' });
-                });
-
-                conn.on('data', (data) => handleHostMessage(data));
-
-                conn.on('close', () => {
-                    connText.textContent = 'พร้อมตอบ 🟢';
-                    setTimeout(connectToHost, 3000);
-                });
-            }
 
             function submitAnswer(ans) {
                 playBeep(ans === 'YES' ? 880 : 380, 0.15);
@@ -332,9 +378,12 @@
                 });
             }
 
+            // Start MQTT
+            initMqtt();
+
             setTimeout(() => {
                 sendToHost({ type: 'REQUEST_STATE' });
-            }, 300);
+            }, 400);
         })();
     </script>
 </body>
