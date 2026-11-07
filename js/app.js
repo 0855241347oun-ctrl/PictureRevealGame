@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const wheelPlaySection = document.getElementById('wheel-play-mode');
     const wordSection = document.getElementById('word-mode');
     const btnWordMode = document.getElementById('btn-word-mode');
+    const mimicSection = document.getElementById('mimic-mode');
+    const btnMimicMode = document.getElementById('btn-mimic-mode');
+    const btnHomeMimic = document.getElementById('btn-home-mimic');
 
     // Home Elements
     const btnHomeCreate = document.getElementById('btn-home-create');
@@ -153,6 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnHomeWordGame) {
         btnHomeWordGame.addEventListener('click', () => switchTab('word'));
     }
+    if (btnMimicMode) {
+        btnMimicMode.addEventListener('click', () => switchTab('mimic'));
+    }
+    if (btnHomeMimic) {
+        btnHomeMimic.addEventListener('click', () => switchTab('mimic'));
+    }
     
     if (btnWordRandom) {
         let isSpinningWord = false;
@@ -244,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreatorMode.classList.remove('active');
         btnWheelMode.classList.remove('active');
         if (btnWordMode) btnWordMode.classList.remove('active');
+        if (btnMimicMode) btnMimicMode.classList.remove('active');
         
         homeSection.classList.remove('active');
         playerSection.classList.remove('active');
@@ -251,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wheelSection.classList.remove('active');
         wheelPlaySection.classList.remove('active');
         if (wordSection) wordSection.classList.remove('active');
+        if (mimicSection) mimicSection.classList.remove('active');
         
         btnPlayerMode.style.display = 'none';
 
@@ -290,6 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tab === 'word') {
             if (btnWordMode) btnWordMode.classList.add('active');
             if (wordSection) wordSection.classList.add('active');
+        } else if (tab === 'mimic') {
+            if (btnMimicMode) btnMimicMode.classList.add('active');
+            if (mimicSection) mimicSection.classList.add('active');
         }
     }
 

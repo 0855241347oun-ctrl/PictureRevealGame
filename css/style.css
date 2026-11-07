@@ -823,3 +823,213 @@ select:focus {
 .wheel-items-list::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.5);
 }
+/* --- Mimic Party Game Styles --- */
+.mimic-wrapper {
+    max-width: 840px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.mimic-card-panel {
+    background: #ffffff;
+    border-radius: 2rem;
+    padding: 2.2rem;
+    width: 100%;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Setup View */
+.mimic-prompt-box {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.mimic-textarea {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #f0fdf4;
+    border: 2px solid #bbf7d0;
+    border-radius: 1.25rem;
+    box-sizing: border-box;
+    outline: none;
+    resize: none;
+    min-height: 85px;
+    transition: border-color 0.2s;
+}
+
+.mimic-textarea:focus {
+    border-color: #22c55e;
+}
+
+.mimic-players-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.mimic-player-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    padding: 0.4rem 0.85rem;
+    border-radius: 2rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.mimic-chip-input {
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #334155;
+    width: 110px;
+    outline: none;
+}
+
+.mimic-chip-del {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Recording View */
+.mimic-mic-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.mimic-record-btn {
+    font-size: 1.3rem;
+    font-weight: 800;
+    padding: 1.2rem 2.8rem;
+    border-radius: 3rem;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2;
+}
+
+.mimic-record-btn.recording {
+    background: #1e293b;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+}
+
+.mimic-pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 3rem;
+    background: rgba(239, 68, 68, 0.3);
+    z-index: 1;
+    display: none;
+}
+
+.mimic-pulse-ring.active {
+    display: block;
+    animation: mimicPulse 1.2s infinite ease-out;
+}
+
+@keyframes mimicPulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Summary Chain */
+.mimic-chain-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1.5rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+}
+
+.mimic-summary-card {
+    flex-shrink: 0;
+    width: 160px;
+    background: #f8fafc;
+    border: 3px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 1.2rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+}
+
+.mimic-summary-card.active-playing {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+    transform: scale(1.1) translateY(-6px);
+    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.35) !important;
+}
+
+.mimic-sc-avatar {
+    font-size: 2.8rem;
+    margin-bottom: 0.3rem;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.mimic-sc-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mimic-sc-play-btn {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    color: #3b82f6;
+    border: 1px solid #bfdbfe;
+    font-weight: 700;
+}
+
+.mimic-sc-arrow {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
