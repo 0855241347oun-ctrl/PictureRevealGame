@@ -3,13 +3,13 @@
  * - สุ่มโจทย์ 50 ข้อ
  * - ตั้งเวลา 10, 15, 20, 30, 60 วิ (หรือตามที่เลือก)
  * - แสดงเวลานับถอยหลังเป็น .00 วินาทีชัดเจน
- * - รับสัญญาณตอบแบบหลายช่องทางความเร็วสูง:
- *   1) ntfy.sh HTTPS EventStream/WebSocket (ทำงานข้ามอุปกรณ์และข้ามเครือข่ายเน็ตได้ 100%)
- *   2) MQTT WebSockets (broker.emqx.io)
- *   3) BroadcastChannel & LocalStorage StorageEvent
- * - เมื่อเครื่องตอบกดส่งคำตอบ: เวลาหยุดทันที!
- * - เมื่อคนถามกดเริ่ม: นับเวลาต่อจากเศษวินาทีเดิม
- * - กระพริบแสงการ์ดตามคำตอบ (เขียว = ใช่, แดง = มั่ว)
+ * - รับสัญญาณตอบแบบหลายช่องทาง (Multi-channel Fallback):
+ *   1) ntfy.sh EventSource (SSE stream): ไม่มีวันติด NAT / ข้ามมือถือ 100%
+ *   2) MQTT WebSocket (broker.emqx.io)
+ *   3) BroadcastChannel & LocalStorage Event (สำหรับเปิดเล่นบนเครื่องเดียวกัน)
+ * - เมื่อเครื่องตอบกดส่งคำตอบ: สั่ง clearInterval(timerInterval) หยุดเวลาทันที ณ เศษวินาทีนั้น (.00)
+ * - เมื่อคนถามกดปุ่ม "เริ่ม": นับเวลาต่อจากเศษวินาทีเดิม
+ * - กระพริบแสงสีการ์ดตามคำตอบ (เขียว = ใช่, แดง = มั่ว)
  */
 (function() {
     let roomId = localStorage.getItem('prg_quiz_room_id');
@@ -109,35 +109,36 @@
         } catch(e) {}
     }
 
-    // --- Communication Setup ---
+    // Communication Setup
     const ntfyClientTopic = 'prg_quiz_' + roomId + '_client';
     const ntfyHostTopic = 'prg_quiz_' + roomId + '_host';
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('prg_quiz_' + roomId) : null;
     const LS_KEY = 'prg_quiz_action_' + roomId;
 
-    // 1. Listen to Client via ntfy WebSocket
-    let ntfyWs = null;
-    function connectNtfyHostWs() {
+    // 1. Listen to answers via EventSource (SSE) - 100% Reliable across any network/mobile browser!
+    let sseSource = null;
+    function initSseListener() {
         try {
-            ntfyWs = new WebSocket('wss://ntfy.sh/' + ntfyClientTopic + '/ws');
-            ntfyWs.onopen = () => {
+            if (sseSource) sseSource.close();
+            sseSource = new EventSource('https://ntfy.sh/' + ntfyClientTopic + '/sse');
+            sseSource.onopen = () => {
                 updateConnectedCount(true);
             };
-            ntfyWs.onmessage = (event) => {
+            sseSource.onmessage = (event) => {
                 try {
-                    const ntfyMsg = JSON.parse(event.data);
-                    if (ntfyMsg.event === 'message') {
-                        const payload = JSON.parse(ntfyMsg.message);
+                    const data = JSON.parse(event.data);
+                    if (data.event === 'message') {
+                        const payload = JSON.parse(data.message);
                         handleClientMessage(payload);
                     }
                 } catch(e) {}
             };
-            ntfyWs.onclose = () => {
-                setTimeout(connectNtfyHostWs, 2000);
+            sseSource.onerror = () => {
+                // EventSource will auto-reconnect
             };
         } catch(e) {}
     }
-    connectNtfyHostWs();
+    initSseListener();
 
     // 2. MQTT Backup
     let mqttClient = null;
@@ -161,7 +162,7 @@
     }
     initMqttHost();
 
-    // 3. BroadcastChannel & Storage Event
+    // 3. BroadcastChannel & LocalStorage (For same-device test)
     if (bc) {
         bc.onmessage = (e) => handleClientMessage(e.data);
     }
@@ -185,7 +186,7 @@
         };
         const str = JSON.stringify(payload);
 
-        // A. Send via ntfy POST (Instant HTTP)
+        // A. Send via ntfy POST
         try {
             fetch('https://ntfy.sh/' + ntfyHostTopic, {
                 method: 'POST',
@@ -222,10 +223,8 @@
             updateConnectedCount(true);
             broadcastState();
         } else if (data.type === 'ANSWER_SUBMITTED') {
-            // STOP TIMER IMMEDIATELY!
-            if (status === 'RUNNING') {
-                pauseOnAnswer(data.answer);
-            }
+            // STOP TIMER IMMEDIATELY! Regardless of current state
+            pauseOnAnswer(data.answer);
         }
     }
 
@@ -271,7 +270,6 @@
         const btnRandomQ = document.getElementById('quiz-btn-random-q');
         const btnStartTimer = document.getElementById('quiz-btn-start-timer');
         const btnPauseTimer = document.getElementById('quiz-btn-pause-timer');
-        const btnNextLoop = document.getElementById('quiz-btn-next-loop');
 
         let baseUrl = window.location.href.split('?')[0].replace(/[^/]*$/, '');
         if (baseUrl.startsWith('file:///')) {
@@ -470,7 +468,7 @@
         }
 
         function pauseOnAnswer(ans) {
-            // STOP TIMER IMMEDIATELY! Keep remainingMs at exact fraction
+            // STOP TIMER IMMEDIATELY!
             clearInterval(timerInterval);
             lastPlayerAnswer = ans;
             playBuzzerSound();
@@ -539,6 +537,7 @@
             });
         }
 
+        // เริ่มจับเวลา หรือ เล่นต่อนับเวลาต่อจากเดิม
         if (btnStartTimer) {
             btnStartTimer.addEventListener('click', () => {
                 startTimer();
@@ -548,14 +547,6 @@
         if (btnPauseTimer) {
             btnPauseTimer.addEventListener('click', () => {
                 pauseTimerManual();
-            });
-        }
-
-        if (btnNextLoop) {
-            btnNextLoop.addEventListener('click', () => {
-                clearInterval(timerInterval);
-                loadQuestion(currentQIndex + 1, true);
-                startTimer();
             });
         }
 
