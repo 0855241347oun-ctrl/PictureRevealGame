@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizSection = document.getElementById('quiz-mode');
     const btnQuizMode = document.getElementById('btn-quiz-mode');
     const btnHomeQuizGame = document.getElementById('btn-home-quiz-game');
+    const petSection = document.getElementById('pet-mode');
+    const btnPetMode = document.getElementById('btn-pet-mode');
+    const btnHomePetGame = document.getElementById('btn-home-pet-game');
 
     // Home Elements
     const btnHomeCreate = document.getElementById('btn-home-create');
@@ -162,6 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnHomeQuizGame) {
         btnHomeQuizGame.addEventListener('click', () => switchTab('quiz'));
     }
+    if (btnPetMode) {
+        btnPetMode.addEventListener('click', () => switchTab('pet'));
+    }
+    if (btnHomePetGame) {
+        btnHomePetGame.addEventListener('click', () => switchTab('pet'));
+    }
     
     if (btnWordRandom) {
         let isSpinningWord = false;
@@ -254,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnWheelMode.classList.remove('active');
         if (btnWordMode) btnWordMode.classList.remove('active');
         if (btnQuizMode) btnQuizMode.classList.remove('active');
+        if (btnPetMode) btnPetMode.classList.remove('active');
         
         homeSection.classList.remove('active');
         playerSection.classList.remove('active');
@@ -262,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wheelPlaySection.classList.remove('active');
         if (wordSection) wordSection.classList.remove('active');
         if (quizSection) quizSection.classList.remove('active');
+        if (petSection) petSection.classList.remove('active');
         
         btnPlayerMode.style.display = 'none';
 
@@ -305,6 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnQuizMode) btnQuizMode.classList.add('active');
             if (quizSection) quizSection.classList.add('active');
             if (window.initQuizHost) window.initQuizHost();
+        } else if (tab === 'pet') {
+            if (btnPetMode) btnPetMode.classList.add('active');
+            if (petSection) petSection.classList.add('active');
+            if (window.initPetGame) window.initPetGame();
         }
     }
 
