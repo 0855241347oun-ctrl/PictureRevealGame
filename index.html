@@ -368,55 +368,29 @@
             <section id="pet-mode" class="mode-section">
                 <div class="pet-game-container">
                     <div class="glass-panel pet-panel">
-                        <!-- Top Bar / Unified Compact Score & Controls -->
+                        <!-- Top Bar / Clean Controls Only (No Scores) -->
                         <div class="pet-compact-topbar">
-                            <!-- Team A Score -->
-                            <div class="pet-team-score-badge team-a">
-                                <span class="pet-team-label">🔴 ทีม A</span>
-                                <div class="pet-score-controls">
-                                    <button type="button" id="pet-score-minus-a" class="pet-btn-score" title="ลดคะแนน">-</button>
-                                    <span id="pet-score-a" class="pet-score-number">0</span>
-                                    <button type="button" id="pet-score-plus-a" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
-                                </div>
+                            <div class="pet-view-btn-group">
+                                <button type="button" id="pet-btn-view-a" class="pet-view-btn btn-view-team-a" title="คีย์ลัด: 1">
+                                    🔴 จอทีม A (1)
+                                </button>
+                                <button type="button" id="pet-btn-view-b" class="pet-view-btn btn-view-team-b" title="คีย์ลัด: 2">
+                                    🔵 จอทีม B (2)
+                                </button>
+                                <button type="button" id="pet-btn-view-host" class="pet-view-btn btn-view-host active" title="คีย์ลัด: 3">
+                                    👑 ผู้คุม (3)
+                                </button>
+                                <button type="button" id="pet-btn-view-reveal" class="pet-view-btn btn-view-reveal" title="คีย์ลัด: 4 หรือ Spacebar">
+                                    💥 เฉลย (4)
+                                </button>
                             </div>
-
-                            <!-- Center: Mode Switchers + Actions in Slim Pill Rows -->
-                            <div class="pet-center-bar">
-                                <div class="pet-view-btn-group">
-                                    <button type="button" id="pet-btn-view-a" class="pet-view-btn btn-view-team-a" title="คีย์ลัด: 1">
-                                        🔴 จอทีม A (1)
-                                    </button>
-                                    <button type="button" id="pet-btn-view-b" class="pet-view-btn btn-view-team-b" title="คีย์ลัด: 2">
-                                        🔵 จอทีม B (2)
-                                    </button>
-                                    <button type="button" id="pet-btn-view-host" class="pet-view-btn btn-view-host active" title="คีย์ลัด: 3">
-                                        👑 ผู้คุม (3)
-                                    </button>
-                                    <button type="button" id="pet-btn-view-reveal" class="pet-view-btn btn-view-reveal" title="คีย์ลัด: 4 หรือ Spacebar">
-                                        💥 เฉลย (4)
-                                    </button>
-                                </div>
-                                <div class="pet-sub-action-group">
-                                    <button type="button" id="pet-btn-new-round" class="btn primary pet-btn-round" title="คีย์ลัด: R">
-                                        🎲 สุ่มใหม่ (R)
-                                    </button>
-                                    <button type="button" id="pet-btn-reroll-special" class="btn secondary pet-btn-round-sub">
-                                        🃏 สุ่มแต้ม
-                                    </button>
-                                    <button type="button" id="pet-btn-reset-score" class="pet-btn-reset-clean" title="รีเซ็ตคะแนน">
-                                        🔄 รีเซ็ต
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Team B Score -->
-                            <div class="pet-team-score-badge team-b">
-                                <span class="pet-team-label">🔵 ทีม B</span>
-                                <div class="pet-score-controls">
-                                    <button type="button" id="pet-score-minus-b" class="pet-btn-score" title="ลดคะแนน">-</button>
-                                    <span id="pet-score-b" class="pet-score-number">0</span>
-                                    <button type="button" id="pet-score-plus-b" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
-                                </div>
+                            <div class="pet-sub-action-group">
+                                <button type="button" id="pet-btn-new-round" class="btn primary pet-btn-round" title="คีย์ลัด: R">
+                                    🎲 สุ่มใหม่ (R)
+                                </button>
+                                <button type="button" id="pet-btn-reroll-special" class="btn secondary pet-btn-round-sub">
+                                    🃏 สุ่มแต้ม
+                                </button>
                             </div>
                         </div>
 

@@ -45,7 +45,7 @@ body {
 
 header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -480,7 +480,7 @@ select:focus {
 
 .leaderboard-item {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     font-size: 0.85rem;
 }
 
@@ -596,7 +596,7 @@ select:focus {
 
 .history-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -840,7 +840,7 @@ select:focus {
 
 .quiz-topbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
@@ -1034,7 +1034,7 @@ select:focus {
 
 .quiz-q-meta {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 1.25rem;
     flex-wrap: wrap;
@@ -1279,7 +1279,7 @@ select:focus {
 /* --- Compact Unified Topbar --- */
 .pet-compact-topbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: 0.75rem;
     background: #f8fafc;
@@ -1515,7 +1515,7 @@ select:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     height: 100%;
     min-height: 250px;
     box-sizing: border-box;
@@ -1607,7 +1607,7 @@ select:focus {
 .pet-card-header {
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: 0.4rem;
 }
@@ -1699,7 +1699,7 @@ select:focus {
     padding: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     height: 100%;
     min-height: 250px;
@@ -1911,7 +1911,7 @@ select:focus {
 
 .pet-column-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -1984,7 +1984,7 @@ select:focus {
 
 .pet-calc-breakdown {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     font-size: 0.8rem;
     color: #64748b;
     margin-bottom: 0.25rem;
@@ -1994,7 +1994,7 @@ select:focus {
 
 .pet-calc-total {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
