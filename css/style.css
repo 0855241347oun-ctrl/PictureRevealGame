@@ -1257,45 +1257,45 @@ select:focus {
 
 
 /* ========================================================
-   🐾 Pet Blind Battle Game Styles (เกมวัดใจแต้มสัตว์เลี้ยง) - Clean & Focus
+   🐾 Pet Blind Battle Game Styles (เกมวัดใจแต้มสัตว์เลี้ยง) - Compact Sleek
    ======================================================== */
 
 .pet-game-container {
-    max-width: 1100px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 0.5rem;
+    padding: 0.25rem;
     width: 100%;
 }
 
 .pet-panel {
-    padding: 1.5rem;
-    border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.95);
+    padding: 0.85rem 1.2rem;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(16px);
     border: 1.5px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
 }
 
-/* --- Clean Topbar & Scoreboard --- */
-.pet-clean-topbar {
+/* --- Compact Unified Topbar --- */
+.pet-compact-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.75rem;
     background: #f8fafc;
-    padding: 0.75rem 1.25rem;
-    border-radius: 1.25rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 1rem;
     border: 1.5px solid #e2e8f0;
 }
 
 .pet-team-score-badge {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.4rem 1rem;
+    gap: 0.45rem;
+    padding: 0.3rem 0.75rem;
     border-radius: 99px;
     font-weight: 800;
+    font-size: 0.92rem;
 }
 
 .pet-team-score-badge.team-a {
@@ -1313,63 +1313,118 @@ select:focus {
 .pet-score-controls {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.25rem;
 }
 
 .pet-btn-score {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     border: none;
     background: white;
     cursor: pointer;
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.1s;
 }
 
 .pet-btn-score:active {
-    transform: scale(0.88);
+    transform: scale(0.85);
 }
 
 .pet-score-number {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 900;
-    min-width: 24px;
+    min-width: 20px;
     text-align: center;
 }
 
-.pet-top-actions {
+.pet-center-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.pet-view-btn-group {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pet-view-btn {
+    padding: 0.38rem 0.75rem;
+    border-radius: 0.65rem;
+    border: 1.5px solid #cbd5e1;
+    background: white;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pet-view-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.pet-view-btn.btn-view-team-a.active {
+    background: #ef4444;
+    color: white;
+    border-color: #dc2626;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.pet-view-btn.btn-view-team-b.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.pet-view-btn.btn-view-host.active {
+    background: #8b5cf6;
+    color: white;
+    border-color: #7c3aed;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+}
+
+.pet-view-btn.btn-view-reveal.active {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: white;
+    border-color: #d97706;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);
+}
+
+.pet-sub-action-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .pet-btn-round {
-    padding: 0.65rem 1.4rem !important;
-    font-size: 1.05rem !important;
+    padding: 0.3rem 0.85rem !important;
+    font-size: 0.82rem !important;
     font-weight: 800 !important;
     border-radius: 99px !important;
     background: linear-gradient(135deg, #f59e0b, #d97706) !important;
     border: none !important;
     color: white !important;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
     cursor: pointer;
-    transition: transform 0.15s ease;
-}
-
-.pet-btn-round:hover {
-    transform: scale(1.03);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
 }
 
 .pet-btn-round-sub {
-    padding: 0.6rem 1.1rem !important;
-    font-size: 0.9rem !important;
+    padding: 0.3rem 0.75rem !important;
+    font-size: 0.8rem !important;
     font-weight: 700 !important;
     border-radius: 99px !important;
     cursor: pointer;
@@ -1379,7 +1434,7 @@ select:focus {
     background: none;
     border: none;
     color: #94a3b8;
-    font-size: 0.82rem;
+    font-size: 0.75rem;
     cursor: pointer;
     text-decoration: underline;
 }
@@ -1388,212 +1443,100 @@ select:focus {
     color: #ef4444;
 }
 
-/* --- View Switcher Buttons --- */
-.pet-view-switcher {
-    margin: 1rem 0;
-}
-
-.pet-view-btn-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.6rem;
-}
-
-.pet-view-btn {
-    padding: 0.75rem 1rem;
-    border-radius: 0.85rem;
-    border: 2px solid #cbd5e1;
-    background: white;
-    font-weight: 800;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-}
-
-.pet-view-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-
-.pet-view-btn.btn-view-team-a.active {
-    background: #ef4444;
-    color: white;
-    border-color: #dc2626;
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-    transform: scale(1.02);
-}
-
-.pet-view-btn.btn-view-team-b.active {
-    background: #3b82f6;
-    color: white;
-    border-color: #2563eb;
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-    transform: scale(1.02);
-}
-
-.pet-view-btn.btn-view-host.active {
-    background: #8b5cf6;
-    color: white;
-    border-color: #7c3aed;
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-    transform: scale(1.02);
-}
-
-.pet-view-btn.btn-view-reveal.active {
-    background: linear-gradient(135deg, #f59e0b, #ea580c);
-    color: white;
-    border-color: #d97706;
-    box-shadow: 0 6px 22px rgba(245, 158, 11, 0.5);
-    transform: scale(1.03);
-}
-
 /* ========================================================
-   STAGE 1: Single Stage (ใบเดียวเดี่ยวๆ ใหญ่ๆ เต็มตา)
+   STAGE 1: Single Stage (Compact Horizontal Cards)
    ======================================================== */
 .pet-single-stage {
+    padding: 0.4rem 0 0.8rem 0;
     text-align: center;
-    padding: 0.5rem 0 1.5rem 0;
-    animation: fadeIn 0.25s ease-out;
 }
 
-.pet-single-banner {
-    max-width: 600px;
-    margin: 0 auto 1.25rem auto;
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 1.25rem;
-    padding: 1rem 1.25rem;
-}
-
-.pet-single-view-title {
-    font-size: 1.35rem;
-    font-weight: 900;
-    color: #1e293b;
-}
-
-.pet-single-clue-box {
-    margin: 0.6rem 0;
-    padding: 0.6rem 1rem;
-    background: #fef3c7;
-    border: 1.5px solid #fde68a;
-    border-radius: 0.75rem;
-    font-size: 1.2rem;
-    color: #92400e;
-    font-weight: 800;
-}
-
-.pet-single-hint-tip {
-    font-size: 0.85rem;
-    color: #64748b;
-}
-
-.pet-single-card-zone {
-    max-width: 480px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
+.pet-compact-clue-bar {
+    display: inline-flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    gap: 0.85rem;
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    border-radius: 99px;
+    padding: 0.35rem 1.1rem;
+    margin: 0.4rem auto 0.75rem auto;
 }
 
-.pet-single-target-label {
-    font-size: 1.2rem;
+.pet-badge-view-team {
+    font-size: 0.85rem;
     font-weight: 800;
-    color: #334155;
+    color: #b45309;
 }
 
-.pet-cards-stack-single {
-    width: 100%;
+.pet-clue-highlight {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #78350f;
+}
+
+.pet-badge-target-team {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 0.15rem 0.6rem;
+    border-radius: 99px;
+}
+
+/* Horizontal Cards Row */
+.pet-single-cards-row {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1.25rem;
+    margin: 0.4rem auto;
+    max-width: 580px;
 }
 
-.pet-flip-instruction {
-    font-size: 0.9rem;
-    color: #64748b;
-    margin-top: 0.2rem;
-}
-
-.pet-single-decision-zone {
-    max-width: 420px;
-    margin: 1.5rem auto 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-/* ========================================================
-   Card 3D Interactive Flip & Styles
-   ======================================================== */
-.pet-card {
-    border-radius: 1.5rem;
+.pet-card.pet-card-compact {
+    flex: 1;
+    max-width: 260px;
+    min-height: 250px;
+    border-radius: 1.25rem;
     cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
     user-select: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 
-.pet-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-}
-
-.pet-card.pet-card-big {
-    min-height: 360px;
+.pet-card.pet-card-compact:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
 }
 
 .pet-card-inner {
-    border-radius: 1.5rem;
-    padding: 1.5rem;
+    border-radius: 1.25rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    min-height: 300px;
-    transition: all 0.3s ease;
+    height: 100%;
+    min-height: 250px;
+    box-sizing: border-box;
 }
 
-.pet-card.pet-card-big .pet-card-inner {
-    min-height: 360px;
-    padding: 1.75rem;
-}
-
-/* Card Front */
 .pet-card-inner.card-front {
     background: #ffffff;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }
 
-.pet-card-inner.card-front.theme-team-a {
-    background: linear-gradient(180deg, #fffafa 0%, #ffffff 100%);
-}
-
-.pet-card-inner.card-front.theme-team-b {
-    background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
-}
-
-/* Card Back (Hidden with Border Indicator) */
 .pet-card-inner.card-back {
     background: linear-gradient(135deg, #1e293b, #0f172a);
     color: white;
     text-align: center;
 }
 
-.pet-back-badge-wrap {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
 .pet-border-glow-badge {
-    padding: 0.35rem 0.9rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 99px;
-    font-weight: 900;
-    font-size: 0.88rem;
+    font-weight: 800;
+    font-size: 0.8rem;
     border: 1.5px solid;
 }
 
@@ -1601,14 +1544,14 @@ select:focus {
     background: rgba(234, 179, 8, 0.2);
     color: #fde047;
     border-color: #eab308;
-    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.4);
 }
 
 .pet-border-glow-badge.tier-blue {
     background: rgba(59, 130, 246, 0.2);
     color: #93c5fd;
     border-color: #3b82f6;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .pet-border-glow-badge.tier-white {
@@ -1618,32 +1561,26 @@ select:focus {
 }
 
 .pet-back-symbol {
-    font-size: 4rem;
-    margin: 1rem 0;
-    animation: mysteryPulse 2s infinite ease-in-out;
-}
-
-@keyframes mysteryPulse {
-    0%, 100% { transform: scale(1); opacity: 0.85; }
-    50% { transform: scale(1.12); opacity: 1; }
+    font-size: 3.2rem;
+    margin: 0.4rem 0;
 }
 
 .pet-back-title {
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     font-weight: 800;
     color: #cbd5e1;
 }
 
 .pet-back-border-desc {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     color: #f8fafc;
-    margin-top: 0.4rem;
+    margin-top: 0.2rem;
 }
 
 .pet-flip-hint {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #94a3b8;
-    margin-top: 0.5rem;
+    margin-top: 0.3rem;
 }
 
 .pet-flip-hint.active-hint {
@@ -1651,87 +1588,77 @@ select:focus {
     font-weight: 800;
 }
 
-/* Border Glow Themes */
+/* Border Glows */
 .border-gold {
-    border: 3.5px solid #eab308 !important;
-    box-shadow: 0 0 25px rgba(234, 179, 8, 0.45) !important;
+    border: 3px solid #eab308 !important;
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.4) !important;
 }
 
 .border-blue {
-    border: 3.5px solid #3b82f6 !important;
-    box-shadow: 0 0 22px rgba(59, 130, 246, 0.38) !important;
+    border: 3px solid #3b82f6 !important;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.35) !important;
 }
 
 .border-white {
-    border: 3px solid #cbd5e1 !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;
+    border: 2.5px solid #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
 }
 
-/* Card Content Elements */
 .pet-card-header {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .pet-clue-pill {
     background: #f1f5f9;
     color: #334155;
-    padding: 0.25rem 0.65rem;
+    padding: 0.18rem 0.55rem;
     border-radius: 99px;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 800;
     border: 1px solid #cbd5e1;
 }
 
 .pet-border-indicator {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    padding: 0.2rem 0.6rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 99px;
 }
-
 .pet-border-indicator.tier-gold { color: #b45309; background: #fef3c7; }
 .pet-border-indicator.tier-blue { color: #1d4ed8; background: #dbeafe; }
 .pet-border-indicator.tier-white { color: #475569; background: #f1f5f9; }
 
 .pet-card-emoji-wrap {
-    margin: 0.8rem 0;
+    margin: 0.4rem 0;
 }
 
 .pet-card-emoji {
-    font-size: 5.2rem;
+    font-size: 4rem;
     line-height: 1;
-    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
-}
-
-.pet-card.pet-card-big .pet-card-emoji {
-    font-size: 6.8rem;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.1));
 }
 
 .pet-card-name {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     font-weight: 900;
     color: #1e293b;
-    margin-bottom: 0.4rem;
-}
-
-.pet-card.pet-card-big .pet-card-name {
-    font-size: 2rem;
+    margin-bottom: 0.2rem;
 }
 
 .pet-card-power-wrap {
     width: 100%;
     background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    padding: 0.6rem 1rem;
-    border-radius: 0.85rem;
-    border: 1.5px solid #e2e8f0;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
 }
 
 .pet-power-label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 800;
     color: #64748b;
     text-transform: uppercase;
@@ -1739,7 +1666,7 @@ select:focus {
 }
 
 .pet-power-val {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 900;
     font-family: monospace;
     color: #b45309;
@@ -1747,109 +1674,80 @@ select:focus {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     line-height: 1.1;
-    margin-top: 2px;
-}
-
-.pet-card.pet-card-big .pet-power-val {
-    font-size: 2.8rem;
+    margin-top: 1px;
 }
 
 /* ========================================================
-   Special Modifier Card (Interactive Flip & Tiers)
+   Special Card (Compact)
    ======================================================== */
-.pet-special-card {
-    border-radius: 1.15rem;
+.pet-special-card.pet-special-compact {
+    flex: 1;
+    max-width: 260px;
+    min-height: 250px;
+    border-radius: 1.25rem;
     cursor: pointer;
     user-select: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease;
 }
 
-.pet-special-card:hover {
-    transform: translateY(-2px);
+.pet-special-card.pet-special-compact:hover {
+    transform: translateY(-3px);
 }
 
 .pet-special-inner {
-    border-radius: 1.15rem;
-    padding: 0.85rem 1.15rem;
+    border-radius: 1.25rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    transition: all 0.25s ease;
-}
-
-.pet-special-card.pet-special-big .pet-special-inner {
-    padding: 1.1rem 1.4rem;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    min-height: 250px;
+    box-sizing: border-box;
 }
 
 .pet-special-tier-label {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 800;
     text-transform: uppercase;
 }
 
 .pet-special-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
+    gap: 0.4rem;
+    margin: auto 0;
 }
 
 .pet-special-icon {
-    font-size: 1.6rem;
-}
-
-.pet-special-card.pet-special-big .pet-special-icon {
-    font-size: 2.2rem;
+    font-size: 3rem;
+    line-height: 1;
 }
 
 .pet-special-name {
     font-size: 1.05rem;
     font-weight: 800;
-    flex: 1;
-    text-align: left;
-}
-
-.pet-special-card.pet-special-big .pet-special-name {
-    font-size: 1.25rem;
+    text-align: center;
 }
 
 .pet-special-val {
-    font-size: 1.35rem;
+    font-size: 1.45rem;
     font-weight: 900;
     font-family: monospace;
-    padding: 0.25rem 0.65rem;
+    padding: 0.2rem 0.6rem;
     border-radius: 0.5rem;
 }
 
-.pet-special-card.pet-special-big .pet-special-val {
-    font-size: 1.7rem;
-}
-
-.pet-special-val.pos {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #86efac;
-}
-
-.pet-special-val.neg {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fca5a5;
-}
+.pet-special-val.pos { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.pet-special-val.neg { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
 .pet-special-flip-sub {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: #64748b;
-    text-align: center;
-    margin-top: 2px;
+    margin-top: 0.2rem;
 }
 
-.pet-special-flip-sub.active-hint {
-    color: #ca8a04;
-    font-weight: 800;
-}
-
-/* Special Card Back */
 .pet-special-inner.card-back {
     background: linear-gradient(135deg, #1e293b, #0f172a);
     color: white;
@@ -1857,10 +1755,10 @@ select:focus {
 }
 
 .pet-special-border-badge {
-    padding: 0.25rem 0.8rem;
+    padding: 0.2rem 0.7rem;
     border-radius: 99px;
     font-weight: 900;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     border: 1px solid;
 }
 
@@ -1870,282 +1768,44 @@ select:focus {
 .pet-special-border-badge.tier-white { background: rgba(255, 255, 255, 0.15); color: #f8fafc; border-color: #cbd5e1; }
 
 .pet-special-back-desc {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     color: #e2e8f0;
-    margin: 0.25rem 0;
+    margin: 0.3rem 0;
 }
 
-/* Special Card Tier Colors */
-.tier-white {
-    background: #ffffff;
-    border: 2.5px solid #cbd5e1 !important;
-}
+.tier-white { background: #ffffff; border: 2px solid #cbd5e1 !important; }
 .tier-white .pet-special-tier-label { color: #64748b; }
 
-.tier-green {
-    background: #f0fdf4;
-    border: 2.5px solid #22c55e !important;
-    box-shadow: 0 0 16px rgba(34, 197, 94, 0.25) !important;
-}
+.tier-green { background: #f0fdf4; border: 2px solid #22c55e !important; box-shadow: 0 0 14px rgba(34, 197, 94, 0.22) !important; }
 .tier-green .pet-special-tier-label { color: #16a34a; }
 
-.tier-blue {
-    background: #eff6ff;
-    border: 2.5px solid #3b82f6 !important;
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.3) !important;
-}
+.tier-blue { background: #eff6ff; border: 2px solid #3b82f6 !important; box-shadow: 0 0 16px rgba(59, 130, 246, 0.25) !important; }
 .tier-blue .pet-special-tier-label { color: #2563eb; }
 
-.tier-gold {
-    background: linear-gradient(135deg, #fefce8, #fffbeb);
-    border: 2.5px solid #eab308 !important;
-    box-shadow: 0 0 24px rgba(234, 179, 8, 0.45) !important;
-}
+.tier-gold { background: linear-gradient(135deg, #fefce8, #fffbeb); border: 2px solid #eab308 !important; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4) !important; }
 .tier-gold .pet-special-tier-label { color: #ca8a04; font-weight: 900; }
 
-/* ========================================================
-   STAGE 2: Dual Stage (Showdown / Host Master Arena)
-   ======================================================== */
-.pet-dual-stage {
-    margin-top: 0.5rem;
-}
-
-.pet-banner-card {
-    margin-bottom: 1rem;
-    padding: 0.85rem 1.25rem;
-    border-radius: 1rem;
-    text-align: center;
-}
-
-.pet-banner-card.mode-host {
-    background: linear-gradient(135deg, #f3e8ff, #ede9fe);
-    border: 1.5px solid #d8b4fe;
-    color: #581c87;
-}
-
-.pet-banner-card.mode-reveal {
-    background: linear-gradient(135deg, #fef3c7, #fed7aa);
-    border: 2px solid #f59e0b;
-    color: #78350f;
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
-}
-
-.pet-banner-title {
-    font-size: 1.18rem;
-    margin-bottom: 0.2rem;
-}
-
-.pet-banner-sub {
-    font-size: 0.88rem;
-    opacity: 0.88;
-}
-
-.pet-arena {
-    display: flex;
-    gap: 1.5rem;
-    align-items: stretch;
-}
-
-@media (max-width: 820px) {
-    .pet-arena {
-        flex-direction: column;
-    }
-}
-
-.pet-team-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    border-radius: 1.25rem;
-    padding: 1.25rem;
-    border: 2px solid #e2e8f0;
-}
-
-.pet-team-column.team-a-side {
-    border-color: #fca5a5;
-    background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
-}
-
-.pet-team-column.team-b-side {
-    border-color: #93c5fd;
-    background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 100%);
-}
-
-.pet-column-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.pet-column-title {
-    font-size: 1.2rem;
-    font-weight: 900;
-}
-.pet-column-title.red { color: #dc2626; }
-.pet-column-title.blue { color: #2563eb; }
-
-.pet-badge-wait {
-    background: #f1f5f9;
-    color: #64748b;
-    padding: 0.3rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.82rem;
-    font-weight: 700;
-}
-
-.pet-badge-fight {
-    background: #dcfce7;
-    color: #15803d;
-    padding: 0.3rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    border: 1px solid #86efac;
-}
-
-.pet-badge-fold {
-    background: #fee2e2;
-    color: #b91c1c;
-    padding: 0.3rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    border: 1px solid #fca5a5;
-}
-
-/* Divider VS */
-.pet-arena-vs-divider {
+/* Single Mode Bottom Bar */
+.pet-single-bottom-bar {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-}
-
-@media (max-width: 820px) {
-    .pet-arena-vs-divider {
-        width: 100%;
-        flex-direction: row;
-        margin: 0.5rem 0;
-    }
-}
-
-.pet-vs-circle {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    color: #f8fafc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 1.05rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border: 3px solid white;
-}
-
-/* Net Total & Winner Badges */
-.pet-total-box {
-    background: white;
-    border-radius: 1rem;
-    padding: 0.85rem 1rem;
-    border: 2px solid #e2e8f0;
-    text-align: center;
-}
-
-.pet-calc-breakdown {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.88rem;
-    color: #64748b;
-    margin-bottom: 0.4rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px dashed #cbd5e1;
-}
-
-.pet-calc-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.pet-calc-total-label {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #1e293b;
-}
-
-.pet-calc-total-val {
-    font-size: 1.8rem;
-    font-weight: 900;
-    font-family: monospace;
-    color: #0f172a;
-}
-
-.pet-calc-host-preview {
-    font-size: 0.88rem;
-    color: #6b21a8;
-    background: #faf5ff;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    font-weight: 700;
-}
-
-.pet-win-badge {
-    margin-top: 0.6rem;
-    padding: 0.5rem 1rem;
-    border-radius: 99px;
-    font-size: 1.05rem;
-    font-weight: 900;
-}
-
-.pet-win-badge.victory {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-}
-
-.pet-win-badge.defeat {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #cbd5e1;
-}
-
-.pet-win-badge.draw {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1.5px solid #fde68a;
-}
-
-/* Decision Buttons */
-.pet-team-decision-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-top: auto;
-}
-
-.pet-decision-label {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #475569;
+    gap: 0.25rem;
+    margin-top: 0.4rem;
 }
 
 .pet-decision-btns {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
 }
 
 .pet-btn-action-choice {
-    flex: 1;
-    padding: 0.65rem 0.8rem;
-    border-radius: 0.75rem;
+    padding: 0.45rem 1.15rem;
+    border-radius: 99px;
     border: 2px solid #cbd5e1;
     background: white;
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     cursor: pointer;
     transition: all 0.15s ease;
 }
@@ -2158,12 +1818,230 @@ select:focus {
     background: #16a34a;
     color: white;
     border-color: #15803d;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+    box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);
 }
 
 .pet-btn-action-choice.btn-fold.active-action {
     background: #dc2626;
     color: white;
     border-color: #b91c1c;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35);
+}
+
+.pet-flip-instruction {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* ========================================================
+   STAGE 2: Dual Stage (Showdown / Host Master Arena)
+   ======================================================== */
+.pet-dual-stage {
+    margin-top: 0.4rem;
+}
+
+.pet-banner-card {
+    margin-bottom: 0.6rem;
+    padding: 0.45rem 1rem;
+    border-radius: 0.85rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.pet-banner-card.mode-host {
+    background: #faf5ff;
+    border: 1.5px solid #d8b4fe;
+    color: #581c87;
+}
+
+.pet-banner-card.mode-reveal {
+    background: #fef3c7;
+    border: 1.5px solid #f59e0b;
+    color: #78350f;
+}
+
+.pet-banner-title {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.pet-banner-sub {
+    font-size: 0.82rem;
+    opacity: 0.85;
+}
+
+.pet-arena {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+@media (max-width: 820px) {
+    .pet-arena {
+        flex-direction: column;
+    }
+    .pet-single-cards-row {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.pet-team-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    padding: 0.75rem;
+    border: 1.5px solid #e2e8f0;
+}
+
+.pet-team-column.team-a-side {
+    border-color: #fca5a5;
+    background: linear-gradient(180deg, #fffafa 0%, #ffffff 100%);
+}
+
+.pet-team-column.team-b-side {
+    border-color: #93c5fd;
+    background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+}
+
+.pet-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pet-column-title {
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+.pet-column-title.red { color: #dc2626; }
+.pet-column-title.blue { color: #2563eb; }
+
+.pet-badge-wait {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.pet-badge-fight {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    border: 1px solid #86efac;
+}
+
+.pet-badge-fold {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    border: 1px solid #fca5a5;
+}
+
+.pet-arena-vs-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+}
+
+.pet-vs-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #0f172a;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.95rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    border: 2px solid white;
+}
+
+.pet-total-box {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    text-align: center;
+}
+
+.pet-calc-breakdown {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+.pet-calc-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pet-calc-total-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.pet-calc-total-val {
+    font-size: 1.4rem;
+    font-weight: 900;
+    font-family: monospace;
+    color: #0f172a;
+}
+
+.pet-calc-host-preview {
+    font-size: 0.82rem;
+    color: #6b21a8;
+    background: #faf5ff;
+    padding: 0.35rem;
+    border-radius: 0.4rem;
+    font-weight: 700;
+}
+
+.pet-win-badge {
+    margin-top: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 99px;
+    font-size: 0.92rem;
+    font-weight: 900;
+}
+
+.pet-win-badge.victory {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    box-shadow: 0 3px 10px rgba(34, 197, 94, 0.4);
+}
+
+.pet-win-badge.defeat {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+.pet-win-badge.draw {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
 }
