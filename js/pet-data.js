@@ -157,3 +157,57 @@ function getRandomPetCard(excludeId = null) {
     } while (excludeId && card.id === excludeId && PET_CARDS.length > 1);
     return { ...card };
 }
+
+
+// ฟังก์ชันวิเคราะห์ระดับขอบการ์ดสัตว์ (Pet Card Border)
+function getPetBorderInfo(power) {
+    if (power >= 6000) {
+        return {
+            tier: 'gold',
+            color: '#eab308',
+            label: '🟡 ขอบสีทอง (ระดับบอส 6,000+)'
+        };
+    } else if (power >= 3000) {
+        return {
+            tier: 'blue',
+            color: '#3b82f6',
+            label: '🔵 ขอบสีน้ำเงิน (ระดับสูง 3,000+)'
+        };
+    } else {
+        return {
+            tier: 'white',
+            color: '#cbd5e1',
+            label: '⚪ ขอบสีเงินขาว (ระดับทั่วไป)'
+        };
+    }
+}
+
+// ฟังก์ชันวิเคราะห์ระดับขอบการ์ดพิเศษ (Special Modifier Card Border)
+function getSpecialBorderInfo(tier) {
+    switch (tier) {
+        case 'gold':
+            return {
+                tier: 'gold',
+                color: '#eab308',
+                label: '🟡 ขอบสีทอง (Legendary)'
+            };
+        case 'blue':
+            return {
+                tier: 'blue',
+                color: '#3b82f6',
+                label: '🔵 ขอบสีน้ำเงิน (Rare)'
+            };
+        case 'green':
+            return {
+                tier: 'green',
+                color: '#22c55e',
+                label: '🟢 ขอบสีเขียว (Uncommon)'
+            };
+        default:
+            return {
+                tier: 'white',
+                color: '#cbd5e1',
+                label: '⚪ ขอบสีขาว (Common)'
+            };
+    }
+}

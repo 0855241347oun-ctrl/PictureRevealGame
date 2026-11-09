@@ -1257,11 +1257,11 @@ select:focus {
 
 
 /* ========================================================
-   🐾 Pet Blind Battle Game Styles (เกมวัดใจแต้มสัตว์เลี้ยง)
+   🐾 Pet Blind Battle Game Styles (เกมวัดใจแต้มสัตว์เลี้ยง) - Clean & Focus
    ======================================================== */
 
 .pet-game-container {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 0.5rem;
     width: 100%;
@@ -1270,36 +1270,30 @@ select:focus {
 .pet-panel {
     padding: 1.5rem;
     border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(16px);
     border: 1.5px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
 }
 
-/* --- Topbar & Scoreboard --- */
-.pet-topbar {
+/* --- Clean Topbar & Scoreboard --- */
+.pet-clean-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-}
-
-.pet-score-pill-box {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
     background: #f8fafc;
-    padding: 0.5rem 1rem;
-    border-radius: 99px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1.25rem;
     border: 1.5px solid #e2e8f0;
 }
 
 .pet-team-score-badge {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.8rem;
+    gap: 0.75rem;
+    padding: 0.4rem 1rem;
     border-radius: 99px;
     font-weight: 800;
 }
@@ -1307,34 +1301,34 @@ select:focus {
 .pet-team-score-badge.team-a {
     background: #fee2e2;
     color: #991b1b;
-    border: 1px solid #fecaca;
+    border: 1.5px solid #fecaca;
 }
 
 .pet-team-score-badge.team-b {
     background: #dbeafe;
     color: #1e40af;
-    border: 1px solid #bfdbfe;
+    border: 1.5px solid #bfdbfe;
 }
 
 .pet-score-controls {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
 }
 
 .pet-btn-score {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
     background: white;
     cursor: pointer;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
     transition: transform 0.1s;
 }
 
@@ -1343,79 +1337,60 @@ select:focus {
 }
 
 .pet-score-number {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 900;
-    min-width: 20px;
+    min-width: 24px;
     text-align: center;
 }
 
-.pet-versus-badge {
+.pet-top-actions {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    line-height: 1.1;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.pet-round-text {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: #64748b;
-    text-transform: uppercase;
+.pet-btn-round {
+    padding: 0.65rem 1.4rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    border-radius: 99px !important;
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+    cursor: pointer;
+    transition: transform 0.15s ease;
 }
 
-.pet-vs-label {
-    font-size: 1rem;
-    font-weight: 900;
-    color: #cbd5e1;
+.pet-btn-round:hover {
+    transform: scale(1.03);
 }
 
-.pet-btn-reset-sub {
-    font-size: 0.7rem;
+.pet-btn-round-sub {
+    padding: 0.6rem 1.1rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border-radius: 99px !important;
+    cursor: pointer;
+}
+
+.pet-btn-reset-clean {
     background: none;
     border: none;
     color: #94a3b8;
+    font-size: 0.82rem;
     cursor: pointer;
     text-decoration: underline;
-    margin-top: 2px;
 }
 
-.pet-btn-reset-sub:hover {
+.pet-btn-reset-clean:hover {
     color: #ef4444;
-}
-
-.pet-timer-quick-box {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.pet-timer-badge {
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 1.1rem;
-    font-weight: 900;
-    padding: 0.3rem 0.75rem;
-    border-radius: 99px;
-    border: 1.5px solid #fde68a;
-    font-family: monospace;
 }
 
 /* --- View Switcher Buttons --- */
 .pet-view-switcher {
-    margin-top: 0.5rem;
-    background: #f1f5f9;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
-    border: 1.5px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.pet-view-hint-title {
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: #475569;
+    margin: 1rem 0;
 }
 
 .pet-view-btn-group {
@@ -1476,33 +1451,476 @@ select:focus {
     transform: scale(1.03);
 }
 
-/* --- Banner Card --- */
-.pet-banner-card {
-    margin: 1rem 0;
+/* ========================================================
+   STAGE 1: Single Stage (ใบเดียวเดี่ยวๆ ใหญ่ๆ เต็มตา)
+   ======================================================== */
+.pet-single-stage {
+    text-align: center;
+    padding: 0.5rem 0 1.5rem 0;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.pet-single-banner {
+    max-width: 600px;
+    margin: 0 auto 1.25rem auto;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 1.25rem;
     padding: 1rem 1.25rem;
+}
+
+.pet-single-view-title {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #1e293b;
+}
+
+.pet-single-clue-box {
+    margin: 0.6rem 0;
+    padding: 0.6rem 1rem;
+    background: #fef3c7;
+    border: 1.5px solid #fde68a;
+    border-radius: 0.75rem;
+    font-size: 1.2rem;
+    color: #92400e;
+    font-weight: 800;
+}
+
+.pet-single-hint-tip {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.pet-single-card-zone {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pet-single-target-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #334155;
+}
+
+.pet-cards-stack-single {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pet-flip-instruction {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-top: 0.2rem;
+}
+
+.pet-single-decision-zone {
+    max-width: 420px;
+    margin: 1.5rem auto 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* ========================================================
+   Card 3D Interactive Flip & Styles
+   ======================================================== */
+.pet-card {
+    border-radius: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    user-select: none;
+}
+
+.pet-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.pet-card.pet-card-big {
+    min-height: 360px;
+}
+
+.pet-card-inner {
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 300px;
+    transition: all 0.3s ease;
+}
+
+.pet-card.pet-card-big .pet-card-inner {
+    min-height: 360px;
+    padding: 1.75rem;
+}
+
+/* Card Front */
+.pet-card-inner.card-front {
+    background: #ffffff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+}
+
+.pet-card-inner.card-front.theme-team-a {
+    background: linear-gradient(180deg, #fffafa 0%, #ffffff 100%);
+}
+
+.pet-card-inner.card-front.theme-team-b {
+    background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+}
+
+/* Card Back (Hidden with Border Indicator) */
+.pet-card-inner.card-back {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: white;
+    text-align: center;
+}
+
+.pet-back-badge-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.pet-border-glow-badge {
+    padding: 0.35rem 0.9rem;
+    border-radius: 99px;
+    font-weight: 900;
+    font-size: 0.88rem;
+    border: 1.5px solid;
+}
+
+.pet-border-glow-badge.tier-gold {
+    background: rgba(234, 179, 8, 0.2);
+    color: #fde047;
+    border-color: #eab308;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+}
+
+.pet-border-glow-badge.tier-blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.pet-border-glow-badge.tier-white {
+    background: rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.pet-back-symbol {
+    font-size: 4rem;
+    margin: 1rem 0;
+    animation: mysteryPulse 2s infinite ease-in-out;
+}
+
+@keyframes mysteryPulse {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.12); opacity: 1; }
+}
+
+.pet-back-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #cbd5e1;
+}
+
+.pet-back-border-desc {
+    font-size: 1.05rem;
+    color: #f8fafc;
+    margin-top: 0.4rem;
+}
+
+.pet-flip-hint {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+.pet-flip-hint.active-hint {
+    color: #fbbf24;
+    font-weight: 800;
+}
+
+/* Border Glow Themes */
+.border-gold {
+    border: 3.5px solid #eab308 !important;
+    box-shadow: 0 0 25px rgba(234, 179, 8, 0.45) !important;
+}
+
+.border-blue {
+    border: 3.5px solid #3b82f6 !important;
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.38) !important;
+}
+
+.border-white {
+    border: 3px solid #cbd5e1 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;
+}
+
+/* Card Content Elements */
+.pet-card-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pet-clue-pill {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 1px solid #cbd5e1;
+}
+
+.pet-border-indicator {
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+}
+
+.pet-border-indicator.tier-gold { color: #b45309; background: #fef3c7; }
+.pet-border-indicator.tier-blue { color: #1d4ed8; background: #dbeafe; }
+.pet-border-indicator.tier-white { color: #475569; background: #f1f5f9; }
+
+.pet-card-emoji-wrap {
+    margin: 0.8rem 0;
+}
+
+.pet-card-emoji {
+    font-size: 5.2rem;
+    line-height: 1;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+}
+
+.pet-card.pet-card-big .pet-card-emoji {
+    font-size: 6.8rem;
+}
+
+.pet-card-name {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #1e293b;
+    margin-bottom: 0.4rem;
+}
+
+.pet-card.pet-card-big .pet-card-name {
+    font-size: 2rem;
+}
+
+.pet-card-power-wrap {
+    width: 100%;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 0.6rem 1rem;
+    border-radius: 0.85rem;
+    border: 1.5px solid #e2e8f0;
+}
+
+.pet-power-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    display: block;
+}
+
+.pet-power-val {
+    font-size: 2.2rem;
+    font-weight: 900;
+    font-family: monospace;
+    color: #b45309;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+
+.pet-card.pet-card-big .pet-power-val {
+    font-size: 2.8rem;
+}
+
+/* ========================================================
+   Special Modifier Card (Interactive Flip & Tiers)
+   ======================================================== */
+.pet-special-card {
+    border-radius: 1.15rem;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pet-special-card:hover {
+    transform: translateY(-2px);
+}
+
+.pet-special-inner {
+    border-radius: 1.15rem;
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    transition: all 0.25s ease;
+}
+
+.pet-special-card.pet-special-big .pet-special-inner {
+    padding: 1.1rem 1.4rem;
+}
+
+.pet-special-tier-label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.pet-special-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.pet-special-icon {
+    font-size: 1.6rem;
+}
+
+.pet-special-card.pet-special-big .pet-special-icon {
+    font-size: 2.2rem;
+}
+
+.pet-special-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    flex: 1;
+    text-align: left;
+}
+
+.pet-special-card.pet-special-big .pet-special-name {
+    font-size: 1.25rem;
+}
+
+.pet-special-val {
+    font-size: 1.35rem;
+    font-weight: 900;
+    font-family: monospace;
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.5rem;
+}
+
+.pet-special-card.pet-special-big .pet-special-val {
+    font-size: 1.7rem;
+}
+
+.pet-special-val.pos {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.pet-special-val.neg {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.pet-special-flip-sub {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.pet-special-flip-sub.active-hint {
+    color: #ca8a04;
+    font-weight: 800;
+}
+
+/* Special Card Back */
+.pet-special-inner.card-back {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: white;
+    text-align: center;
+}
+
+.pet-special-border-badge {
+    padding: 0.25rem 0.8rem;
+    border-radius: 99px;
+    font-weight: 900;
+    font-size: 0.82rem;
+    border: 1px solid;
+}
+
+.pet-special-border-badge.tier-gold { background: rgba(234, 179, 8, 0.2); color: #fde047; border-color: #eab308; }
+.pet-special-border-badge.tier-blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: #3b82f6; }
+.pet-special-border-badge.tier-green { background: rgba(34, 197, 94, 0.2); color: #86efac; border-color: #22c55e; }
+.pet-special-border-badge.tier-white { background: rgba(255, 255, 255, 0.15); color: #f8fafc; border-color: #cbd5e1; }
+
+.pet-special-back-desc {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    margin: 0.25rem 0;
+}
+
+/* Special Card Tier Colors */
+.tier-white {
+    background: #ffffff;
+    border: 2.5px solid #cbd5e1 !important;
+}
+.tier-white .pet-special-tier-label { color: #64748b; }
+
+.tier-green {
+    background: #f0fdf4;
+    border: 2.5px solid #22c55e !important;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.25) !important;
+}
+.tier-green .pet-special-tier-label { color: #16a34a; }
+
+.tier-blue {
+    background: #eff6ff;
+    border: 2.5px solid #3b82f6 !important;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.3) !important;
+}
+.tier-blue .pet-special-tier-label { color: #2563eb; }
+
+.tier-gold {
+    background: linear-gradient(135deg, #fefce8, #fffbeb);
+    border: 2.5px solid #eab308 !important;
+    box-shadow: 0 0 24px rgba(234, 179, 8, 0.45) !important;
+}
+.tier-gold .pet-special-tier-label { color: #ca8a04; font-weight: 900; }
+
+/* ========================================================
+   STAGE 2: Dual Stage (Showdown / Host Master Arena)
+   ======================================================== */
+.pet-dual-stage {
+    margin-top: 0.5rem;
+}
+
+.pet-banner-card {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1.25rem;
     border-radius: 1rem;
     text-align: center;
-    transition: all 0.3s ease;
 }
 
 .pet-banner-card.mode-host {
     background: linear-gradient(135deg, #f3e8ff, #ede9fe);
     border: 1.5px solid #d8b4fe;
     color: #581c87;
-}
-
-.pet-banner-card.mode-team-a {
-    background: linear-gradient(135deg, #fee2e2, #ffedd5);
-    border: 1.5px solid #fca5a5;
-    color: #991b1b;
-    animation: bannerPulseA 2s infinite ease-in-out;
-}
-
-.pet-banner-card.mode-team-b {
-    background: linear-gradient(135deg, #dbeafe, #e0e7ff);
-    border: 1.5px solid #93c5fd;
-    color: #1e40af;
-    animation: bannerPulseB 2s infinite ease-in-out;
 }
 
 .pet-banner-card.mode-reveal {
@@ -1512,32 +1930,19 @@ select:focus {
     box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
 }
 
-@keyframes bannerPulseA {
-    0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
-    50% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.25); }
-}
-
-@keyframes bannerPulseB {
-    0%, 100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
-    50% { box-shadow: 0 0 18px rgba(59, 130, 246, 0.25); }
-}
-
 .pet-banner-title {
     font-size: 1.18rem;
     margin-bottom: 0.2rem;
 }
 
 .pet-banner-sub {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     opacity: 0.88;
 }
 
-/* --- Battlefield Arena --- */
 .pet-arena {
     display: flex;
     gap: 1.5rem;
-    margin-top: 1rem;
-    position: relative;
     align-items: stretch;
 }
 
@@ -1552,11 +1957,9 @@ select:focus {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    background: #f8fafc;
     border-radius: 1.25rem;
     padding: 1.25rem;
     border: 2px solid #e2e8f0;
-    transition: all 0.3s ease;
 }
 
 .pet-team-column.team-a-side {
@@ -1579,7 +1982,6 @@ select:focus {
     font-size: 1.2rem;
     font-weight: 900;
 }
-
 .pet-column-title.red { color: #dc2626; }
 .pet-column-title.blue { color: #2563eb; }
 
@@ -1612,13 +2014,12 @@ select:focus {
     border: 1px solid #fca5a5;
 }
 
-/* --- Divider VS --- */
+/* Divider VS */
 .pet-arena-vs-divider {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
     width: 40px;
 }
 
@@ -1631,8 +2032,8 @@ select:focus {
 }
 
 .pet-vs-circle {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     background: linear-gradient(135deg, #1e293b, #0f172a);
     color: #f8fafc;
@@ -1640,284 +2041,18 @@ select:focus {
     align-items: center;
     justify-content: center;
     font-weight: 900;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     border: 3px solid white;
-    z-index: 2;
 }
 
-/* --- Pet Card Styles --- */
-.pet-card {
-    min-height: 290px;
-    border-radius: 1.25rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-}
-
-.pet-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-}
-
-/* Front Card */
-.pet-card-front {
-    background: white;
-    border: 3px solid #e2e8f0;
-}
-
-.pet-card-front.theme-team-a {
-    border-color: #f87171;
-    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.12);
-}
-
-.pet-card-front.theme-team-b {
-    border-color: #60a5fa;
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.12);
-}
-
-.pet-card-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.pet-clue-pill {
-    background: #f1f5f9;
-    color: #334155;
-    padding: 0.25rem 0.65rem;
-    border-radius: 99px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    border: 1px solid #cbd5e1;
-}
-
-.pet-id-pill {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    font-weight: 700;
-}
-
-.pet-card-emoji-wrap {
-    margin: 0.8rem 0;
-}
-
-.pet-card-emoji {
-    font-size: 5rem;
-    line-height: 1;
-    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
-    animation: floatEmoji 3s ease-in-out infinite;
-}
-
-@keyframes floatEmoji {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
-
-.pet-card-name {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-}
-
-.pet-card-power-wrap {
-    width: 100%;
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    padding: 0.6rem 1rem;
-    border-radius: 0.85rem;
-    border: 1.5px solid #e2e8f0;
-}
-
-.pet-power-label {
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: #64748b;
-    text-transform: uppercase;
-    display: block;
-}
-
-.pet-power-val {
-    font-size: 2.1rem;
-    font-weight: 900;
-    font-family: monospace;
-    color: #b45309;
-    background: linear-gradient(135deg, #d97706, #b45309);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    line-height: 1.1;
-    margin-top: 2px;
-}
-
-/* Back Card (Hidden Mystery) */
-.pet-card-back {
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    color: white;
-    border: 3px dashed #475569;
-}
-
-.pet-card-back-badge {
-    background: rgba(255, 255, 255, 0.15);
-    color: #f8fafc;
-    padding: 0.25rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.82rem;
-    font-weight: 800;
-}
-
-.pet-card-back-icon {
-    font-size: 4rem;
-    margin: 0.5rem 0;
-    animation: mysteryPulse 1.8s infinite ease-in-out;
-}
-
-@keyframes mysteryPulse {
-    0%, 100% { transform: scale(1); opacity: 0.85; }
-    50% { transform: scale(1.15); opacity: 1; }
-}
-
-.pet-card-back-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #94a3b8;
-}
-
-.pet-card-my-clue-box {
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(251, 191, 36, 0.6);
-    border-radius: 0.85rem;
-    padding: 0.75rem 1rem;
-    width: 100%;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
-}
-
-.pet-clue-title {
-    font-size: 0.82rem;
-    font-weight: 800;
-    color: #fbbf24;
-}
-
-.pet-clue-content {
-    font-size: 1.45rem;
-    font-weight: 900;
-    color: #ffffff;
-    margin: 0.2rem 0;
-}
-
-.pet-clue-hint {
-    font-size: 0.72rem;
-    color: #cbd5e1;
-}
-
-/* --- Special Modifier Card --- */
-.pet-special-card {
-    border-radius: 1rem;
-    padding: 0.75rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    transition: all 0.25s ease;
-}
-
-.pet-special-tier-label {
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.pet-special-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.pet-special-icon {
-    font-size: 1.5rem;
-}
-
-.pet-special-name {
-    font-size: 0.95rem;
-    font-weight: 800;
-    flex: 1;
-    text-align: left;
-}
-
-.pet-special-val {
-    font-size: 1.25rem;
-    font-weight: 900;
-    font-family: monospace;
-    padding: 0.2rem 0.6rem;
-    border-radius: 0.5rem;
-}
-
-.pet-special-val.pos {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #86efac;
-}
-
-.pet-special-val.neg {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fca5a5;
-}
-
-/* Special Card Tiers */
-.pet-special-card.tier-white {
-    background: #ffffff;
-    border: 2px solid #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.pet-special-card.tier-white .pet-special-tier-label { color: #64748b; }
-
-.pet-special-card.tier-green {
-    background: #f0fdf4;
-    border: 2px solid #22c55e;
-    box-shadow: 0 0 16px rgba(34, 197, 94, 0.25);
-}
-.pet-special-card.tier-green .pet-special-tier-label { color: #16a34a; }
-
-.pet-special-card.tier-blue {
-    background: #eff6ff;
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.3);
-}
-.pet-special-card.tier-blue .pet-special-tier-label { color: #2563eb; }
-
-.pet-special-card.tier-gold {
-    background: linear-gradient(135deg, #fefce8, #fffbeb);
-    border: 2px solid #eab308;
-    box-shadow: 0 0 24px rgba(234, 179, 8, 0.45);
-    animation: goldShimmer 2.5s infinite ease-in-out;
-}
-.pet-special-card.tier-gold .pet-special-tier-label { color: #ca8a04; font-weight: 900; }
-
-@keyframes goldShimmer {
-    0%, 100% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); }
-    50% { box-shadow: 0 0 32px rgba(234, 179, 8, 0.7); }
-}
-
-/* --- Net Total Box & Reveal --- */
+/* Net Total & Winner Badges */
 .pet-total-box {
     background: white;
     border-radius: 1rem;
     padding: 0.85rem 1rem;
     border: 2px solid #e2e8f0;
     text-align: center;
-    animation: popInCalc 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes popInCalc {
-    0% { transform: scale(0.9); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
 }
 
 .pet-calc-breakdown {
@@ -1964,12 +2099,6 @@ select:focus {
     border-radius: 99px;
     font-size: 1.05rem;
     font-weight: 900;
-    animation: popInBadge 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes popInBadge {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
 }
 
 .pet-win-badge.victory {
@@ -1990,7 +2119,7 @@ select:focus {
     border: 1.5px solid #fde68a;
 }
 
-/* --- Decision Buttons --- */
+/* Decision Buttons */
 .pet-team-decision-wrap {
     display: flex;
     flex-direction: column;
@@ -1999,7 +2128,7 @@ select:focus {
 }
 
 .pet-decision-label {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: #475569;
 }
@@ -2037,31 +2166,4 @@ select:focus {
     color: white;
     border-color: #b91c1c;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
-}
-
-/* --- Bottom Actions --- */
-.pet-bottom-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.pet-btn-main {
-    padding: 0.9rem 2.2rem !important;
-    font-size: 1.15rem !important;
-    font-weight: 800 !important;
-    border-radius: 99px !important;
-    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35) !important;
-    border: none !important;
-    color: white !important;
-}
-
-.pet-btn-sub {
-    padding: 0.85rem 1.6rem !important;
-    font-size: 1rem !important;
-    font-weight: 800 !important;
-    border-radius: 99px !important;
 }

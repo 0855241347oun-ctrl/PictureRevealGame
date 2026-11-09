@@ -368,58 +368,41 @@
             <section id="pet-mode" class="mode-section">
                 <div class="pet-game-container">
                     <div class="glass-panel pet-panel">
-                        <!-- Top Bar / Scoreboard -->
-                        <div class="pet-topbar">
-                            <div class="pet-score-pill-box">
-                                <div class="pet-team-score-badge team-a">
-                                    <span class="pet-team-label">🔴 ทีม A</span>
-                                    <div class="pet-score-controls">
-                                        <button type="button" id="pet-score-minus-a" class="pet-btn-score" title="ลดคะแนน">-</button>
-                                        <span id="pet-score-a" class="pet-score-number">0</span>
-                                        <button type="button" id="pet-score-plus-a" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
-                                    </div>
-                                </div>
-                                <div class="pet-versus-badge">
-                                    <span id="pet-round-display" class="pet-round-text">รอบที่ 1</span>
-                                    <span class="pet-vs-label">VS</span>
-                                    <button type="button" id="pet-btn-reset-score" class="pet-btn-reset-sub" title="รีเซ็ตคะแนนและรอบทั้งหมด">🔄 รีเซ็ตสกอร์</button>
-                                </div>
-                                <div class="pet-team-score-badge team-b">
-                                    <span class="pet-team-label">🔵 ทีม B</span>
-                                    <div class="pet-score-controls">
-                                        <button type="button" id="pet-score-minus-b" class="pet-btn-score" title="ลดคะแนน">-</button>
-                                        <span id="pet-score-b" class="pet-score-number">0</span>
-                                        <button type="button" id="pet-score-plus-b" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
-                                    </div>
+                        <!-- Top Bar / Clean Scoreboard & Controls -->
+                        <div class="pet-clean-topbar">
+                            <div class="pet-team-score-badge team-a">
+                                <span class="pet-team-label">🔴 ทีม A</span>
+                                <div class="pet-score-controls">
+                                    <button type="button" id="pet-score-minus-a" class="pet-btn-score" title="ลดคะแนน">-</button>
+                                    <span id="pet-score-a" class="pet-score-number">0</span>
+                                    <button type="button" id="pet-score-plus-a" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
                                 </div>
                             </div>
 
-                            <!-- Timer & Controls -->
-                            <div class="pet-timer-quick-box">
-                                <label for="pet-timer-select" style="font-size: 0.85rem; font-weight: 700; color: #475569;">⏱️ เวลา:</label>
-                                <select id="pet-timer-select" class="quiz-select" style="padding: 0.35rem 0.65rem; font-size: 0.88rem;">
-                                    <option value="10">10 วินาที</option>
-                                    <option value="15" selected>15 วินาที</option>
-                                    <option value="20">20 วินาที</option>
-                                    <option value="30">30 วินาที</option>
-                                </select>
-                                <button type="button" id="pet-btn-start-timer" class="btn primary quiz-btn-sm" style="background: #10b981;">▶️ จับเวลา</button>
-                                <button type="button" id="pet-btn-pause-timer" class="btn danger quiz-btn-sm" style="display: none;">⏸️ หยุดเวลา</button>
-                                <button type="button" id="pet-btn-reset-timer" class="btn secondary quiz-btn-sm" title="รีเซ็ตเวลา">↺</button>
-                                <div class="pet-timer-badge">
-                                    <span id="pet-timer-num">15</span>s
+                            <div class="pet-top-actions">
+                                <button type="button" id="pet-btn-new-round" class="btn primary pet-btn-round" title="คีย์ลัด: R">
+                                    🎲 สุ่มการ์ดรอบใหม่ (R)
+                                </button>
+                                <button type="button" id="pet-btn-reroll-special" class="btn secondary pet-btn-round-sub">
+                                    🃏 สุ่มการ์ดแต้มใหม่
+                                </button>
+                                <button type="button" id="pet-btn-reset-score" class="pet-btn-reset-clean" title="รีเซ็ตคะแนน">
+                                    🔄 รีเซ็ตสกอร์
+                                </button>
+                            </div>
+
+                            <div class="pet-team-score-badge team-b">
+                                <span class="pet-team-label">🔵 ทีม B</span>
+                                <div class="pet-score-controls">
+                                    <button type="button" id="pet-score-minus-b" class="pet-btn-score" title="ลดคะแนน">-</button>
+                                    <span id="pet-score-b" class="pet-score-number">0</span>
+                                    <button type="button" id="pet-score-plus-b" class="pet-btn-score" title="เพิ่มคะแนน">+</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Progress Bar Fill -->
-                        <div class="quiz-progress-bar-bg" style="margin: 0.6rem 0 1rem 0;">
-                            <div id="pet-timer-bar" class="quiz-progress-bar-fill" style="width: 100%; background: #f59e0b;"></div>
-                        </div>
-
-                        <!-- Host Screen View Switcher (The 4 View Mode Buttons) -->
+                        <!-- Mode Switcher Buttons (หันจอให้ดู / เฉลย) -->
                         <div class="pet-view-switcher">
-                            <span class="pet-view-hint-title">📺 สลับมุมมองหน้าจอ (ผู้คุมเลือกหันจอ):</span>
                             <div class="pet-view-btn-group">
                                 <button type="button" id="pet-btn-view-a" class="pet-view-btn btn-view-team-a" title="คีย์ลัด: 1">
                                     🔴 หันให้ทีม A ดู (1)
@@ -431,102 +414,143 @@
                                     👑 จอผู้คุม แอบดู (3)
                                 </button>
                                 <button type="button" id="pet-btn-view-reveal" class="pet-view-btn btn-view-reveal" title="คีย์ลัด: 4 หรือ Spacebar">
-                                    💥 หันตรงกลาง: เปิดเฉลยพร้อมกัน! (4)
+                                    💥 เฉลยประชันแต้ม! (4)
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Dynamic Instructions Banner -->
-                        <div id="pet-banner-container" class="pet-banner-card mode-host">
-                            <div id="pet-view-mode-title" class="pet-banner-title">
-                                👑 <strong>จอผู้คุมเกม (Host Master)</strong> - แอบดูคนเดียว
-                            </div>
-                            <div id="pet-view-mode-sub" class="pet-banner-sub">
-                                ผู้คุมเกมเห็นการ์ดและคะแนนของทั้ง 2 ฝั่งอย่างชัดเจน เพื่อพากย์หรือควบคุมเกม
-                            </div>
-                        </div>
-
-                        <!-- Main Battlefield Arena (Team A vs Team B) -->
-                        <div class="pet-arena">
-                            <!-- Team A Side -->
-                            <div class="pet-team-column team-a-side">
-                                <div class="pet-column-header">
-                                    <div class="pet-column-title red">🔴 ฝั่งทีม A</div>
-                                    <div id="pet-action-status-a" class="pet-action-status-pill">
-                                        <span class="pet-badge-wait">⏳ ยังไม่เลือก</span>
-                                    </div>
+                        <!-- STAGE 1: Single Huge Card Focus (สำหรับโหมดหันให้ทีม A หรือ B ดู - ใบเดียวใหญ่ๆ ชัดๆ) -->
+                        <div id="pet-single-stage" class="pet-single-stage" style="display: none;">
+                            <!-- Header / Clue for this viewing team -->
+                            <div class="pet-single-banner">
+                                <div id="pet-single-view-title" class="pet-single-view-title">
+                                    👀 หันจอให้ <strong>"ทีม A"</strong> ดู!
                                 </div>
-
-                                <!-- Pet Card A -->
-                                <div id="pet-card-box-a" class="pet-card pet-card-front theme-team-a"></div>
-
-                                <!-- Special Modifier Card A -->
-                                <div id="pet-special-box-a" class="pet-special-card tier-white"></div>
-
-                                <!-- Net Power Breakdown & Winner Badge A -->
-                                <div id="pet-total-box-a" class="pet-total-box" style="display: none;"></div>
-
-                                <!-- Team A Decision Buttons -->
-                                <div class="pet-team-decision-wrap">
-                                    <span class="pet-decision-label">การตัดสินใจทีม A:</span>
-                                    <div class="pet-decision-btns">
-                                        <button type="button" id="pet-btn-fight-a" class="pet-btn-action-choice btn-fight">
-                                            ⚔️ สู้ใจเด็ด!
-                                        </button>
-                                        <button type="button" id="pet-btn-fold-a" class="pet-btn-action-choice btn-fold">
-                                            🏳️ ขอยอมหมอบ
-                                        </button>
-                                    </div>
+                                <div id="pet-single-my-clue" class="pet-single-clue-box">
+                                    💡 คำใบ้การ์ดของคุณ: <strong>--</strong>
+                                </div>
+                                <div class="pet-single-hint-tip">
+                                    (คุณกำลังส่องการ์ดคู่แข่งใบด้านล่างนี้ คลิกที่การ์ดเพื่อพลิกซ่อน/ดูขอบได้)
                                 </div>
                             </div>
 
-                            <!-- VS Divider -->
-                            <div class="pet-arena-vs-divider">
-                                <div class="pet-vs-circle">VS</div>
-                                <div class="pet-vs-line"></div>
-                            </div>
-
-                            <!-- Team B Side -->
-                            <div class="pet-team-column team-b-side">
-                                <div class="pet-column-header">
-                                    <div class="pet-column-title blue">🔵 ฝั่งทีม B</div>
-                                    <div id="pet-action-status-b" class="pet-action-status-pill">
-                                        <span class="pet-badge-wait">⏳ ยังไม่เลือก</span>
-                                    </div>
+                            <!-- Centered Huge Target Card Area -->
+                            <div class="pet-single-card-zone">
+                                <div id="pet-single-target-label" class="pet-single-target-label">
+                                    🎯 กำลังส่องการ์ดของ: <strong>ทีม B</strong>
                                 </div>
 
-                                <!-- Pet Card B -->
-                                <div id="pet-card-box-b" class="pet-card pet-card-front theme-team-b"></div>
+                                <div class="pet-cards-stack-single">
+                                    <!-- Big Pet Card -->
+                                    <div id="pet-single-pet-card" class="pet-card pet-card-big interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
 
-                                <!-- Special Modifier Card B -->
-                                <div id="pet-special-box-b" class="pet-special-card tier-white"></div>
+                                    <!-- Big Special Modifier Card -->
+                                    <div id="pet-single-special-card" class="pet-special-card pet-special-big interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
+                                </div>
 
-                                <!-- Net Power Breakdown & Winner Badge B -->
-                                <div id="pet-total-box-b" class="pet-total-box" style="display: none;"></div>
+                                <div class="pet-flip-instruction">
+                                    👆 <em>คลิกที่การ์ดสัตว์ หรือการ์ดแต้ม เพื่อพลิกคว่ำซ่อน/หงายเปิดดูขอบการ์ดได้</em>
+                                </div>
+                            </div>
 
-                                <!-- Team B Decision Buttons -->
-                                <div class="pet-team-decision-wrap">
-                                    <span class="pet-decision-label">การตัดสินใจทีม B:</span>
-                                    <div class="pet-decision-btns">
-                                        <button type="button" id="pet-btn-fight-b" class="pet-btn-action-choice btn-fight">
-                                            ⚔️ สู้ใจเด็ด!
-                                        </button>
-                                        <button type="button" id="pet-btn-fold-b" class="pet-btn-action-choice btn-fold">
-                                            🏳️ ขอยอมหมอบ
-                                        </button>
-                                    </div>
+                            <!-- Single Mode Decision for Active Team -->
+                            <div class="pet-single-decision-zone">
+                                <span id="pet-single-decision-label" class="pet-decision-label">การตัดสินใจ:</span>
+                                <div class="pet-decision-btns">
+                                    <button type="button" id="pet-single-btn-fight" class="pet-btn-action-choice btn-fight">
+                                        ⚔️ สู้ใจเด็ด!
+                                    </button>
+                                    <button type="button" id="pet-single-btn-fold" class="pet-btn-action-choice btn-fold">
+                                        🏳️ ขอยอมหมอบ
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Bottom Global Action Bar -->
-                        <div class="pet-bottom-actions">
-                            <button type="button" id="pet-btn-new-round" class="btn primary pet-btn-main">
-                                🎲 สุ่มการ์ดรอบใหม่ (Next Round - R)
-                            </button>
-                            <button type="button" id="pet-btn-reroll-special" class="btn secondary pet-btn-sub">
-                                🃏 สุ่มเฉพาะการ์ดพิเศษใหม่
-                            </button>
+                        <!-- STAGE 2: Dual Comparison / Showdown Stage (สำหรับโหมดเฉลย และโหมดผู้คุม) -->
+                        <div id="pet-dual-stage" class="pet-dual-stage">
+                            <!-- Banner for Dual Mode -->
+                            <div id="pet-banner-container" class="pet-banner-card mode-host">
+                                <div id="pet-view-mode-title" class="pet-banner-title">
+                                    👑 <strong>จอผู้คุมเกม (Host Master)</strong>
+                                </div>
+                                <div id="pet-view-mode-sub" class="pet-banner-sub">
+                                    ผู้คุมมองเห็นทั้งสองฝั่ง และสามารถคลิกการ์ดใบไหนก็ได้เพื่อพลิกซ่อน/เปิด
+                                </div>
+                            </div>
+
+                            <!-- Two Columns Side by Side -->
+                            <div class="pet-arena">
+                                <!-- Team A Column -->
+                                <div class="pet-team-column team-a-side">
+                                    <div class="pet-column-header">
+                                        <div class="pet-column-title red">🔴 ฝั่งทีม A</div>
+                                        <div id="pet-action-status-a" class="pet-action-status-pill">
+                                            <span class="pet-badge-wait">⏳ ยังไม่เลือก</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pet Card A (Interactive Flip) -->
+                                    <div id="pet-card-box-a" class="pet-card interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
+
+                                    <!-- Special Card A (Interactive Flip) -->
+                                    <div id="pet-special-box-a" class="pet-special-card interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
+
+                                    <!-- Net Power Breakdown Box A -->
+                                    <div id="pet-total-box-a" class="pet-total-box" style="display: none;"></div>
+
+                                    <!-- Decision A -->
+                                    <div class="pet-team-decision-wrap">
+                                        <span class="pet-decision-label">การตัดสินใจทีม A:</span>
+                                        <div class="pet-decision-btns">
+                                            <button type="button" id="pet-btn-fight-a" class="pet-btn-action-choice btn-fight">
+                                                ⚔️ สู้ใจเด็ด!
+                                            </button>
+                                            <button type="button" id="pet-btn-fold-a" class="pet-btn-action-choice btn-fold">
+                                                🏳️ ขอยอมหมอบ
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- VS Divider -->
+                                <div class="pet-arena-vs-divider">
+                                    <div class="pet-vs-circle">VS</div>
+                                    <div class="pet-vs-line"></div>
+                                </div>
+
+                                <!-- Team B Column -->
+                                <div class="pet-team-column team-b-side">
+                                    <div class="pet-column-header">
+                                        <div class="pet-column-title blue">🔵 ฝั่งทีม B</div>
+                                        <div id="pet-action-status-b" class="pet-action-status-pill">
+                                            <span class="pet-badge-wait">⏳ ยังไม่เลือก</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pet Card B (Interactive Flip) -->
+                                    <div id="pet-card-box-b" class="pet-card interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
+
+                                    <!-- Special Card B (Interactive Flip) -->
+                                    <div id="pet-special-box-b" class="pet-special-card interactive-flip" title="คลิกเพื่อพลิกซ่อน/เปิดดูขอบการ์ด"></div>
+
+                                    <!-- Net Power Breakdown Box B -->
+                                    <div id="pet-total-box-b" class="pet-total-box" style="display: none;"></div>
+
+                                    <!-- Decision B -->
+                                    <div class="pet-team-decision-wrap">
+                                        <span class="pet-decision-label">การตัดสินใจทีม B:</span>
+                                        <div class="pet-decision-btns">
+                                            <button type="button" id="pet-btn-fight-b" class="pet-btn-action-choice btn-fight">
+                                                ⚔️ สู้ใจเด็ด!
+                                            </button>
+                                            <button type="button" id="pet-btn-fold-b" class="pet-btn-action-choice btn-fold">
+                                                🏳️ ขอยอมหมอบ
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
