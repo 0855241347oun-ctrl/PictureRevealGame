@@ -370,6 +370,9 @@
                     <div class="glass-panel pet-panel">
                         <!-- Top Controls: Pure Clean Buttons -->
                         <div class="pet-compact-topbar">
+                            <button type="button" id="pet-btn-card-dex" class="pet-dex-btn" title="ดูสมุดการ์ดและคำใบ้ทั้งหมด">
+                                📖 การ์ดทั้งหมด
+                            </button>
                             <div class="pet-view-btn-group">
                                 <button type="button" id="pet-btn-view-a" class="pet-view-btn btn-view-team-a" title="คีย์ลัด: 1">
                                     🔴 ทีม A
@@ -464,6 +467,50 @@
                         </div>
                     </div>
                 </div>
+            
+                    <!-- Pet Card Dex Modal (คลังการ์ดทั้งหมด) -->
+                    <div id="pet-card-dex-modal" class="pet-dex-modal" style="display: none;">
+                        <div class="pet-dex-backdrop"></div>
+                        <div class="pet-dex-dialog">
+                            <div class="pet-dex-header">
+                                <div class="pet-dex-header-info">
+                                    <h2 class="pet-dex-title">📖 คลังการ์ด & คำใบ้ทั้งหมด</h2>
+                                    <p class="pet-dex-subtitle">🐾 สัตว์ 72 ตัว (5 คำใบ้ต่อตัว) • ⚡ การ์ดพิเศษ 28 ใบ</p>
+                                </div>
+                                <button type="button" id="pet-dex-close" class="pet-dex-close-btn" title="ปิด (Esc)">✕</button>
+                            </div>
+
+                            <!-- Tabs -->
+                            <div class="pet-dex-tabs">
+                                <button type="button" class="pet-dex-tab-btn active" data-tab="pets">🐾 การ์ดสัตว์ทั้งหมด (72 ตัว)</button>
+                                <button type="button" class="pet-dex-tab-btn" data-tab="specials">⚡ การ์ดพิเศษ/เพิ่มแต้ม (28 ใบ)</button>
+                            </div>
+
+                            <!-- Tab Content 1: Pets -->
+                            <div id="pet-dex-view-pets" class="pet-dex-view active">
+                                <div class="pet-dex-toolbar">
+                                    <div class="pet-dex-search-box">
+                                        <span class="pet-dex-search-icon">🔍</span>
+                                        <input type="text" id="pet-dex-search-input" placeholder="ค้นหาชื่อสัตว์ หรือ คำใบ้..." autocomplete="off">
+                                        <button type="button" id="pet-dex-search-clear" class="pet-dex-search-clear" style="display: none;">✕</button>
+                                    </div>
+                                    <div class="pet-dex-filter-chips">
+                                        <button type="button" class="pet-dex-chip active" data-tier="all">ทั้งหมด (72)</button>
+                                        <button type="button" class="pet-dex-chip chip-gold" data-tier="gold">🟡 บอส 2,500+ (8)</button>
+                                        <button type="button" class="pet-dex-chip chip-blue" data-tier="blue">🔵 ตัวชน 1,000+ (16)</button>
+                                        <button type="button" class="pet-dex-chip chip-white" data-tier="white">⚪ ตัวหลอก &lt;1,000 (48)</button>
+                                    </div>
+                                </div>
+                                <div id="pet-dex-pet-grid" class="pet-dex-pet-grid"></div>
+                            </div>
+
+                            <!-- Tab Content 2: Specials -->
+                            <div id="pet-dex-view-specials" class="pet-dex-view" style="display: none;">
+                                <div id="pet-dex-specials-container" class="pet-dex-specials-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
             </section>
         </main>
     </div>

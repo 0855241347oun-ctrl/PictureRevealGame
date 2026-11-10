@@ -499,6 +499,189 @@
         }
     }
 
+    
+    // --- ระบบ Card Compendium / สมุดคลังการ์ดทั้งหมด ---
+    function initPetCardDex() {
+        const btnOpen = document.getElementById('pet-btn-card-dex');
+        const modal = document.getElementById('pet-card-dex-modal');
+        const btnClose = document.getElementById('pet-dex-close');
+        const backdrop = modal ? modal.querySelector('.pet-dex-backdrop') : null;
+        const tabBtns = document.querySelectorAll('.pet-dex-tab-btn');
+        const viewPets = document.getElementById('pet-dex-view-pets');
+        const viewSpecials = document.getElementById('pet-dex-view-specials');
+        const petGrid = document.getElementById('pet-dex-pet-grid');
+        const specialsContainer = document.getElementById('pet-dex-specials-container');
+        const searchInput = document.getElementById('pet-dex-search-input');
+        const searchClear = document.getElementById('pet-dex-search-clear');
+        const filterChips = document.querySelectorAll('.pet-dex-chip');
+
+        let currentTierFilter = 'all';
+        let searchQuery = '';
+
+        if (!btnOpen || !modal) return;
+
+        function openModal() {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            renderPetGrid();
+            renderSpecialsGrid();
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        btnOpen.addEventListener('click', openModal);
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
+
+        // Keyboard Esc to close
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+
+        // Tab switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const target = btn.dataset.tab;
+                if (target === 'pets') {
+                    if (viewPets) viewPets.style.display = 'block';
+                    if (viewSpecials) viewSpecials.style.display = 'none';
+                } else {
+                    if (viewPets) viewPets.style.display = 'none';
+                    if (viewSpecials) viewSpecials.style.display = 'block';
+                }
+            });
+        });
+
+        // Filter Chips
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                filterChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentTierFilter = chip.dataset.tier;
+                renderPetGrid();
+            });
+        });
+
+        // Search Input
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                if (searchClear) searchClear.style.display = searchQuery ? 'flex' : 'none';
+                renderPetGrid();
+            });
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                searchClear.style.display = 'none';
+                searchInput.focus();
+                renderPetGrid();
+            });
+        }
+
+        // Render Pets Grid
+        function renderPetGrid() {
+            if (!petGrid || typeof PET_CARDS === 'undefined') return;
+
+            let filtered = PET_CARDS.filter(pet => {
+                const borderInfo = getPetBorderInfo(pet.power);
+                if (currentTierFilter !== 'all' && borderInfo.tier !== currentTierFilter) {
+                    return false;
+                }
+                if (searchQuery) {
+                    const nameMatch = pet.name.toLowerCase().includes(searchQuery);
+                    const clueMatch = (pet.clues || [pet.clue]).some(c => c.toLowerCase().includes(searchQuery));
+                    if (!nameMatch && !clueMatch) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                petGrid.innerHTML = `
+                    <div class="pet-dex-empty">
+                        <span class="pet-dex-empty-icon">🔍</span>
+                        <p>ไม่พบการ์ดสัตว์ที่ตรงกับคำค้นหา "${searchQuery}"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            petGrid.innerHTML = filtered.map(pet => {
+                const borderInfo = getPetBorderInfo(pet.power);
+                const clues = pet.clues || [pet.clue];
+                return `
+                    <div class="pet-dex-card tier-${borderInfo.tier}">
+                        <div class="pet-dex-card-top">
+                            <span class="pet-dex-emoji">${pet.emoji}</span>
+                            <div class="pet-dex-meta">
+                                <div class="pet-dex-name">${pet.name}</div>
+                                <span class="pet-dex-tier-badge tier-${borderInfo.tier}">${borderInfo.label}</span>
+                            </div>
+                            <div class="pet-dex-power-val">${fmtNum(pet.power)}</div>
+                        </div>
+                        <div class="pet-dex-clues-section">
+                            <div class="pet-dex-clues-title">💡 คำใบ้ที่เป็นไปได้ (${clues.length} คำ):</div>
+                            <div class="pet-dex-clue-tags">
+                                ${clues.map(c => `<span class="pet-dex-tag">${c}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Specials Grid
+        function renderSpecialsGrid() {
+            if (!specialsContainer || typeof SPECIAL_CARDS === 'undefined') return;
+
+            const tierMeta = {
+                gold: { title: '🟡 การ์ดสีทอง (Legendary - ออกยาก 8%)', desc: 'พลิกฟ้าคว่ำแผ่นดิน บอสโดนถึงทรุด หรือดันตัวชนจนล้มบอสได้' },
+                blue: { title: '🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%)', desc: 'เสี่ยงสูง ลุ้นหนัก การ์ดบวกผลักดันสัตว์ล่างขึ้นไปชนสัตว์กลาง' },
+                green: { title: '🟢 การ์ดสีเขียว (Uncommon - ออก 30%)', desc: 'พลิกผลสัตว์ทั่วไป ช่วยให้สัตว์แต้มปานกลางเอาชนะได้' },
+                white: { title: '⚪ การ์ดสีขาว (Common - ออก 42%)', desc: 'ปรับแต่งแต้มเบาๆ เสริมกำลังตัวกากให้มีลุ้น' }
+            };
+
+            const tierOrder = ['gold', 'blue', 'green', 'white'];
+
+            specialsContainer.innerHTML = tierOrder.map(tierKey => {
+                const meta = tierMeta[tierKey];
+                const cards = SPECIAL_CARDS[tierKey] || [];
+                return `
+                    <div class="pet-dex-special-section tier-${tierKey}">
+                        <div class="pet-dex-special-sec-header">
+                            <h3>${meta.title}</h3>
+                            <p>${meta.desc}</p>
+                        </div>
+                        <div class="pet-dex-special-grid">
+                            ${cards.map(card => {
+                                const isPos = card.val >= 0;
+                                return `
+                                    <div class="pet-dex-special-card tier-${card.tier} ${isPos ? 'pos' : 'neg'}">
+                                        <div class="pet-dex-special-icon">${card.icon}</div>
+                                        <div class="pet-dex-special-details">
+                                            <div class="pet-dex-special-name">${card.name}</div>
+                                            <span class="pet-dex-special-tag ${isPos ? 'pos' : 'neg'}">${isPos ? 'บัฟเพิ่มพลัง' : 'คำสาปลดแต้ม'}</span>
+                                        </div>
+                                        <div class="pet-dex-special-val ${isPos ? 'pos' : 'neg'}">${card.text}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
     function initEvents() {
         const btnViewA = document.getElementById('pet-btn-view-a');
         const btnViewB = document.getElementById('pet-btn-view-b');
@@ -572,6 +755,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         initEvents();
+        initPetCardDex();
         newRound();
     });
 })();
