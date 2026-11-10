@@ -2637,3 +2637,12 @@ select:focus {
     background: #dcfce7;
     color: #15803d;
 }
+
+.pet-dex-special-section.tier-gamechanger {
+    background: linear-gradient(135deg, rgba(254, 243, 199, 0.55), rgba(255, 237, 213, 0.45));
+    border: 1.5px dashed #f59e0b;
+}
+
+.pet-dex-special-section.tier-gamechanger h3 {
+    color: #b45309;
+}

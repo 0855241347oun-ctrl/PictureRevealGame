@@ -851,51 +851,81 @@
             }).join('');
         }
 
-        // Render Specials Grid
+        // Render Specials Grid (รวมทั้งตัวพลิกเกมที่สุ่มทุกขอบสี และการ์ดปรับแต้ม)
         function renderSpecialsGrid() {
-            if (!specialsContainer || typeof SPECIAL_CARDS === 'undefined') return;
+            if (!specialsContainer) return;
 
-            const tierMeta = {
-                gold: { title: '🟡 การ์ดสีทอง (Legendary - ออกยาก 8%)', desc: 'การ์ดระดับตำนาน พลิกฟ้าคว่ำแผ่นดิน ตัวคูณสอง สลับสัตว์ หรือแต้มมหาศาล' },
-                blue: { title: '🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%)', desc: 'เสี่ยงสูง ลุ้นหนัก การ์ดล็อกสู้คู่แข่ง หรือบัฟแต้มรุนแรง' },
-                green: { title: '🟢 การ์ดสีเขียว (Uncommon - ออก 30%)', desc: 'การ์ดบังคับตัวเองสู้ และปรับแต่งแต้มปานกลาง' },
-                white: { title: '⚪ การ์ดสีขาว (Common - ออก 42%)', desc: 'ปรับแต่งแต้มเบาๆ เสริมกำลังตัวกากให้มีลุ้น' }
-            };
+            let html = '';
 
-            const tierOrder = ['gold', 'blue', 'green', 'white'];
-
-            specialsContainer.innerHTML = tierOrder.map(tierKey => {
-                const meta = tierMeta[tierKey];
-                const cards = SPECIAL_CARDS[tierKey] || [];
-                return `
-                    <div class="pet-dex-special-section tier-${tierKey}">
+            // 1. หมวดการ์ดตัวพลิกเกม (Game Changers - สุ่มออกได้ทุกขอบสี)
+            if (typeof GAME_CHANGER_CARDS !== 'undefined' && GAME_CHANGER_CARDS.length > 0) {
+                html += `
+                    <div class="pet-dex-special-section tier-gamechanger">
                         <div class="pet-dex-special-sec-header">
-                            <h3>${meta.title}</h3>
-                            <p>${meta.desc}</p>
+                            <h3>⚡ การ์ดตัวพลิกเกม (${GAME_CHANGER_CARDS.length} ใบ - สุ่มออกได้ทุกขอบสี ⚪ 🟢 🔵 🟡)</h3>
+                            <p>การ์ดระดับพิเศษที่ขอบสีจะถูกสุ่มหลอกตา ลุ้นระทึกได้ทุกรอบ ไม่จำกัดขอบสี!</p>
                         </div>
                         <div class="pet-dex-special-grid">
-                            ${cards.map(card => {
-                                const isGameChanger = !!card.type;
-                                const isPos = card.val >= 0;
-                                const valClass = isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg');
+                            ${GAME_CHANGER_CARDS.map(card => {
                                 const typeDesc = card.desc ? `<div class="pet-dex-special-desc" style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">${card.desc}</div>` : '';
-                                const tagLabel = isGameChanger ? '⚡ ตัวพลิกเกม' : (isPos ? 'บัฟเพิ่มพลัง' : 'คำสาปลดแต้ม');
                                 return `
-                                    <div class="pet-dex-special-card tier-${card.tier} ${isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg')}">
+                                    <div class="pet-dex-special-card game-changer">
                                         <div class="pet-dex-special-icon">${card.icon}</div>
                                         <div class="pet-dex-special-details">
                                             <div class="pet-dex-special-name">${card.name}</div>
-                                            <span class="pet-dex-special-tag ${isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg')}">${tagLabel}</span>
+                                            <span class="pet-dex-special-tag game-changer">⚡ สุ่มออกทุกขอบสี</span>
                                             ${typeDesc}
                                         </div>
-                                        <div class="pet-dex-special-val ${valClass}">${card.text}</div>
+                                        <div class="pet-dex-special-val game-changer">${card.text}</div>
                                     </div>
                                 `;
                             }).join('')}
                         </div>
                     </div>
                 `;
-            }).join('');
+            }
+
+            // 2. หมวดการ์ดปรับแต้มปกติ (Score Modifiers)
+            if (typeof SCORE_CARDS !== 'undefined') {
+                const tierMeta = {
+                    gold: { title: '🟡 การ์ดสีทอง (Legendary - ออกยาก 8%)', desc: 'การ์ดแต้มมหาศาล บอสโดนถึงทรุด หรือดันตัวชนจนล้มบอสได้' },
+                    blue: { title: '🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%)', desc: 'เสี่ยงสูง ลุ้นหนัก แต้มระดับสูงช่วยดันตัวล่างขึ้นมาชน' },
+                    green: { title: '🟢 การ์ดสีเขียว (Uncommon - ออก 30%)', desc: 'แต้มระดับปานกลาง ช่วยให้สัตว์ทั่วไปเอาชนะได้' },
+                    white: { title: '⚪ การ์ดสีขาว (Common - ออก 42%)', desc: 'ปรับแต่งแต้มเบาๆ เสริมกำลังตัวกากให้มีลุ้น' }
+                };
+
+                const tierOrder = ['gold', 'blue', 'green', 'white'];
+
+                html += tierOrder.map(tierKey => {
+                    const meta = tierMeta[tierKey];
+                    const cards = SCORE_CARDS[tierKey] || [];
+                    return `
+                        <div class="pet-dex-special-section tier-${tierKey}">
+                            <div class="pet-dex-special-sec-header">
+                                <h3>${meta.title}</h3>
+                                <p>${meta.desc}</p>
+                            </div>
+                            <div class="pet-dex-special-grid">
+                                ${cards.map(card => {
+                                    const isPos = card.val >= 0;
+                                    return `
+                                        <div class="pet-dex-special-card tier-${card.tier} ${isPos ? 'pos' : 'neg'}">
+                                            <div class="pet-dex-special-icon">${card.icon}</div>
+                                            <div class="pet-dex-special-details">
+                                                <div class="pet-dex-special-name">${card.name}</div>
+                                                <span class="pet-dex-special-tag ${isPos ? 'pos' : 'neg'}">${isPos ? 'บัฟเพิ่มพลัง' : 'คำสาปลดแต้ม'}</span>
+                                            </div>
+                                            <div class="pet-dex-special-val ${isPos ? 'pos' : 'neg'}">${card.text}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            specialsContainer.innerHTML = html;
         }
     }
 
