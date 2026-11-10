@@ -1,10 +1,15 @@
 /**
  * pet-game.js - ระบบการทำงานของเกม "วัดใจแต้มสัตว์เลี้ยง" (Offline Host Controlled)
  * - สัตว์ไม่ต้องบอกขอบ เปิดมาให้ซ่อนทั้งสองใบ (Face Down)
- * - สุ่มแล้วมีคำใบ้อยู่บนหลังการ์ดสัตว์
- * - การ์ดแต้มพิเศษแสดงขอบสี (ขาว เขียว น้ำเงิน ทอง)
+ * - สุ่มแล้วมีคำใบ้อยู่บนหลังการ์ดสัตว์ (5 คำใบ้ต่อสัตว์ 1 ตัว)
+ * - การ์ดแต้มพิเศษแบ่งเป็น 2 ใบ บน-ล่าง (Special 1 / Special 2) แสดงขอบสีชัดเจน
+ * - 4 การ์ดตัวพลิกเกม:
+ *     1. x2 พลังสัตว์ (Legendary Gold)
+ *     2. ขอสลับสัตว์ (Legendary Gold)
+ *     3. บังคับตัวเองสู้ (Uncommon Green)
+ *     4. บังคับคู่แข่งสู้ (Rare Blue)
  * - โหมดเฉลย (Duel Arena): การ์ดซ่อนไว้ก่อน ให้คลิกเลือกเปิดทีละใบ
- * - แอนิเมชันสุ่มแบบที่ 1: Card Snap (สไลด์ลงตรงๆ สแน็ปเข้าล็อก คมชัด นิ่งสนิท ไม่เอียง)
+ * - แอนิเมชันสุ่มแบบ Card Snap (สไลด์ลงตรงๆ สแน็ปเข้าล็อก คมชัด นิ่งสนิท ไม่เอียง)
  * - สุ่มใบไหน ขยับเฉพาะใบนั้น 100%
  */
 
@@ -125,42 +130,53 @@
         return Number(n).toLocaleString('en-US');
     }
 
-    // สุ่มรอบใหม่: ซ่อนทั้ง 2 ใบ มีคำใบ้อยู่หลังการ์ดสัตว์
+    // สุ่มรอบใหม่: แจกสัตว์ 1 ใบ + การ์ดพิเศษ 2 ใบ (บน-ล่าง) ให้ทั้ง 2 ทีม
     function newRound() {
         const petA = getRandomPetCard();
         const petB = getRandomPetCard(petA.id);
-        const specA = getRandomSpecialCard();
-        const specB = getRandomSpecialCard();
+        const specA1 = getRandomSpecialCard();
+        const specA2 = getRandomSpecialCard(specA1.id);
+        const specB1 = getRandomSpecialCard();
+        const specB2 = getRandomSpecialCard(specB1.id);
         state.dealSeq++;
 
         state.cardA = {
             pet: petA,
-            special: specA,
+            special1: specA1,
+            special2: specA2,
             petFlipped: true,
-            specialFlipped: true,
+            special1Flipped: true,
+            special2Flipped: true,
             action: 'none',
             petSeq: state.dealSeq,
-            specSeq: state.dealSeq
+            spec1Seq: state.dealSeq,
+            spec2Seq: state.dealSeq
         };
 
         state.cardB = {
             pet: petB,
-            special: specB,
+            special1: specB1,
+            special2: specB2,
             petFlipped: true,
-            specialFlipped: true,
+            special1Flipped: true,
+            special2Flipped: true,
             action: 'none',
             petSeq: state.dealSeq,
-            specSeq: state.dealSeq
+            spec1Seq: state.dealSeq,
+            spec2Seq: state.dealSeq
         };
 
         playSfxDeal();
         render();
 
-        ['pet-card-box-a', 'pet-special-box-a', 'pet-card-box-b', 'pet-special-box-b',
-         'pet-single-pet-card', 'pet-single-special-card'].forEach(triggerCardSnap);
+        [
+            'pet-card-box-a', 'pet-special1-box-a', 'pet-special2-box-a',
+            'pet-card-box-b', 'pet-special1-box-b', 'pet-special2-box-b',
+            'pet-single-pet-card', 'pet-single-special1-card', 'pet-single-special2-card'
+        ].forEach(triggerCardSnap);
     }
 
-    // สุ่มสัตว์เฉพาะทีม: เล่นแอนิเมชันเฉพาะการ์ดสัตว์ใบที่สุ่มเท่านั้น!
+    // สุ่มสัตว์เฉพาะทีม
     function rerollPet(team) {
         if (!state.cardA || !state.cardB) return;
         state.dealSeq++;
@@ -172,7 +188,6 @@
         playSfxDeal();
         render();
 
-        // ยิงแอนิเมชัน Card Snap เฉพาะใบนี้ใบเดียว!
         if (state.viewMode === 'reveal') {
             triggerCardSnap(team === 'A' ? 'pet-card-box-a' : 'pet-card-box-b');
         } else {
@@ -180,66 +195,97 @@
         }
     }
 
-    // สุ่มการ์ดแต้มเฉพาะทีม: เล่นแอนิเมชันเฉพาะการ์ดแต้มใบที่สุ่มเท่านั้น!
-    function rerollSpecial(team) {
+    // สุ่มการ์ดพิเศษใบบน (Special 1)
+    function rerollSpecial1(team) {
         if (!state.cardA || !state.cardB) return;
         state.dealSeq++;
         const target = team === 'A' ? state.cardA : state.cardB;
-        target.special = getRandomSpecialCard();
-        target.specialFlipped = true;
-        target.specSeq = state.dealSeq;
+        target.special1 = getRandomSpecialCard(target.special2 ? target.special2.id : null);
+        target.special1Flipped = true;
+        target.spec1Seq = state.dealSeq;
         playSfxDeal();
         render();
 
-        // ยิงแอนิเมชัน Card Snap เฉพาะใบนี้ใบเดียว!
         if (state.viewMode === 'reveal') {
-            triggerCardSnap(team === 'A' ? 'pet-special-box-a' : 'pet-special-box-b');
+            triggerCardSnap(team === 'A' ? 'pet-special1-box-a' : 'pet-special1-box-b');
         } else {
-            triggerCardSnap('pet-single-special-card');
+            triggerCardSnap('pet-single-special1-card');
         }
     }
 
-    // สุ่มเฉพาะการ์ดแต้มทั้งสองทีม
-    function rerollSpecialCards() {
+    // สุ่มการ์ดพิเศษใบล่าง (Special 2)
+    function rerollSpecial2(team) {
         if (!state.cardA || !state.cardB) return;
         state.dealSeq++;
-        state.cardA.special = getRandomSpecialCard();
-        state.cardB.special = getRandomSpecialCard();
-        state.cardA.specialFlipped = true;
-        state.cardB.specialFlipped = true;
-        state.cardA.specSeq = state.dealSeq;
-        state.cardB.specSeq = state.dealSeq;
+        const target = team === 'A' ? state.cardA : state.cardB;
+        target.special2 = getRandomSpecialCard(target.special1 ? target.special1.id : null);
+        target.special2Flipped = true;
+        target.spec2Seq = state.dealSeq;
         playSfxDeal();
         render();
 
-        triggerCardSnap('pet-special-box-a');
-        triggerCardSnap('pet-special-box-b');
-        triggerCardSnap('pet-single-special-card');
+        if (state.viewMode === 'reveal') {
+            triggerCardSnap(team === 'A' ? 'pet-special2-box-a' : 'pet-special2-box-b');
+        } else {
+            triggerCardSnap('pet-single-special2-card');
+        }
     }
 
-    // พลิกการ์ด (เปิด/ซ่อน) หมุน 3D ลื่นๆ (ไม่ยิงแอนิเมชันสแน็ป)
+    // สุ่มการ์ดพิเศษทั้งหมด (ทั้งบน-ล่าง ทั้งสองทีม)
+    function rerollSpecialCards() {
+        if (!state.cardA || !state.cardB) return;
+        state.dealSeq++;
+        state.cardA.special1 = getRandomSpecialCard();
+        state.cardA.special2 = getRandomSpecialCard(state.cardA.special1.id);
+        state.cardB.special1 = getRandomSpecialCard();
+        state.cardB.special2 = getRandomSpecialCard(state.cardB.special1.id);
+
+        state.cardA.special1Flipped = true;
+        state.cardA.special2Flipped = true;
+        state.cardB.special1Flipped = true;
+        state.cardB.special2Flipped = true;
+
+        state.cardA.spec1Seq = state.dealSeq;
+        state.cardA.spec2Seq = state.dealSeq;
+        state.cardB.spec1Seq = state.dealSeq;
+        state.cardB.spec2Seq = state.dealSeq;
+
+        playSfxDeal();
+        render();
+
+        [
+            'pet-special1-box-a', 'pet-special2-box-a',
+            'pet-special1-box-b', 'pet-special2-box-b',
+            'pet-single-special1-card', 'pet-single-special2-card'
+        ].forEach(triggerCardSnap);
+    }
+
+    // พลิกการ์ด (เปิด/ซ่อน) หมุน 3D
     function toggleFlip(team, type) {
         const data = team === 'A' ? state.cardA : state.cardB;
         if (!data) return;
 
         if (type === 'pet') {
             data.petFlipped = !data.petFlipped;
-        } else if (type === 'special') {
-            data.specialFlipped = !data.specialFlipped;
+        } else if (type === 'special1') {
+            data.special1Flipped = !data.special1Flipped;
+        } else if (type === 'special2') {
+            data.special2Flipped = !data.special2Flipped;
         }
 
         playSfxFlip();
         render();
 
-        // โหมดเฉลย: ถ้าเปิดครบทั้ง 4 ใบแล้ว เล่นเสียงฉลองผู้ชนะ
+        // โหมดเฉลย: ถ้าเปิดครบทั้ง 6 ใบแล้ว เล่นเสียงฉลอง
         if (state.viewMode === 'reveal') {
-            const allOpened = !state.cardA.petFlipped && !state.cardA.specialFlipped &&
-                              !state.cardB.petFlipped && !state.cardB.specialFlipped;
+            const allOpened = !state.cardA.petFlipped && !state.cardA.special1Flipped && !state.cardA.special2Flipped &&
+                              !state.cardB.petFlipped && !state.cardB.special1Flipped && !state.cardB.special2Flipped;
             if (allOpened) {
                 setTimeout(() => {
-                    const totalA = (state.cardA?.pet?.power || 0) + (state.cardA?.special?.val || 0);
-                    const totalB = (state.cardB?.pet?.power || 0) + (state.cardB?.special?.val || 0);
-                    if (totalA !== totalB) playSfxVictory();
+                    const battle = calcBattle();
+                    if (battle && battle.teamA.total !== battle.teamB.total) {
+                        playSfxVictory();
+                    }
                 }, 350);
             }
         }
@@ -251,11 +297,13 @@
         if (mode === 'reveal') {
             if (state.cardA) {
                 state.cardA.petFlipped = true;
-                state.cardA.specialFlipped = true;
+                state.cardA.special1Flipped = true;
+                state.cardA.special2Flipped = true;
             }
             if (state.cardB) {
                 state.cardB.petFlipped = true;
-                state.cardB.specialFlipped = true;
+                state.cardB.special1Flipped = true;
+                state.cardB.special2Flipped = true;
             }
             playSfxClash();
         } else {
@@ -265,11 +313,96 @@
     }
 
     function setTeamAction(team, action) {
+        const battle = calcBattle();
         const target = team === 'A' ? state.cardA : state.cardB;
+        const targetBattle = team === 'A' ? battle?.teamA : battle?.teamB;
+
         if (target) {
-            target.action = target.action === action ? 'none' : action;
+            // ถ้าโดนบังคับสู้ จะไม่สามารถเปลี่ยนเป็นหมอบได้
+            if (targetBattle && targetBattle.lockedFight && action === 'fold') {
+                target.action = 'fight';
+            } else {
+                target.action = target.action === action ? 'none' : action;
+            }
         }
         render();
+    }
+
+    // คำนวณผลการรบ รวมผลของการ์ดตัวพลิกเกมทั้ง 4 ชนิด
+    function calcBattle() {
+        if (!state.cardA || !state.cardB) return null;
+
+        // 1. ตรวจสอบการ์ดสลับสัตว์ (Swap Pet)
+        const aSwapCount = (state.cardA.special1?.type === 'swap' ? 1 : 0) + (state.cardA.special2?.type === 'swap' ? 1 : 0);
+        const bSwapCount = (state.cardB.special1?.type === 'swap' ? 1 : 0) + (state.cardB.special2?.type === 'swap' ? 1 : 0);
+        const isSwapped = ((aSwapCount + bSwapCount) % 2) === 1;
+
+        const effectivePetA = isSwapped ? state.cardB.pet : state.cardA.pet;
+        const effectivePetB = isSwapped ? state.cardA.pet : state.cardB.pet;
+
+        // 2. ตัวคูณพลังสัตว์ (x2)
+        let multA = 1;
+        if (state.cardA.special1?.type === 'multiplier') multA *= (state.cardA.special1.mult || 2);
+        if (state.cardA.special2?.type === 'multiplier') multA *= (state.cardA.special2.mult || 2);
+
+        let multB = 1;
+        if (state.cardB.special1?.type === 'multiplier') multB *= (state.cardB.special1.mult || 2);
+        if (state.cardB.special2?.type === 'multiplier') multB *= (state.cardB.special2.mult || 2);
+
+        const basePowA = effectivePetA ? effectivePetA.power : 0;
+        const basePowB = effectivePetB ? effectivePetB.power : 0;
+        const boostedPetA = basePowA * multA;
+        const boostedPetB = basePowB * multB;
+
+        // 3. แต้มบวก/ลบ จากการ์ดพิเศษ
+        const valA1 = state.cardA.special1?.val || 0;
+        const valA2 = state.cardA.special2?.val || 0;
+        const flatA = valA1 + valA2;
+
+        const valB1 = state.cardB.special1?.val || 0;
+        const valB2 = state.cardB.special2?.val || 0;
+        const flatB = valB1 + valB2;
+
+        const totalA = boostedPetA + flatA;
+        const totalB = boostedPetB + flatB;
+
+        // 4. การ์ดบังคับสู้ (Force Fight)
+        // ทีม A โดนบังคับสู้ถ้า: ตัวเองมีการ์ด force_self_fight หรือ คู่แข่งมีการ์ด force_opp_fight
+        const aHasForceSelf = (state.cardA.special1?.type === 'force_self_fight') || (state.cardA.special2?.type === 'force_self_fight');
+        const bHasForceSelf = (state.cardB.special1?.type === 'force_self_fight') || (state.cardB.special2?.type === 'force_self_fight');
+        const aHasForceOpp = (state.cardA.special1?.type === 'force_opp_fight') || (state.cardA.special2?.type === 'force_opp_fight');
+        const bHasForceOpp = (state.cardB.special1?.type === 'force_opp_fight') || (state.cardB.special2?.type === 'force_opp_fight');
+
+        const lockedA = aHasForceSelf || bHasForceOpp;
+        const lockedB = bHasForceSelf || aHasForceOpp;
+
+        // ถ้าถูกล็อกสู้ ปรับ action ให้เป็น fight อัตโนมัติถ้าเดิมเป็น fold
+        if (lockedA && state.cardA.action === 'fold') state.cardA.action = 'fight';
+        if (lockedB && state.cardB.action === 'fold') state.cardB.action = 'fight';
+
+        return {
+            isSwapped,
+            teamA: {
+                effectivePet: effectivePetA,
+                mult: multA,
+                flat: flatA,
+                val1: valA1,
+                val2: valA2,
+                total: totalA,
+                lockedFight: lockedA,
+                action: lockedA && state.cardA.action === 'fold' ? 'fight' : state.cardA.action
+            },
+            teamB: {
+                effectivePet: effectivePetB,
+                mult: multB,
+                flat: flatB,
+                val1: valB1,
+                val2: valB2,
+                total: totalB,
+                lockedFight: lockedB,
+                action: lockedB && state.cardB.action === 'fold' ? 'fight' : state.cardB.action
+            }
+        };
     }
 
     // HTML การ์ดสัตว์ 3D Flipper
@@ -291,19 +424,31 @@
         `;
     }
 
-    // HTML การ์ดพิเศษ 3D Flipper
-    function getSpecialCardFlipperHtml(specData, isFlipped) {
+    // HTML การ์ดพิเศษ 3D Flipper (รองรับแบบครึ่งใบ บน-ล่าง และตัวพลิกเกม)
+    function getSpecialCardFlipperHtml(specData, isFlipped, slotLabel) {
         const borderInfo = getSpecialBorderInfo(specData.tier);
         const isPos = specData.val >= 0;
+        const isGameChanger = !!specData.type;
+        const typeClass = specData.type ? `type-${specData.type}` : '';
+        const valClass = isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg');
+        const slotBadge = slotLabel ? `<span class="pet-card-slot-label">${slotLabel}</span>` : '';
+
         return `
             <div class="pet-card-flipper ${isFlipped ? 'is-flipped' : ''}">
-                <div class="pet-special-inner card-front tier-${specData.tier}">
+                <div class="pet-special-inner card-front tier-${specData.tier} ${typeClass}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        ${slotBadge}
+                        <span class="pet-special-border-badge tier-${specData.tier}">${borderInfo.label}</span>
+                    </div>
                     <span class="pet-special-icon">${specData.icon}</span>
-                    <span class="pet-special-name">${specData.name}</span>
-                    <span class="pet-special-val ${isPos ? 'pos' : 'neg'}">${specData.text}</span>
+                    <span class="pet-special-name" title="${specData.name}">${specData.name}</span>
+                    <span class="pet-special-val ${valClass}">${specData.text}</span>
                 </div>
                 <div class="pet-special-inner card-back tier-${specData.tier}">
-                    <span class="pet-special-border-badge tier-${specData.tier}">${borderInfo.label}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        ${slotBadge}
+                        <span class="pet-special-border-badge tier-${specData.tier}">${borderInfo.label}</span>
+                    </div>
                     <div class="pet-back-symbol">🃏</div>
                 </div>
             </div>
@@ -329,6 +474,8 @@
     function render() {
         if (!state.cardA || !state.cardB) return;
 
+        const battle = calcBattle();
+
         const btnViewA = document.getElementById('pet-btn-view-a');
         const btnViewB = document.getElementById('pet-btn-view-b');
         const btnViewReveal = document.getElementById('pet-btn-view-reveal');
@@ -346,77 +493,109 @@
 
             if (state.viewMode === 'teamA') {
                 if (btnViewA) btnViewA.classList.add('active');
-                renderSingleStage('A', state.cardA, 'B', state.cardB);
+                renderSingleStage('A', state.cardA, 'B', state.cardB, battle);
             } else {
                 if (btnViewB) btnViewB.classList.add('active');
-                renderSingleStage('B', state.cardB, 'A', state.cardA);
+                renderSingleStage('B', state.cardB, 'A', state.cardA, battle);
             }
         } else {
             if (singleStage) singleStage.style.display = 'none';
             if (dualStage) dualStage.style.display = 'block';
             if (btnViewReveal) btnViewReveal.classList.add('active');
-            renderDualStage(true);
+            renderDualStage(battle, true);
         }
     }
 
     // Render Single Stage
-    function renderSingleStage(activeTeamKey, activeData, oppTeamKey, oppData) {
+    function renderSingleStage(activeTeamKey, activeData, oppTeamKey, oppData, battle) {
         const singlePetBox = document.getElementById('pet-single-pet-card');
-        const singleSpecialBox = document.getElementById('pet-single-special-card');
+        const singleSpec1Box = document.getElementById('pet-single-special1-card');
+        const singleSpec2Box = document.getElementById('pet-single-special2-card');
         const isTeamA = activeTeamKey === 'A';
-        const theme = isTeamA ? 'theme-team-b' : 'theme-team-a';
+        const theme = isTeamA ? 'theme-team-a' : 'theme-team-b';
+        const activeBattle = isTeamA ? battle?.teamA : battle?.teamB;
 
         if (singlePetBox) {
-            const petKey = `single-pet-${oppTeamKey}-${oppData.pet.id}-${oppData.petSeq}`;
+            const petKey = `single-pet-${activeTeamKey}-${activeData.pet.id}-${activeData.petSeq}`;
             updateCardElement(
                 singlePetBox,
                 petKey,
-                () => getPetCardFlipperHtml(oppData.pet, oppData.petFlipped, theme),
-                oppData.petFlipped
+                () => getPetCardFlipperHtml(activeData.pet, activeData.petFlipped, theme),
+                activeData.petFlipped
             );
-            singlePetBox.onclick = () => toggleFlip(oppTeamKey, 'pet');
+            singlePetBox.onclick = () => toggleFlip(activeTeamKey, 'pet');
         }
 
-        if (singleSpecialBox) {
-            const specKey = `single-spec-${oppTeamKey}-${oppData.special.id}-${oppData.specSeq}`;
+        if (singleSpec1Box && activeData.special1) {
+            const spec1Key = `single-spec1-${activeTeamKey}-${activeData.special1.id}-${activeData.spec1Seq}`;
             updateCardElement(
-                singleSpecialBox,
-                specKey,
-                () => getSpecialCardFlipperHtml(oppData.special, oppData.specialFlipped),
-                oppData.specialFlipped
+                singleSpec1Box,
+                spec1Key,
+                () => getSpecialCardFlipperHtml(activeData.special1, activeData.special1Flipped, 'การ์ดบน'),
+                activeData.special1Flipped
             );
-            singleSpecialBox.onclick = () => toggleFlip(oppTeamKey, 'special');
+            singleSpec1Box.onclick = () => toggleFlip(activeTeamKey, 'special1');
+        }
+
+        if (singleSpec2Box && activeData.special2) {
+            const spec2Key = `single-spec2-${activeTeamKey}-${activeData.special2.id}-${activeData.spec2Seq}`;
+            updateCardElement(
+                singleSpec2Box,
+                spec2Key,
+                () => getSpecialCardFlipperHtml(activeData.special2, activeData.special2Flipped, 'การ์ดล่าง'),
+                activeData.special2Flipped
+            );
+            singleSpec2Box.onclick = () => toggleFlip(activeTeamKey, 'special2');
         }
 
         const btnFight = document.getElementById('pet-single-btn-fight');
         const btnFold = document.getElementById('pet-single-btn-fold');
+
         if (btnFight) {
             btnFight.classList.toggle('active-action', activeData.action === 'fight');
             btnFight.onclick = () => setTeamAction(activeTeamKey, 'fight');
         }
+
         if (btnFold) {
+            const isLocked = activeBattle?.lockedFight;
+            btnFold.classList.toggle('is-locked', !!isLocked);
+            btnFold.disabled = !!isLocked;
+            btnFold.title = isLocked ? 'ถูกบังคับสู้ ห้ามหมอบเด็ดขาด!' : 'หมอบยอมแพ้';
             btnFold.classList.toggle('active-action', activeData.action === 'fold');
-            btnFold.onclick = () => setTeamAction(activeTeamKey, 'fold');
+            btnFold.onclick = () => {
+                if (!isLocked) setTeamAction(activeTeamKey, 'fold');
+            };
         }
     }
 
     // Render Dual Stage
-    function renderDualStage(isRevealMode) {
-        renderDualColumn('A', state.cardA, state.cardB, isRevealMode);
-        renderDualColumn('B', state.cardB, state.cardA, isRevealMode);
+    function renderDualStage(battle, isRevealMode) {
+        renderDualColumn('A', state.cardA, state.cardB, battle, isRevealMode);
+        renderDualColumn('B', state.cardB, state.cardA, battle, isRevealMode);
     }
 
-    function renderDualColumn(teamKey, myData, oppData, isRevealMode) {
+    function renderDualColumn(teamKey, myData, oppData, battle, isRevealMode) {
         const isTeamA = teamKey === 'A';
         const cardBox = document.getElementById(isTeamA ? 'pet-card-box-a' : 'pet-card-box-b');
-        const specialBox = document.getElementById(isTeamA ? 'pet-special-box-a' : 'pet-special-box-b');
+        const spec1Box = document.getElementById(isTeamA ? 'pet-special1-box-a' : 'pet-special1-box-b');
+        const spec2Box = document.getElementById(isTeamA ? 'pet-special2-box-a' : 'pet-special2-box-b');
         const totalBox = document.getElementById(isTeamA ? 'pet-total-box-a' : 'pet-total-box-b');
         const actionStatus = document.getElementById(isTeamA ? 'pet-action-status-a' : 'pet-action-status-b');
         const btnFight = document.getElementById(isTeamA ? 'pet-btn-fight-a' : 'pet-btn-fight-b');
         const btnFold = document.getElementById(isTeamA ? 'pet-btn-fold-a' : 'pet-btn-fold-b');
 
+        const myBattle = isTeamA ? battle?.teamA : battle?.teamB;
+        const oppBattle = isTeamA ? battle?.teamB : battle?.teamA;
+
         if (btnFight) btnFight.classList.toggle('active-action', myData.action === 'fight');
-        if (btnFold) btnFold.classList.toggle('active-action', myData.action === 'fold');
+
+        if (btnFold) {
+            const isLocked = myBattle?.lockedFight;
+            btnFold.classList.toggle('is-locked', !!isLocked);
+            btnFold.disabled = !!isLocked;
+            btnFold.title = isLocked ? 'ถูกบังคับสู้ ห้ามหมอบเด็ดขาด!' : 'หมอบยอมแพ้';
+            btnFold.classList.toggle('active-action', myData.action === 'fold');
+        }
 
         if (actionStatus) {
             if (myData.action === 'fight') {
@@ -428,6 +607,7 @@
             }
         }
 
+        // การ์ดสัตว์
         if (cardBox) {
             const petKey = `dual-pet-${teamKey}-${myData.pet.id}-${myData.petSeq}`;
             updateCardElement(
@@ -439,56 +619,89 @@
             cardBox.onclick = () => toggleFlip(teamKey, 'pet');
         }
 
-        if (specialBox) {
-            const specKey = `dual-spec-${teamKey}-${myData.special.id}-${myData.specSeq}`;
+        // การ์ดพิเศษ 1 (บน)
+        if (spec1Box && myData.special1) {
+            const spec1Key = `dual-spec1-${teamKey}-${myData.special1.id}-${myData.spec1Seq}`;
             updateCardElement(
-                specialBox,
-                specKey,
-                () => getSpecialCardFlipperHtml(myData.special, myData.specialFlipped),
-                myData.specialFlipped
+                spec1Box,
+                spec1Key,
+                () => getSpecialCardFlipperHtml(myData.special1, myData.special1Flipped, 'การ์ดบน'),
+                myData.special1Flipped
             );
-            specialBox.onclick = () => toggleFlip(teamKey, 'special');
+            spec1Box.onclick = () => toggleFlip(teamKey, 'special1');
         }
 
-        if (totalBox) {
-            const petPow = myData.pet ? myData.pet.power : 0;
-            const specVal = myData.special ? myData.special.val : 0;
-            const netTotal = petPow + specVal;
+        // การ์ดพิเศษ 2 (ล่าง)
+        if (spec2Box && myData.special2) {
+            const spec2Key = `dual-spec2-${teamKey}-${myData.special2.id}-${myData.spec2Seq}`;
+            updateCardElement(
+                spec2Box,
+                spec2Key,
+                () => getSpecialCardFlipperHtml(myData.special2, myData.special2Flipped, 'การ์ดล่าง'),
+                myData.special2Flipped
+            );
+            spec2Box.onclick = () => toggleFlip(teamKey, 'special2');
+        }
 
-            const myPetOpen = !myData.petFlipped;
-            const mySpecOpen = !myData.specialFlipped;
-            const myBothOpen = myPetOpen && mySpecOpen;
-            const oppBothOpen = !oppData.petFlipped && !oppData.specialFlipped;
-            const allFourOpen = myBothOpen && oppBothOpen;
+        // กล่องคะแนนสุทธิ (Total Box)
+        if (totalBox && myBattle) {
+            const myAllOpen = !myData.petFlipped && !myData.special1Flipped && !myData.special2Flipped;
+            const oppAllOpen = !oppData.petFlipped && !oppData.special1Flipped && !oppData.special2Flipped;
+            const allSixOpen = myAllOpen && oppAllOpen;
 
             if (isRevealMode) {
-                if (!myBothOpen) {
+                if (!myAllOpen) {
                     totalBox.style.display = 'none';
                     totalBox.innerHTML = '';
                 } else {
                     totalBox.style.display = 'block';
-                    const oppPetPow = oppData.pet ? oppData.pet.power : 0;
-                    const oppSpecVal = oppData.special ? oppData.special.val : 0;
-                    const oppNetTotal = oppPetPow + oppSpecVal;
 
                     let badgeHtml = '';
-                    if (allFourOpen) {
+                    if (allSixOpen) {
                         if (myData.action === 'fold' && oppData.action === 'fight') {
                             badgeHtml = '<div class="pet-win-badge defeat">🏳️ หมอบ</div>';
                         } else if (oppData.action === 'fold' && myData.action === 'fight') {
                             badgeHtml = '<div class="pet-win-badge victory">👑 ชนะ</div>';
-                        } else if (netTotal > oppNetTotal) {
+                        } else if (myData.action === 'fold' && oppData.action === 'fold') {
+                            badgeHtml = '<div class="pet-win-badge draw">🏳️ หมอบทั้งคู่</div>';
+                        } else if (myBattle.total > oppBattle.total) {
                             badgeHtml = '<div class="pet-win-badge victory">🏆 ชนะ</div>';
-                        } else if (netTotal < oppNetTotal) {
+                        } else if (myBattle.total < oppBattle.total) {
                             badgeHtml = '<div class="pet-win-badge defeat">💀 แพ้</div>';
                         } else {
                             badgeHtml = '<div class="pet-win-badge draw">🤝 เสมอ</div>';
                         }
                     }
 
+                    // แสดงรายละเอียดการคำนวณแต้ม (Breakdown)
+                    const effectivePet = myBattle.effectivePet;
+                    const mult = myBattle.mult;
+                    const val1 = myBattle.val1;
+                    const val2 = myBattle.val2;
+
+                    let formulaParts = [];
+                    formulaParts.push(`สัตว์: <strong>${fmtNum(effectivePet.power)}</strong>`);
+                    if (mult > 1) {
+                        formulaParts.push(`<span style="color:#eab308; font-weight:800;">(x${mult} = ${fmtNum(effectivePet.power * mult)})</span>`);
+                    }
+                    if (val1 !== 0) {
+                        formulaParts.push(`<span style="color:${val1 > 0 ? '#16a34a' : '#dc2626'}; font-weight:700;">${val1 > 0 ? '+' : ''}${val1}</span>`);
+                    }
+                    if (val2 !== 0) {
+                        formulaParts.push(`<span style="color:${val2 > 0 ? '#16a34a' : '#dc2626'}; font-weight:700;">${val2 > 0 ? '+' : ''}${val2}</span>`);
+                    }
+
+                    const swapBadge = battle.isSwapped
+                        ? `<div class="pet-swap-notice">🔄 ได้รับ: ${effectivePet.emoji} ${effectivePet.name}</div>`
+                        : '';
+
                     totalBox.innerHTML = `
+                        ${swapBadge}
+                        <div class="pet-calc-breakdown" style="font-size: 0.85rem; color: #475569; margin-bottom: 0.35rem; display: flex; flex-direction: column; gap: 0.15rem; align-items: center;">
+                            <div>${formulaParts.join(' ')}</div>
+                        </div>
                         <div class="pet-calc-total">
-                            <span class="pet-calc-total-val">${fmtNum(netTotal)}</span>
+                            <span class="pet-calc-total-val">${fmtNum(myBattle.total)}</span>
                         </div>
                         ${badgeHtml}
                     `;
@@ -499,7 +712,6 @@
         }
     }
 
-    
     // --- ระบบ Card Compendium / สมุดคลังการ์ดทั้งหมด ---
     function initPetCardDex() {
         const btnOpen = document.getElementById('pet-btn-card-dex');
@@ -644,9 +856,9 @@
             if (!specialsContainer || typeof SPECIAL_CARDS === 'undefined') return;
 
             const tierMeta = {
-                gold: { title: '🟡 การ์ดสีทอง (Legendary - ออกยาก 8%)', desc: 'พลิกฟ้าคว่ำแผ่นดิน บอสโดนถึงทรุด หรือดันตัวชนจนล้มบอสได้' },
-                blue: { title: '🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%)', desc: 'เสี่ยงสูง ลุ้นหนัก การ์ดบวกผลักดันสัตว์ล่างขึ้นไปชนสัตว์กลาง' },
-                green: { title: '🟢 การ์ดสีเขียว (Uncommon - ออก 30%)', desc: 'พลิกผลสัตว์ทั่วไป ช่วยให้สัตว์แต้มปานกลางเอาชนะได้' },
+                gold: { title: '🟡 การ์ดสีทอง (Legendary - ออกยาก 8%)', desc: 'การ์ดระดับตำนาน พลิกฟ้าคว่ำแผ่นดิน ตัวคูณสอง สลับสัตว์ หรือแต้มมหาศาล' },
+                blue: { title: '🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%)', desc: 'เสี่ยงสูง ลุ้นหนัก การ์ดล็อกสู้คู่แข่ง หรือบัฟแต้มรุนแรง' },
+                green: { title: '🟢 การ์ดสีเขียว (Uncommon - ออก 30%)', desc: 'การ์ดบังคับตัวเองสู้ และปรับแต่งแต้มปานกลาง' },
                 white: { title: '⚪ การ์ดสีขาว (Common - ออก 42%)', desc: 'ปรับแต่งแต้มเบาๆ เสริมกำลังตัวกากให้มีลุ้น' }
             };
 
@@ -663,15 +875,20 @@
                         </div>
                         <div class="pet-dex-special-grid">
                             ${cards.map(card => {
+                                const isGameChanger = !!card.type;
                                 const isPos = card.val >= 0;
+                                const valClass = isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg');
+                                const typeDesc = card.desc ? `<div class="pet-dex-special-desc" style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">${card.desc}</div>` : '';
+                                const tagLabel = isGameChanger ? '⚡ ตัวพลิกเกม' : (isPos ? 'บัฟเพิ่มพลัง' : 'คำสาปลดแต้ม');
                                 return `
-                                    <div class="pet-dex-special-card tier-${card.tier} ${isPos ? 'pos' : 'neg'}">
+                                    <div class="pet-dex-special-card tier-${card.tier} ${isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg')}">
                                         <div class="pet-dex-special-icon">${card.icon}</div>
                                         <div class="pet-dex-special-details">
                                             <div class="pet-dex-special-name">${card.name}</div>
-                                            <span class="pet-dex-special-tag ${isPos ? 'pos' : 'neg'}">${isPos ? 'บัฟเพิ่มพลัง' : 'คำสาปลดแต้ม'}</span>
+                                            <span class="pet-dex-special-tag ${isGameChanger ? 'game-changer' : (isPos ? 'pos' : 'neg')}">${tagLabel}</span>
+                                            ${typeDesc}
                                         </div>
-                                        <div class="pet-dex-special-val ${isPos ? 'pos' : 'neg'}">${card.text}</div>
+                                        <div class="pet-dex-special-val ${valClass}">${card.text}</div>
                                     </div>
                                 `;
                             }).join('')}
@@ -707,20 +924,28 @@
         if (btnNewRound) btnNewRound.addEventListener('click', newRound);
         if (btnRerollSpecial) btnRerollSpecial.addEventListener('click', rerollSpecialCards);
 
-        // Team-specific reroll buttons
+        // Team A reroll buttons
         const btnRerollPetA = document.getElementById('pet-reroll-pet-a');
-        const btnRerollSpecialA = document.getElementById('pet-reroll-special-a');
-        const btnRerollPetB = document.getElementById('pet-reroll-pet-b');
-        const btnRerollSpecialB = document.getElementById('pet-reroll-special-b');
+        const btnRerollSpec1A = document.getElementById('pet-reroll-special1-a');
+        const btnRerollSpec2A = document.getElementById('pet-reroll-special2-a');
 
         if (btnRerollPetA) btnRerollPetA.addEventListener('click', (e) => { e.stopPropagation(); rerollPet('A'); });
-        if (btnRerollSpecialA) btnRerollSpecialA.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial('A'); });
+        if (btnRerollSpec1A) btnRerollSpec1A.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial1('A'); });
+        if (btnRerollSpec2A) btnRerollSpec2A.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial2('A'); });
+
+        // Team B reroll buttons
+        const btnRerollPetB = document.getElementById('pet-reroll-pet-b');
+        const btnRerollSpec1B = document.getElementById('pet-reroll-special1-b');
+        const btnRerollSpec2B = document.getElementById('pet-reroll-special2-b');
+
         if (btnRerollPetB) btnRerollPetB.addEventListener('click', (e) => { e.stopPropagation(); rerollPet('B'); });
-        if (btnRerollSpecialB) btnRerollSpecialB.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial('B'); });
+        if (btnRerollSpec1B) btnRerollSpec1B.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial1('B'); });
+        if (btnRerollSpec2B) btnRerollSpec2B.addEventListener('click', (e) => { e.stopPropagation(); rerollSpecial2('B'); });
 
         // Single stage reroll buttons
         const btnSingleRerollPet = document.getElementById('pet-single-reroll-pet');
-        const btnSingleRerollSpecial = document.getElementById('pet-single-reroll-special');
+        const btnSingleRerollSpec1 = document.getElementById('pet-single-reroll-special1');
+        const btnSingleRerollSpec2 = document.getElementById('pet-single-reroll-special2');
 
         if (btnSingleRerollPet) {
             btnSingleRerollPet.addEventListener('click', () => {
@@ -728,10 +953,16 @@
                 rerollPet(curTeam);
             });
         }
-        if (btnSingleRerollSpecial) {
-            btnSingleRerollSpecial.addEventListener('click', () => {
+        if (btnSingleRerollSpec1) {
+            btnSingleRerollSpec1.addEventListener('click', () => {
                 const curTeam = state.viewMode === 'teamB' ? 'B' : 'A';
-                rerollSpecial(curTeam);
+                rerollSpecial1(curTeam);
+            });
+        }
+        if (btnSingleRerollSpec2) {
+            btnSingleRerollSpec2.addEventListener('click', () => {
+                const curTeam = state.viewMode === 'teamB' ? 'B' : 'A';
+                rerollSpecial2(curTeam);
             });
         }
 

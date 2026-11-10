@@ -384,18 +384,23 @@
                                     💥 เฉลย
                                 </button>
                             </div>
+                            <div class="pet-topbar-spacer" aria-hidden="true"></div>
                         </div>
 
                         <!-- STAGE 1: Single Stage (โหมดทีม A / ทีม B) -->
                         <div id="pet-single-stage" class="pet-single-stage" style="display: none;">
-                            <div class="pet-single-reroll-bar" style="display: flex; justify-content: center; gap: 0.6rem; margin-bottom: 0.6rem;">
+                            <div class="pet-single-reroll-bar" style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.6rem;">
                                 <button type="button" id="pet-single-reroll-pet" class="pet-btn-team-reroll">🐾 สุ่มสัตว์</button>
-                                <button type="button" id="pet-single-reroll-special" class="pet-btn-team-reroll">🃏 สุ่มการ์ด</button>
+                                <button type="button" id="pet-single-reroll-special1" class="pet-btn-team-reroll">🃏 การ์ดบน</button>
+                                <button type="button" id="pet-single-reroll-special2" class="pet-btn-team-reroll">🃏 การ์ดล่าง</button>
                             </div>
                             <!-- Cards Side-by-Side (Horizontal Hand) -->
                             <div class="pet-single-cards-row">
                                 <div id="pet-single-pet-card" class="pet-card pet-card-compact interactive-flip"></div>
-                                <div id="pet-single-special-card" class="pet-special-card pet-special-compact interactive-flip"></div>
+                                <div class="pet-special-cards-col">
+                                    <div id="pet-single-special1-card" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                    <div id="pet-single-special2-card" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                </div>
                             </div>
 
                             <!-- Bottom Decision Buttons -->
@@ -420,13 +425,17 @@
                                     <div class="pet-column-header">
                                         <div class="pet-column-title red">🔴 ทีม A</div>
                                         <div class="pet-team-reroll-group">
-                                            <button type="button" id="pet-reroll-pet-a" class="pet-btn-team-reroll" title="สุ่มสัตว์เฉพาะทีม A">🐾 สุ่มสัตว์</button>
-                                            <button type="button" id="pet-reroll-special-a" class="pet-btn-team-reroll" title="สุ่มการ์ดเฉพาะทีม A">🃏 สุ่มการ์ด</button>
+                                            <button type="button" id="pet-reroll-pet-a" class="pet-btn-team-reroll" title="สุ่มสัตว์">🐾 สัตว์</button>
+                                            <button type="button" id="pet-reroll-special1-a" class="pet-btn-team-reroll" title="สุ่มการ์ดบน">🃏 การ์ดบน</button>
+                                            <button type="button" id="pet-reroll-special2-a" class="pet-btn-team-reroll" title="สุ่มการ์ดล่าง">🃏 การ์ดล่าง</button>
                                         </div>
                                     </div>
                                     <div class="pet-team-cards-row">
                                         <div id="pet-card-box-a" class="pet-card pet-card-compact interactive-flip"></div>
-                                        <div id="pet-special-box-a" class="pet-special-card pet-special-compact interactive-flip"></div>
+                                        <div class="pet-special-cards-col">
+                                            <div id="pet-special1-box-a" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                            <div id="pet-special2-box-a" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                        </div>
                                     </div>
                                     <div id="pet-total-box-a" class="pet-total-box" style="display: none;"></div>
                                     <div class="pet-team-decision-wrap">
@@ -447,13 +456,17 @@
                                     <div class="pet-column-header">
                                         <div class="pet-column-title blue">🔵 ทีม B</div>
                                         <div class="pet-team-reroll-group">
-                                            <button type="button" id="pet-reroll-pet-b" class="pet-btn-team-reroll" title="สุ่มสัตว์เฉพาะทีม B">🐾 สุ่มสัตว์</button>
-                                            <button type="button" id="pet-reroll-special-b" class="pet-btn-team-reroll" title="สุ่มการ์ดเฉพาะทีม B">🃏 สุ่มการ์ด</button>
+                                            <button type="button" id="pet-reroll-pet-b" class="pet-btn-team-reroll" title="สุ่มสัตว์">🐾 สัตว์</button>
+                                            <button type="button" id="pet-reroll-special1-b" class="pet-btn-team-reroll" title="สุ่มการ์ดบน">🃏 การ์ดบน</button>
+                                            <button type="button" id="pet-reroll-special2-b" class="pet-btn-team-reroll" title="สุ่มการ์ดล่าง">🃏 การ์ดล่าง</button>
                                         </div>
                                     </div>
                                     <div class="pet-team-cards-row">
                                         <div id="pet-card-box-b" class="pet-card pet-card-compact interactive-flip"></div>
-                                        <div id="pet-special-box-b" class="pet-special-card pet-special-compact interactive-flip"></div>
+                                        <div class="pet-special-cards-col">
+                                            <div id="pet-special1-box-b" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                            <div id="pet-special2-box-b" class="pet-special-card pet-special-compact pet-special-half interactive-flip"></div>
+                                        </div>
                                     </div>
                                     <div id="pet-total-box-b" class="pet-total-box" style="display: none;"></div>
                                     <div class="pet-team-decision-wrap">

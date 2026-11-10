@@ -115,7 +115,7 @@ const SPECIAL_CARDS = {
         { id: "w6", tier: "white", name: "สะดุดขาตัวเอง", val: -80, text: "-80", icon: "🐾" }
     ],
 
-    // 🟢 การ์ดสีเขียว (Uncommon - ออก 30%) - บวก 4 ใบ, ลบ 3 ใบ
+    // 🟢 การ์ดสีเขียว (Uncommon - ออก 30%) - บวก 4 ใบ, ลบ 2 ใบ, ตัวพลิกเกม 1 ใบ
     green: [
         { id: "g1", tier: "green", name: "กระโดดข้ามรั้ว", val: 200, text: "+200", icon: "🦘" },
         { id: "g2", tier: "green", name: "ยาวิ่งสปีดบูสต์", val: 240, text: "+240", icon: "⚡" },
@@ -123,10 +123,10 @@ const SPECIAL_CARDS = {
         { id: "g4", tier: "green", name: "เกราะกระดองเต่า", val: 320, text: "+320", icon: "🛡️" },
         { id: "g5", tier: "green", name: "ท้องร่วงกะทันหัน", val: -120, text: "-120", icon: "🤢" },
         { id: "g6", tier: "green", name: "หนามทิ่มฝ่าเท้า", val: -160, text: "-160", icon: "🌵" },
-        { id: "g7", tier: "green", name: "ติดใยแมงมุมเหนียว", val: -200, text: "-200", icon: "🕸️" }
+        { id: "g_force_self", tier: "green", type: "force_self_fight", name: "⚔️ บังคับตัวเองสู้", val: 0, text: "⚔️ บังคับสู้", icon: "⚔️", desc: "ทีมตัวเองต้องสู้ ห้ามหมอบเด็ดขาด!" }
     ],
 
-    // 🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%) - บวก 3 ใบ, ลบ 4 ใบ
+    // 🔵 การ์ดสีน้ำเงิน (Rare - ออก 20%) - บวก 3 ใบ, ลบ 3 ใบ, ตัวพลิกเกม 2 ใบ
     blue: [
         { id: "b1", tier: "blue", name: "เขี้ยวสายฟ้าฟาด", val: 400, text: "+400", icon: "⚡" },
         { id: "b2", tier: "blue", name: "พายุหมุนคลั่ง", val: 480, text: "+480", icon: "🌪️" },
@@ -134,37 +134,43 @@ const SPECIAL_CARDS = {
         { id: "b5", tier: "blue", name: "หมอกควันตาพร่ามัว", val: -240, text: "-240", icon: "🌫️" },
         { id: "b6", tier: "blue", name: "ตกหลุมพรางนายพราน", val: -320, text: "-320", icon: "🕳️" },
         { id: "b7", tier: "blue", name: "โดนพิษงูกัดขา", val: -400, text: "-400", icon: "🧪" },
-        { id: "b8", tier: "blue", name: "โดนโซ่ตรวนขึงขัง", val: -480, text: "-480", icon: "⛓️" }
+        { id: "b_force_opp", tier: "blue", type: "force_opp_fight", name: "🎯 บังคับคู่แข่งสู้", val: 0, text: "🎯 ล็อกสู้", icon: "🎯", desc: "บังคับคู่แข่งต้องสู้ ห้ามหมอบเด็ดขาด!" },
+        { id: "b_reroll_pet", tier: "blue", type: "reroll_pet", name: "🎲 ขอสุ่มสัตว์ใหม่", val: 0, text: "🎲 สุ่มใหม่", icon: "🎲", desc: "ได้สิทธิ์กดสุ่มสัตว์ของตัวเองใหม่ 1 ครั้ง!" }
     ],
 
-    // 🟡 การ์ดสีทอง (Legendary - ออก 8%) - บวก 3 ใบ, ลบ 4 ใบ
+    // 🟡 การ์ดสีทอง (Legendary - ออก 8%) - บวก 2 ใบ, ลบ 3 ใบ, ตัวพลิกเกม 2 ใบ
     gold: [
         { id: "l1", tier: "gold", name: "🐲 พลังมังกรหลับตื่น", val: 650, text: "+650", icon: "🐲" },
         { id: "l2", tier: "gold", name: "☄️ อุกกาบาตบรรพกาล", val: 800, text: "+800", icon: "☄️" },
-        { id: "l3", tier: "gold", name: "🌟 อวตารเทพจุติ", val: 950, text: "+950", icon: "🌟" },
+        { id: "l_x2", tier: "gold", type: "multiplier", name: "✨ พลังคูณสอง (x2)", val: 0, mult: 2, text: "x2 พลัง", icon: "✨", desc: "คูณ 2 แต้มสัตว์ของทีมตัวเอง!" },
+        { id: "l_swap", tier: "gold", type: "swap", name: "🔄 ขอสลับสัตว์", val: 0, text: "🔄 สลับสัตว์", icon: "🔄", desc: "สลับสัตว์ของตัวเองกับคู่แข่งทันที!" },
         { id: "l5", tier: "gold", name: "❄️ แช่แข็งยุคน้ำแข็ง", val: -400, text: "-400", icon: "❄️" },
         { id: "l6", tier: "gold", name: "🌋 ธรณีสูบลาวาเดือด", val: -550, text: "-550", icon: "🌋" },
-        { id: "l7", tier: "gold", name: "💀 คำสาปปีศาจมรณะ", val: -700, text: "-700", icon: "💀" },
-        { id: "l8", tier: "gold", name: "🖤 หลุมดำดูดกลืนพลัง", val: -800, text: "-800", icon: "🕳️" }
+        { id: "l7", tier: "gold", name: "💀 คำสาปปีศาจมรณะ", val: -700, text: "-700", icon: "💀" }
     ]
 };
 
 // รวมการ์ดพิเศษทั้งหมดเข้าเป็น Pool เดียว สำหรับสุ่มตามน้ำหนัก (Weight)
 // ขาว (42%), เขียว (30%), น้ำเงิน (20%), ทอง (8%)
-function getRandomSpecialCard() {
-    const rand = Math.random() * 100;
-    let tier = 'white';
-    if (rand < 42) {
-        tier = 'white';
-    } else if (rand < 72) {
-        tier = 'green';
-    } else if (rand < 92) {
-        tier = 'blue';
-    } else {
-        tier = 'gold';
-    }
-    const pool = SPECIAL_CARDS[tier];
-    const card = pool[Math.floor(Math.random() * pool.length)];
+function getRandomSpecialCard(excludeId = null) {
+    let card;
+    let attempts = 0;
+    do {
+        const rand = Math.random() * 100;
+        let tier = 'white';
+        if (rand < 42) {
+            tier = 'white';
+        } else if (rand < 72) {
+            tier = 'green';
+        } else if (rand < 92) {
+            tier = 'blue';
+        } else {
+            tier = 'gold';
+        }
+        const pool = SPECIAL_CARDS[tier];
+        card = pool[Math.floor(Math.random() * pool.length)];
+        attempts++;
+    } while (excludeId && card.id === excludeId && attempts < 10);
     return { ...card };
 }
 

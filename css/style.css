@@ -1911,8 +1911,7 @@ select:focus {
 ========================================================= */
 
 .pet-dex-btn {
-    position: absolute;
-    left: 0.75rem;
+    position: static;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -1926,7 +1925,18 @@ select:focus {
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.16s ease;
-    z-index: 2;
+    flex-shrink: 0;
+}
+
+.pet-topbar-spacer {
+    width: 130px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 680px) {
+    .pet-topbar-spacer {
+        display: none;
+    }
 }
 
 .pet-dex-btn:hover {
@@ -2427,6 +2437,12 @@ select:focus {
     color: #b91c1c;
 }
 
+.pet-dex-special-tag.game-changer {
+    background: #fef08a;
+    color: #854d0e;
+    border: 1px solid #fde047;
+}
+
 .pet-dex-special-val {
     font-size: 1.15rem;
     font-weight: 900;
@@ -2435,3 +2451,189 @@ select:focus {
 
 .pet-dex-special-val.pos { color: #059669; }
 .pet-dex-special-val.neg { color: #dc2626; }
+
+
+/* =========================================================
+   2 Special Cards Stacked Layout (บน - ล่าง)
+========================================================= */
+
+.pet-special-cards-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-height: 380px;
+}
+
+.pet-special-cards-col .pet-special-card.pet-special-half,
+.pet-team-cards-row .pet-special-cards-col .pet-special-card.pet-special-half {
+    flex: 1;
+    min-height: 182px !important;
+    max-height: 186px !important;
+    height: 184px !important;
+    width: 100%;
+}
+
+.pet-special-half .pet-special-inner {
+    min-height: 182px !important;
+    max-height: 186px !important;
+    height: 184px !important;
+    padding: 0.55rem 0.8rem !important;
+    gap: 0.25rem !important;
+    border-radius: 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+.pet-special-half .pet-special-icon {
+    font-size: 2.3rem !important;
+    line-height: 1 !important;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+}
+
+.pet-special-half .pet-special-name {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.pet-special-half .pet-special-val {
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+    padding: 0.18rem 0.65rem !important;
+    line-height: 1.2 !important;
+    border-radius: 0.5rem;
+}
+
+.pet-special-half .pet-special-border-badge {
+    font-size: 0.72rem !important;
+    padding: 0.15rem 0.5rem !important;
+}
+
+.pet-special-half .pet-back-symbol {
+    font-size: 2.8rem !important;
+    margin: auto 0 !important;
+    line-height: 1 !important;
+    opacity: 0.88 !important;
+}
+
+.pet-special-half .pet-card-slot-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #475569;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 0.12rem 0.45rem;
+    border-radius: 99px;
+}
+
+/* Single Stage Stacked Special Cards */
+.pet-single-cards-row .pet-special-cards-col {
+    flex: 1;
+    max-width: 330px;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.pet-single-cards-row .pet-special-cards-col .pet-special-card.pet-special-half {
+    flex: 1;
+    min-height: 202px !important;
+    max-height: 206px !important;
+    height: 204px !important;
+    width: 100%;
+}
+
+.pet-single-cards-row .pet-special-half .pet-special-inner {
+    min-height: 202px !important;
+    max-height: 206px !important;
+    height: 204px !important;
+    padding: 0.65rem 0.95rem !important;
+}
+
+/* Game Changer Effect Cards Styles */
+.pet-special-inner.type-multiplier {
+    background: radial-gradient(circle at center, #fffbeb 0%, #ffffff 85%);
+    border-color: #eab308 !important;
+}
+
+.pet-special-inner.type-swap {
+    background: radial-gradient(circle at center, #fff7ed 0%, #ffffff 85%);
+    border-color: #f97316 !important;
+}
+
+.pet-special-inner.type-force_self_fight {
+    background: radial-gradient(circle at center, #f0fdf4 0%, #ffffff 85%);
+    border-color: #22c55e !important;
+}
+
+.pet-special-inner.type-force_opp_fight {
+    background: radial-gradient(circle at center, #eff6ff 0%, #ffffff 85%);
+    border-color: #3b82f6 !important;
+}
+
+.pet-special-inner.type-reroll_pet {
+    background: radial-gradient(circle at center, #f0f9ff 0%, #ffffff 85%);
+    border-color: #0284c7 !important;
+}
+
+.pet-special-val.game-changer {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155;
+    font-size: 0.95rem !important;
+}
+
+.pet-btn-action-choice.btn-fold.is-locked {
+    opacity: 0.45;
+    pointer-events: none;
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #cbd5e1 !important;
+    cursor: not-allowed;
+}
+
+.pet-swap-notice {
+    display: inline-block;
+    background: #ffedd5;
+    color: #c2410c;
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 0.2rem 0.65rem;
+    border-radius: 99px;
+    border: 1px solid #fed7aa;
+    margin-bottom: 0.35rem;
+}
+
+.pet-game-changer-banner {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    margin-top: 0.25rem;
+}
+
+.pet-game-changer-banner.gold {
+    background: #fef08a;
+    color: #854d0e;
+}
+
+.pet-game-changer-banner.blue {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.pet-game-changer-banner.green {
+    background: #dcfce7;
+    color: #15803d;
+}
